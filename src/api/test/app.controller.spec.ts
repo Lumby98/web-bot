@@ -1,4 +1,5 @@
-/*import { Test, TestingModule } from '@nestjs/testing';
+/*
+import { Test, TestingModule } from '@nestjs/testing';
 import { AppController } from '../controllers/app.controller';
 describe('AppController', () => {
   let appController: AppController;
@@ -14,7 +15,8 @@ describe('AppController', () => {
 
   describe('root', () => {
     it('should return "Hello World!"', () => {
-      expect(appController.getHello()).toBe('Hello World!');
+      expect(appController.scrap()).toBe('Hello World!');
     });
   });
-});*/
+});
+*/

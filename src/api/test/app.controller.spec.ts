@@ -10,7 +10,7 @@ describe('AppController', () => {
     const serviceProvider = {
       provide: ScraperService,
       useFactory: () => ({
-        scrap: jest.fn(),
+        scrap: jest.fn(() => 'scrap successful'),
       }),
     };
     const app: TestingModule = await Test.createTestingModule({

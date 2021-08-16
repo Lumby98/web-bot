@@ -14,9 +14,7 @@ export class ScraperService {
       // Create an instance of the page
       const page = await browser.newPage();
       // Go to the web page that we want to scrap
-      await page.goto(
-        'https://www.imdb.com/title/tt1013752/',
-      );
+      await page.goto('https://www.imdb.com/title/tt1013752/');
 
       // Here we can select elements from the web page
       const data = await page.evaluate(() => {

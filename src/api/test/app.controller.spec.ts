@@ -10,7 +10,7 @@ describe('AppController', () => {
     const serviceProvider = {
       provide: ScraperService,
       useFactory: () => ({
-        scrap: jest.fn(() => 'scrap successful'),
+        scrapNeskrid: jest.fn(),
       }),
     };
     const app: TestingModule = await Test.createTestingModule({
@@ -23,29 +23,29 @@ describe('AppController', () => {
   });
 
   describe('getScrap', () => {
-    it('should pass login check"', () => {
+    it('should pass login check"', async () => {
       const username = 'steve';
       const password = 'password';
-      appController.scrap(username, password);
-      expect(spyService.scrap).toHaveBeenCalled();
+      await expect(appController.scrap(username, password)).resolves.toEqual(
+        'scrap successful',
+      );
+      expect(spyService.scrapNeskrid).toHaveBeenCalled();
     });
   });
 
-  describe('wrongUsername', () => {
-    it('should throw exception "incomplete login information"', () => {
-      const username = '';
-      const password = 'password';
-      appController.scrap(username, password);
-      expect(spyService.scrap).toHaveBeenCalledTimes(0);
-    });
+  it('should throw exception "incomplete login information" (no username test)', () => {
+    const username = '';
+    const password = 'password';
+    return appController
+      .scrap(username, password)
+      .catch((e) => expect(e).toEqual('incomplete login information'));
   });
 
-  describe('wrongPassword', () => {
-    it('should throw exception "incomplete login information"', () => {
-      const username = 'marc';
-      const password = '';
-      appController.scrap(username, password);
-      expect(spyService.scrap).toHaveBeenCalledTimes(0);
-    });
+  it('should throw exception "incomplete login information" (no password test)', () => {
+    const username = 'marc';
+    const password = '';
+    return appController
+      .scrap(username, password)
+      .catch((e) => expect(e).toEqual('incomplete login information'));
   });
 });

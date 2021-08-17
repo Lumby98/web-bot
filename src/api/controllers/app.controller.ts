@@ -1,9 +1,4 @@
-import {
-  Controller,
-  Get,
-  HttpException,
-  Query,
-} from '@nestjs/common';
+import { Controller, Get, HttpException, Query } from '@nestjs/common';
 import { ScraperService } from '../../core/services/scraper/scraper.service';
 
 @Controller()
@@ -19,7 +14,7 @@ export class AppController {
       if (!username || !password) {
         throw new HttpException('incomplete login information', 400);
       }
-      await this.scraperService.scrap('username', 'password');
+      await this.scraperService.scrapNeskrid(username, password);
       return 'scrap successful';
     } catch (err) {
       console.log(err.message);

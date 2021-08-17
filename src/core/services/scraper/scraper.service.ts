@@ -1,43 +1,81 @@
 import { Injectable } from '@nestjs/common';
-//import * as puppeteer from 'puppeteer';
-// import fs from 'fs';
 
 @Injectable()
 export class ScraperService {
   puppeteer = require('puppeteer');
   fs = require('fs');
 
-  public async scrap(username: string, password: string) {
+  /**
+   * scraps Neskrid and writes to a file
+   * @param username
+   * @param password
+   */
+  public async scrapNeskrid(username: string, password: string) {
     try {
       // Launch the browser
-      const browser = await this.puppeteer.launch();
+      const browser = await this.puppeteer.launch({ headless: false });
       // Create an instance of the page
       const page = await browser.newPage();
+      const client = await page.target().createCDPSession();
+      await client.send('Network.emulateNetworkConditions', {
+        offline: true,
+        downloadThroughput: 500,
+        uploadThroughput: 500,
+        latency: 20,
+      });
+
       // Go to the web page that we want to scrap
-      await page.goto('https://www.imdb.com/title/tt1013752/');
+      await page
+        .goto('https://quotes.toscrape.com', { timeout: 3000 })
+        .catch((err) => {
+          throw new err('something went wrong, neskrid might be down');
+        });
+      await page.waitForSelector(
+        'body > div > div.row.header-box > div.col-md-4 > p > a',
+      );
+
+      //navigate to login
+      await page.click(
+        'body > div > div.row.header-box > div.col-md-4 > p > a',
+      );
+
+      //login
+      await page.waitForSelector('#username');
+      await page.type('#username', username);
+      await page.type('#password', password);
+      await page.click('.btn.btn-primary');
+
+      //navigate to scraping content
+      await page.waitForSelector(
+        'body > div > div:nth-child(2) > div.col-md-8 > div:nth-child(1) > span:nth-child(2) > a',
+      );
+      await page.click(
+        'body > div > div:nth-child(2) > div.col-md-8 > div:nth-child(1) > span:nth-child(2) > a',
+      );
+      await page.waitForSelector('.author-title');
 
       // Here we can select elements from the web page
       const data = await page.evaluate(() => {
-        const title = document
-          .querySelector(
-            '#__next > main > div > section.ipc-page-background.ipc-page-background--base.TitlePage__StyledPageBackground-wzlr49-0.dDUGgO > section > div:nth-child(4) > section > section > div.TitleBlock__Container-sc-1nlhx7j-0.hglRHk > div.TitleBlock__TitleContainer-sc-1nlhx7j-1.jxsVNt > h1',
-          )
+        const brand = document
+          .querySelector('.author-title')
           .textContent.toString();
-        const summary = document
-          .querySelector(
-            '#__next > main > div > section.ipc-page-background.ipc-page-background--base.TitlePage__StyledPageBackground-wzlr49-0.dDUGgO > section > div:nth-child(4) > section > section > div.Hero__MediaContentContainer__Video-kvkd64-2.kmTkgc > div.Hero__ContentContainer-kvkd64-10.eaUohq > div.Hero__MetaContainer__Video-kvkd64-4.kNqsIK > div.GenresAndPlot__ContentParent-cum89p-8.bFvaWW.Hero__GenresAndPlotContainer-kvkd64-11.twqaW > p > span.GenresAndPlot__TextContainerBreakpointXL-cum89p-2.gCtawA',
-          )
+        const articleName = document
+          .querySelector('.author-born-date')
+          .textContent.toString();
+        const articleNo = document
+          .querySelector('.author-born-location')
           .textContent.toString();
         // This object will be stored in the data variable
         return {
-          title,
-          summary,
+          brand,
+          articleName,
+          articleNo,
         };
       });
 
       this.fs.writeFile(
         'testScrap.csv',
-        data.title + ';' + data.summary,
+        data.brand + ' ; ' + data.articleName + ' ; ' + data.articleNo,
         function (err) {
           if (err) return console.log(err);
         },
@@ -46,7 +84,7 @@ export class ScraperService {
       // We close the browser
       await browser.close();
     } catch (err) {
-      console.log(err);
+      throw err;
     }
   }
 }

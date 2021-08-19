@@ -14,7 +14,7 @@ export class AppController {
       if (!username || !password) {
         throw new HttpException('incomplete login information', 400);
       }
-      await this.scraperService
+      const products = await this.scraperService
         .scrapNeskrid(username, password)
         .catch((err) => {
           throw err.message;

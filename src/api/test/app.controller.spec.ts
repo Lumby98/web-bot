@@ -26,9 +26,7 @@ describe('AppController', () => {
     it('should pass login check"', async () => {
       const username = 'steve';
       const password = 'password';
-      await expect(appController.scrap(username, password)).resolves.toEqual(
-        'scrap successful',
-      );
+      await appController.scrap(username, password);
       expect(spyService.scrapNeskrid).toHaveBeenCalled();
     });
   });
@@ -38,7 +36,7 @@ describe('AppController', () => {
     const password = 'password';
     return appController
       .scrap(username, password)
-      .catch((e) => expect(e).toEqual('incomplete login information'));
+      .catch((e) => expect(e.message).toEqual('incomplete login information'));
   });
 
   it('should throw exception "incomplete login information" (no password test)', () => {
@@ -46,6 +44,6 @@ describe('AppController', () => {
     const password = '';
     return appController
       .scrap(username, password)
-      .catch((e) => expect(e).toEqual('incomplete login information'));
+      .catch((e) => expect(e.message).toEqual('incomplete login information'));
   });
 });

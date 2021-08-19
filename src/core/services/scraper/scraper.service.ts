@@ -17,7 +17,7 @@ export class ScraperService {
       // Create an instance of the page
       const page = await browser.newPage();
 
-      // Go to the web page that we want to scrap
+      // Go to the web page (Neskrid)
       await page
         .goto('https://www.neskrid.com/', { timeout: 3000 })
         .catch((err) => {
@@ -25,8 +25,13 @@ export class ScraperService {
           throw new Error(err);
         });
 
+      await page.waitForSelector(
+        '#modallanguages > div > div > div.modal-body.text-center > ul > li:nth-child(1) > a',
+      );
+
+      //set language on the page
       await page
-        .waitForSelector(
+        .click(
           '#modallanguages > div > div > div.modal-body.text-center > ul > li:nth-child(1) > a',
         )
         .catch((err) => {
@@ -35,10 +40,6 @@ export class ScraperService {
         });
 
       //navigate to login
-      await page.click(
-        '#modallanguages > div > div > div.modal-body.text-center > ul > li:nth-child(1) > a',
-      );
-
       await page.waitForSelector('.last a').catch((err) => {
         err.message = 'could not find selector for login button';
         throw new Error(err);
@@ -61,14 +62,22 @@ export class ScraperService {
       });
 
       //navigate to scraping content
-      await page.waitForTimeout(4000);
+      await page
+        .waitForSelector(
+          '.card.card-yellow.animated.fadeInUp.animation-delay-7',
+          { timeout: 10000 }, //waits a maximum of 10 seconds after pressing login
+        )
+        .catch((err) => {
+          //if timeout it is assumed that the username or password is incorrect
+          err.message =
+            'failed to login username or password might be incorrect';
+          throw new Error(err);
+        });
       await page.click('.card.card-yellow.animated.fadeInUp.animation-delay-7');
       await page.waitForSelector('.col-sm-9');
       await page.click('.searchable-select-holder');
 
       // get the different brands in the dropdown menu
-
-      const products = [];
       const brandValues = await page.$$eval(
         '.searchable-select-item',
         (items) => items.map((item) => item.dataset.value),
@@ -87,74 +96,74 @@ export class ScraperService {
         brands.push(newBrand);
       }
 
+      // get the different products
+      const products = [];
       for (const brand of brands) {
         const dataValue = brand.brandValue;
-        console.log('[data-value="' + dataValue + '"]');
-        await page.waitForSelector('.modal-header');
-        await page.click('.modal-header');
+        console.log('[data-value*="' + dataValue + '"]');
+        await page.waitForSelector('.searchable-select-caret');
+        await page.click('.searchable-select-caret');
         await page.waitForSelector('.searchable-select-holder');
         await page.click('.searchable-select-holder');
-        await page.waitForSelector('div[data-value="' + dataValue + '"]');
-        await page.click('div[data-value="' + dataValue + '"]');
-        const data = await page.evaluate(() => {
-          const articleName = document
-            .querySelector(
-              '.radio-tile.card.card-yellow .card-block.pt-4.text-center h5',
-            )
-            .textContent.toString();
-          let articleNo = document
-            .querySelector(
-              '.radio-tile.card.card-yellow .card-block.pt-4.text-center small',
-            )
-            .textContent.toString();
-          const splitter = articleNo.split(':');
-          articleNo = splitter[1].trim();
-          const productBrand = brand.brandNames;
-          return {
-            productBrand,
-            articleName,
-            articleNo,
-          };
-        });
-        products.push(data);
+        await page.waitForSelector('div[data-value*="' + dataValue + '"]');
+        await page.click('div[data-value*="' + dataValue + '"]');
+        await page.waitForSelector('.input-container');
+        const articleName = await page.$$eval(
+          '.radio-tile-label',
+          (label) => label.textContent,
+        );
+        console.log(articleName);
+        let articleNo = await page.$$eval(
+          '.card-block.pt-4.text-center small',
+          (small) => small.textContent,
+        );
+        const splitter = articleNo.split(':');
+        articleNo = splitter[1];
+        console.log(articleNo);
+
+        for (let i = 0; i < brandValues.length; i++) {
+          const articleName = '';
+          const articleNo = '';
+          const brandName = '';
+          const product = { articleName, articleNo, brandName };
+          product.articleName = articleName[i];
+          product.articleNo = articleNo[i];
+          product.brandName = brand.brandName;
+          products.push(product);
+        }
       }
-      console.log(brandNames);
 
-      /*
-      // Here we can select elements from the web page
-      const data = await page.evaluate(() => {
-        const brand = document
-          .querySelector('.author-title')
-          .textContent.toString();
-        const articleName = document
-          .querySelector('.author-born-date')
-          .textContent.toString();
-        const articleNo = document
-          .querySelector('.author-born-location')
-          .textContent.toString();
-        // This object will be stored in the data variable
-        return {
-          brand,
-          articleName,
-          articleNo,
-        };
-      });
-
+      //writes the list of products to an csv file
       this.fs.writeFile(
         'testScrap.csv',
-        data.brand + ' ; ' + data.articleName + ' ; ' + data.articleNo,
+        'brand ; articleName ; articleNo',
         function (err) {
           if (err) return console.log(err);
         },
       );
+      for (const product of products) {
+        this.fs.write(
+          'testScrap.csv',
+          product.brandName +
+            ' ; ' +
+            product.articleName +
+            ' ; ' +
+            product.articleNo,
+          function (err) {
+            if (err) return console.log(err);
+          },
+        );
+      }
 
       // We close the browser
-      await browser.close();*/
+      await browser.close();
+
+      return products;
     } catch (err) {
       console.log(err.message);
       throw err;
     } finally {
-      //await browser.close();
+      await browser.close();
     }
   }
 }

@@ -1,17 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ScraperService } from './scraper.service';
-import {
-  stubBrowser,
-  stubPage,
-  stubElementHandle,
-} from '../../../test/mock/mockPuppeteer';
-import puppeteer from 'puppeteer';
-
-jest.mock('puppeteer', () => ({
-  lanuch() {
-    return stubBrowser;
-  },
-}));
 
 describe('ScraperService', () => {
   let service: ScraperService;

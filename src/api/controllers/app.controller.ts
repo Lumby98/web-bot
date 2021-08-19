@@ -12,17 +12,17 @@ export class AppController {
   ) {
     try {
       if (!username || !password) {
-        throw new HttpException('incomplete login information', 400);
+        throw new HttpException('incomplete login information', 404);
       }
       const products = await this.scraperService
         .scrapNeskrid(username, password)
         .catch((err) => {
-          throw err.message;
+          throw err;
         });
       return 'scrap successful';
     } catch (err) {
       console.log(err);
-      throw new HttpException(err, 404);
+      throw new HttpException(err, err.statusCode);
     }
   }
 }

@@ -19,7 +19,7 @@ export class ScraperService {
 
       // Go to the web page (Neskrid)
       await page
-        .goto('https://www.neskrid.com/', { timeout: 3000 })
+        .goto('https://www.neskrid.com/', { timeout: 4000 })
         .catch((err) => {
           err.message = 'could not reach Neskrid';
           throw new Error(err);

@@ -19,17 +19,8 @@ describe('AppController', () => {
     }).compile();
 
     appController = app.get<AppController>(AppController);
-    spyService = app.get<ScraperService>(ScraperService);
   });
 
-  describe('getScrap', () => {
-    it('should pass login check"', async () => {
-      const username = 'steve';
-      const password = 'password';
-      await appController.scrap(username, password);
-      expect(spyService.scrapNeskrid).toHaveBeenCalled();
-    });
-  });
 
   it('should throw exception "incomplete login information" (no username test)', () => {
     const username = '';

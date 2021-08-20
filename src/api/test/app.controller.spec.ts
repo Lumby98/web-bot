@@ -3,38 +3,57 @@ import { AppController } from '../controllers/app.controller';
 import { ScraperService } from '../../core/services/scraper/scraper.service';
 
 describe('AppController', () => {
-  let appController: AppController;
-  let spyService: ScraperService;
+  let controller: AppController;
+  const mockScraperService = {
+    scrapNeskrid: jest.fn(() => {
+      return [
+        {
+          articleName: 'string',
+          articleNo: 'string',
+          brandName: 'string',
+        },
+        {
+          articleName: 'string',
+          articleNo: 'string',
+          brandName: 'string',
+        },
+      ];
+    }),
+  };
 
   beforeEach(async () => {
-    const serviceProvider = {
-      provide: ScraperService,
-      useFactory: () => ({
-        scrapNeskrid: jest.fn(),
-      }),
-    };
     const app: TestingModule = await Test.createTestingModule({
       controllers: [AppController],
-      providers: [serviceProvider],
-    }).compile();
+      providers: [ScraperService],
+    })
+      .overrideProvider(ScraperService)
+      .useValue(mockScraperService)
+      .compile();
 
-    appController = app.get<AppController>(AppController);
+    controller = app.get<AppController>(AppController);
   });
 
+  it('should be defined', () => {
+    expect(controller).toBeDefined();
+  });
 
   it('should throw exception "incomplete login information" (no username test)', () => {
-    const username = '';
-    const password = 'password';
-    return appController
-      .scrap(username, password)
+    return controller
+      .scrap('', 'test')
       .catch((e) => expect(e.message).toEqual('incomplete login information'));
   });
 
   it('should throw exception "incomplete login information" (no password test)', () => {
-    const username = 'marc';
-    const password = '';
-    return appController
-      .scrap(username, password)
+    return controller
+      .scrap('test', '')
       .catch((e) => expect(e.message).toEqual('incomplete login information'));
+  });
+
+  it('should scrape neskrid', () => {
+    controller.scrap('test', 'test');
+    expect(mockScraperService.scrapNeskrid).toHaveBeenCalledWith(
+      'test',
+      'test',
+    );
   });
 });

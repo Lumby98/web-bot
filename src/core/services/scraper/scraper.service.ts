@@ -47,7 +47,7 @@ export class ScraperService {
       await page.waitForSelector('.last a').catch((err) => {
         err.message = 'could not find selector for login button';
         err.statusCode = 504;
-          throw new Error(err);
+        throw new Error(err);
       });
       await page.click('.last a');
 
@@ -55,20 +55,20 @@ export class ScraperService {
       await page.waitForSelector('#gebruikerscode').catch((err) => {
         err.message = 'could not find selector for input field for username';
         err.statusCode = 504;
-          throw new Error(err);
+        throw new Error(err);
       });
 
       await page.type('#gebruikerscode', username);
       await page.type('#gebruikerspass', password).catch((err) => {
         err.message = 'could not find selector for input field for password';
         err.statusCode = 504;
-          throw new Error(err);
+        throw new Error(err);
       });
 
       await page.click('.login-form button').catch((err) => {
         err.message = 'could not find selector for login button';
         err.statusCode = 504;
-          throw new Error(err);
+        throw new Error(err);
       });
 
       //navigate to scraping content
@@ -82,7 +82,7 @@ export class ScraperService {
           err.message =
             'failed to login username or password might be incorrect';
           err.statusCode = 504;
-            throw new Error(err);
+          throw new Error(err);
         });
 
       await page.click('.card.card-yellow.animated.fadeInUp.animation-delay-7');

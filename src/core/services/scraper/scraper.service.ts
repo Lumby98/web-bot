@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ProductModel } from '../../models/product.model';
+import { keyDefinitions } from "puppeteer";
 
 @Injectable()
 export class ScraperService {
@@ -12,6 +13,10 @@ export class ScraperService {
    * @param password = string
    */
   public async scrapNeskrid(username: string, password: string) {
+    //test in place for checking connection between frontend and backend (delete later)
+    if (username == 'test' || password == 'test') {
+      return 'done';
+    }
     // Launch the browser
     const browser = await this.puppeteer.launch({ headless: false });
 
@@ -85,8 +90,10 @@ export class ScraperService {
           throw new Error(err);
         });
 
-      await page.click('.card.card-yellow.animated.fadeInUp.animation-delay-7');
-      await page.waitForSelector('.col-sm-9');
+      await page.click(
+        '.card.card-yellow.animated.fadeInUp.animation-delay-7 .ms-hero-bg-royal',
+      );
+      await page.waitForSelector('.searchable-select-holder');
       await page.click('.searchable-select-holder');
 
       // get the different brands in the dropdown menu
@@ -130,33 +137,31 @@ export class ScraperService {
 
         //gets the article names for the current brand
         await page.waitForSelector('.input-container');
-        const articleName = await page.$$eval(
-          '.radio-tile-label',
-          (label) => label.textContent,
+        const articleNames = await page.$$eval('.radio-tile-label', (labels) =>
+          labels.map((label) => label.textContent),
         );
-        console.log(articleName);
+        console.log(articleNames.length);
 
         //gets the article number for the current brand
-        let articleNo = await page.$$eval(
+        const articleNos = await page.$$eval(
           '.card-block.pt-4.text-center small',
-          (small) => small.textContent,
+          (smalls) => smalls.map((small) => small.textContent),
         );
-        //removes the "article number" text
-        const splitter = articleNo.split(':');
-        articleNo = splitter[1];
-        console.log(articleNo);
+        console.log(articleNos.length);
 
         //creates a product and pushes it to the products list
-        for (let i = 0; i < brandValues.length; i++) {
+        for (let i = 0; i < articleNames.length; i++) {
           const product: ProductModel = {
             brandName: brand.brandName,
-            articleName: articleName[i],
-            articleNo: articleNo[i],
+            articleName: articleNames[i],
+            articleNo: articleNos[i],
           };
           products.push(product);
         }
       }
-      this.writeToFile(products);
+
+      //console.log(products);
+      //this.writeToFile(products);
 
       // We close the browser
       await browser.close();
@@ -177,25 +182,15 @@ export class ScraperService {
    * @private
    */
   private writeToFile(items: ProductModel[]) {
-    this.fs.writeFile(
-      'testScrap.csv',
-      'brand ; articleName ; articleNo',
-      function (err) {
-        if (err) return console.log(err);
-      },
-    );
-    for (const product of items) {
-      this.fs.write(
-        'testScrap.csv',
-        product.brandName +
-          ' ; ' +
-          product.articleName +
-          ' ; ' +
-          product.articleNo,
-        function (err) {
-          if (err) return console.log(err);
-        },
-      );
-    }
+    const file = this.fs.createWriteStream('testScrap.csv');
+    file.on('error', function (err) {
+      throw err;
+    });
+
+    items.forEach(function (v) {
+      file.write(v.brandName + ';' + v.articleName + ';' + v.articleNo + '\n');
+    });
+
+    file.end();
   }
 }

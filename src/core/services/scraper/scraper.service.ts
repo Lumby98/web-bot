@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ProductModel } from '../../models/product.model';
-import { keyDefinitions } from "puppeteer";
+import { keyDefinitions } from 'puppeteer';
+import { text } from 'express';
 
 @Injectable()
 export class ScraperService {
@@ -79,7 +80,7 @@ export class ScraperService {
       //navigate to scraping content
       await page
         .waitForSelector(
-          '.card.card-yellow.animated.fadeInUp.animation-delay-7',
+          '.ms-hero-bg-royal',
           { timeout: 10000 }, //waits a maximum of 10 seconds after pressing login
         )
         .catch((err) => {
@@ -137,27 +138,45 @@ export class ScraperService {
 
         //gets the article names for the current brand
         await page.waitForSelector('.input-container');
-        const articleNames = await page.$$eval('.radio-tile-label', (labels) =>
-          labels.map((label) => label.textContent),
+        const articles = await page.$$eval(
+          '.card-block.pt-4.text-center',
+          (divs) => divs.map((div) => div),
         );
-        console.log(articleNames.length);
+        console.log(articles.length);
 
         //gets the article number for the current brand
-        const articleNos = await page.$$eval(
+        for (const article of articles) {
+          const articleName = await article.$('h5', (text) => text.textContent);
+          let articleNo = await article.$('small', (text) => {
+            if (!text.textContent) {
+              articleNo = '';
+            } else {
+              articleNo = text.textContent;
+            }
+          });
+          const product: ProductModel = {
+            brandName: brand.brandName,
+            articleName: articleName,
+            articleNo: articleNo,
+          };
+          products.push(product);
+        }
+
+        /*    const articleNos = await page.$$eval(
           '.card-block.pt-4.text-center small',
           (smalls) => smalls.map((small) => small.textContent),
         );
         console.log(articleNos.length);
-
+*/
         //creates a product and pushes it to the products list
-        for (let i = 0; i < articleNames.length; i++) {
+        /*    for (let i = 0; i < articleNames.length; i++) {
           const product: ProductModel = {
             brandName: brand.brandName,
             articleName: articleNames[i],
             articleNo: articleNos[i],
           };
           products.push(product);
-        }
+        }*/
       }
 
       //console.log(products);
@@ -167,6 +186,7 @@ export class ScraperService {
       await browser.close();
 
       // return the list of products
+      console.log(products);
       return products;
     } catch (err) {
       console.log(err.message);

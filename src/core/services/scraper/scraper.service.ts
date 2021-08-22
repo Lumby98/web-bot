@@ -1,8 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { ProductModel } from '../../models/product.model';
-import { keyDefinitions } from 'puppeteer';
-import { text } from 'express';
-import { timeout } from "rxjs/operators";
 
 @Injectable()
 export class ScraperService {
@@ -140,22 +137,22 @@ export class ScraperService {
 
         //gets the article names for the current brand
         await page.waitForSelector('.input-container');
-        const articles = await page.$$eval(
-          '.card-block.pt-4.text-center',
-          (divs) => divs.map((div) => div),
-        );
-        console.log(articles.length);
+        const articles = await page.$$('.radio-tile.card.card-yellow');
+        //console.log(articles);
 
         //gets the article number for the current brand
         for (const article of articles) {
-          const articleName = await article.$('h5', (text) => text.textContent);
-          let articleNo = await article.$('small', (text) => {
-            if (!text.textContent) {
+          const articleName = await article.$eval(
+            '.color-primary',
+            (el) => el.textContent,
+          );
+          let articleNo = '';
+          articleNo = await article
+            .$eval('small', (el) => el.textContent)
+            .catch((err) => {
               articleNo = '';
-            } else {
-              articleNo = text.textContent;
-            }
-          });
+            });
+          console.log(articleNo);
           const product: ProductModel = {
             brandName: brand.brandName,
             articleName: articleName,
@@ -182,13 +179,13 @@ export class ScraperService {
       }
 
       //console.log(products);
-      //this.writeToFile(products);
+      this.writeToFile(products);
 
       // We close the browser
       await browser.close();
 
       // return the list of products
-      console.log(products);
+      //console.log(products);
       return products;
     } catch (err) {
       console.log(err.message);

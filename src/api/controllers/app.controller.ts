@@ -19,7 +19,9 @@ export class AppController {
         .catch((err) => {
           throw err;
         });
-      return 'scrap successful';
+      console.log(products);
+      const done = { message: 'complete' };
+      return done;
     } catch (err) {
       console.log(err);
       throw new HttpException(err, err.statusCode);

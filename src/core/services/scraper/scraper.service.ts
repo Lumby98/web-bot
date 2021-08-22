@@ -97,26 +97,12 @@ export class ScraperService {
       await page.click('.searchable-select-holder');
 
       // get the different brands in the dropdown menu
-      const brandValues = await page.$$eval(
-        '.searchable-select-item',
-        (items) => items.map((item) => item.dataset.value),
-      );
-      const brandNames = await page.$$eval('.searchable-select-item', (items) =>
+      let brandNames = await page.$$eval('.searchable-select-item', (items) =>
         items.map((item) => item.innerHTML),
       );
 
-      const brands = [];
-      for (let i = 1; i < brandValues.length; i++) {
-        const brandName = '';
-        const brandValue = '';
-
-        const newBrand = { brandValue, brandName };
-
-        newBrand.brandValue = brandValues[i];
-        newBrand.brandName = brandNames[i];
-
-        brands.push(newBrand);
-      }
+      brandNames = brandNames.filter((obj) => obj !== brandNames[0]);
+      //console.log(brands);
 
       //closes dropdown menu
       await page.waitForSelector('.searchable-select-caret');
@@ -124,20 +110,20 @@ export class ScraperService {
 
       // get the different products
       const products = [];
-      for (const brand of brands) {
-        const dataValue = brand.brandValue;
-
+      for (const brand of brandNames) {
         //opens dropdown menu
         await page.waitForSelector('.searchable-select-holder');
         await page.click('.searchable-select-holder');
+        await page.waitForTimeout(1000);
 
         //clicks the next item in the list
-        await page.waitForSelector('div[data-value*="' + dataValue + '"]');
-        await page.click('div[data-value*="' + dataValue + '"]');
+        await page.type('.searchable-select-input', brand);
+        await page.waitForTimeout(500);
+        await page.keyboard.press('Enter');
 
         //gets the article names for the current brand
         await page.waitForSelector('.input-container');
-        const articles = await page.$$('.radio-tile.card.card-yellow');
+        const articles = await page.$$('.input-container');
         //console.log(articles);
 
         //gets the article number for the current brand
@@ -152,30 +138,14 @@ export class ScraperService {
             .catch((err) => {
               articleNo = '';
             });
-          console.log(articleNo);
           const product: ProductModel = {
-            brandName: brand.brandName,
+            brandName: brand,
             articleName: articleName,
             articleNo: articleNo,
           };
+          console.log(product);
           products.push(product);
         }
-
-        /*    const articleNos = await page.$$eval(
-          '.card-block.pt-4.text-center small',
-          (smalls) => smalls.map((small) => small.textContent),
-        );
-        console.log(articleNos.length);
-*/
-        //creates a product and pushes it to the products list
-        /*    for (let i = 0; i < articleNames.length; i++) {
-          const product: ProductModel = {
-            brandName: brand.brandName,
-            articleName: articleNames[i],
-            articleNo: articleNos[i],
-          };
-          products.push(product);
-        }*/
       }
 
       //console.log(products);
@@ -201,7 +171,7 @@ export class ScraperService {
    * @private
    */
   private writeToFile(items: ProductModel[]) {
-    const file = this.fs.createWriteStream('testScrap.csv');
+    const file = this.fs.createWriteStream('testScrap.csv', 'utf-8');
     file.on('error', function (err) {
       throw err;
     });

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ProductModel } from '../../models/product.model';
-import { keyDefinitions } from "puppeteer";
+import { keyDefinitions } from 'puppeteer';
+import { timeout } from "rxjs/operators";
 
 @Injectable()
 export class ScraperService {
@@ -75,6 +76,7 @@ export class ScraperService {
         err.statusCode = 504;
         throw new Error(err);
       });
+      await page.waitForTimeout(5000);
 
       //navigate to scraping content
       await page

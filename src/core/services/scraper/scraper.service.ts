@@ -144,7 +144,7 @@ export class ScraperService {
 
         //gets the article number for the current brand
         const articleNos = await page.$$eval(
-          '.card-block.pt-4.text-center small',
+          '.card-block.pt-4.text-center',
           (smalls) => smalls.map((small) => small.textContent),
         );
         console.log(articleNos.length);

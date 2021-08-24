@@ -25,7 +25,10 @@ describe('ScraperController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ScraperController],
       providers: [ScraperService],
-    }).compile();
+    })
+      .overrideProvider(ScraperService)
+      .useValue(mockScraperService)
+      .compile();
 
     controller = module.get<ScraperController>(ScraperController);
   });

@@ -46,7 +46,7 @@ export class ScraperController {
   async scrap(
     @Query('username') username: string,
     @Query('password') password: string,
-  ): Promise<any> {
+  ) {
     try {
       if (!username || !password) {
         throw new HttpException('incomplete login information', 404);

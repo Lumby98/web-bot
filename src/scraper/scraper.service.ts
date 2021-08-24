@@ -1,31 +1,90 @@
 import { Injectable } from '@nestjs/common';
-import { CreateScraperDto } from './dto/create-scraper.dto';
-import { UpdateScraperDto } from './dto/update-scraper.dto';
 import { ProductModel } from '../core/models/product.model';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Product } from '../infrastructure/product.entity';
+import { Repository } from 'typeorm';
+import { Status } from '../enums/status.enum';
 
 @Injectable()
 export class ScraperService {
   puppeteer = require('puppeteer');
   fs = require('fs');
 
-  create(createScraperDto: CreateScraperDto) {
-    return 'This action adds a new scraper';
+  constructor(
+    @InjectRepository(Product)
+    private productRepository: Repository<Product>,
+  ) {}
+
+  /**
+   *  creates a new product in the database
+   * @param productToCreate
+   */
+  async create(productToCreate: ProductModel): Promise<ProductModel> {
+    let product = this.productRepository.create();
+    product.brand = productToCreate.brandName;
+    product.articleName = productToCreate.articleName;
+    product.articleNo = productToCreate.articleNo;
+    product.status = Status.NEW;
+    product = await this.productRepository.save(product);
+    return JSON.parse(JSON.stringify(product));
   }
 
-  findAll() {
-    return `This action returns all scraper`;
+  /**
+   * finds all the products in the database
+   */
+  async findAll(): Promise<ProductModel[]> {
+    const productE = await this.productRepository.find();
+    if (productE) {
+      return JSON.parse(JSON.stringify(productE));
+    } else {
+      throw new Error('could not find any products');
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} scraper`;
+  /**
+   * finds one product based on the brand and article name
+   * @param articleName
+   * @param brand
+   */
+  async findOne(brand: string, articleName: string): Promise<ProductModel> {
+    const product: Product = await this.productRepository.findOne({
+      brand: brand,
+      articleName: articleName,
+    });
+
+    if (product) {
+      return JSON.parse(JSON.stringify(product));
+    } else {
+      throw new Error('could not find the product');
+    }
   }
 
-  update(id: number, updateScraperDto: UpdateScraperDto) {
-    return `This action updates a #${id} scraper`;
-  }
+  /**
+   * updates a product
+   * @param productToUpdate
+   */
+  async update(productToUpdate: ProductModel): Promise<ProductModel> {
+    const productTU = await this.productRepository.findOne({
+      brand: productToUpdate.brandName,
+      articleName: productToUpdate.articleName,
+    });
+    if (productTU) {
+      await this.productRepository.update(
+        { articleName: productToUpdate.articleName },
+        productToUpdate,
+      );
+      const updatedProduct = await this.productRepository.findOne({
+        articleName: productToUpdate.articleName,
+      });
 
-  remove(id: number) {
-    return `This action removes a #${id} scraper`;
+      if (updatedProduct) {
+        return JSON.parse(JSON.stringify(updatedProduct));
+      } else {
+        throw new Error('This product was not updated');
+      }
+    } else {
+      throw new Error('this product does not exist');
+    }
   }
 
   /**
@@ -33,10 +92,13 @@ export class ScraperService {
    * @param username = string
    * @param password = string
    */
-  public async scrapNeskrid(username: string, password: string) {
+  public async scrapNeskrid(
+    username: string,
+    password: string,
+  ): Promise<ProductModel[]> {
     //test in place for checking connection between frontend and backend (delete later)
     if (username == 'test' || password == 'test') {
-      return 'done';
+      return [];
     }
     // Launch the browser
     const browser = await this.puppeteer.launch({ headless: false });
@@ -173,9 +235,6 @@ export class ScraperService {
         }
       }
 
-      //console.log(products);
-      this.writeToFile(products);
-
       // We close the browser
       await browser.close();
 
@@ -200,10 +259,58 @@ export class ScraperService {
       throw err;
     });
 
-    items.forEach(function (v) {
-      file.write(v.brandName + ';' + v.articleName + ';' + v.articleNo + '\n');
+    items.forEach(function (productModel) {
+      file.write(
+        productModel.brandName +
+          ';' +
+          productModel.articleName +
+          ';' +
+          productModel.articleNo +
+          ';' +
+          productModel.status.toString() +
+          '\n',
+      );
     });
 
     file.end();
+  }
+
+  public async createFile(products: ProductModel[]) {
+    const completedList: ProductModel[] = [];
+    try {
+      for (const product of products) {
+        let p: ProductModel;
+        p = await this.findOne(product.brandName, product.articleName).catch(
+          () =>
+            (p = {
+              brandName: 'placeholder',
+              articleName: 'placeholder',
+              articleNo: 'placeholder',
+            }),
+        );
+
+        if (p.brandName !== 'placeholder') {
+          if (p.status == Status.NEW) {
+            product.status = Status.ACTIVE;
+            await this.update(product);
+            console.log(product);
+          } else if (p.status == Status.INACTIVE) {
+            product.status = Status.ACTIVE;
+            await this.update(product);
+            console.log(product);
+          } else if (p.status == Status.ACTIVE) {
+          }
+          completedList.push(p);
+        } else {
+          p = await this.create(product);
+          console.log(p);
+          completedList.push(p);
+        }
+      }
+
+      //this.writeToFile(completedList);
+    } catch (err) {
+      throw err;
+    }
   }
 }

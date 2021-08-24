@@ -1,9 +1,10 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Status } from '../enums/status.enum';
 
 @Entity()
 export class Product {
-  @PrimaryGeneratedColumn()
-  public id: number;
+  @PrimaryGeneratedColumn('uuid')
+  public id: string;
 
   @Column()
   public brand: string;
@@ -14,6 +15,6 @@ export class Product {
   @Column()
   public articleNo: string;
 
-  @Column()
-  public status: string;
+  @Column({ type: 'enum', enum: Status, default: Status.NEW })
+  public status: Status;
 }

@@ -14,12 +14,18 @@ export class ScraperController {
       if (!username || !password) {
         throw new HttpException('incomplete login information', 404);
       }
-      const products = await this.scraperService
+      const scrapeProducts = await this.scraperService
         .scrapNeskrid(username, password)
         .catch((err) => {
           throw err;
         });
-      console.log(products);
+
+      //for testing connection (delete later)
+      if (scrapeProducts.length == 0) {
+        return { message: 'test done' };
+      }
+
+      await this.scraperService.createFile(scrapeProducts);
       return { message: 'complete' };
     } catch (err) {
       console.log(err);

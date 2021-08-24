@@ -1,7 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { ProductModel } from '../../models/product.model';
-import { keyDefinitions } from 'puppeteer';
-import { timeout } from "rxjs/operators";
 
 @Injectable()
 export class ScraperService {
@@ -26,13 +24,11 @@ export class ScraperService {
       const page = await browser.newPage();
 
       // navigates to the web page (Neskrid)
-      await page
-        .goto('https://www.neskrid.com/', { timeout: 4000 })
-        .catch((err) => {
-          err.message = 'could not reach Neskrid';
-          err.statusCode = 504;
-          throw new Error(err);
-        });
+      await page.goto('https://www.neskrid.com/').catch((err) => {
+        err.message = 'could not reach Neskrid';
+        err.statusCode = 504;
+        throw new Error(err);
+      });
 
       await page.waitForSelector(
         '#modallanguages > div > div > div.modal-body.text-center > ul > li:nth-child(1) > a',
@@ -44,7 +40,7 @@ export class ScraperService {
           '#modallanguages > div > div > div.modal-body.text-center > ul > li:nth-child(1) > a',
         )
         .catch((err) => {
-          err.message = 'could not find selector for login button';
+          err.message = 'could not find selector for language selection';
           err.statusCode = 504;
           throw new Error(err);
         });
@@ -81,11 +77,11 @@ export class ScraperService {
       //navigate to scraping content
       await page
         .waitForSelector(
-          '.card.card-yellow.animated.fadeInUp.animation-delay-7',
-          { timeout: 10000 }, //waits a maximum of 10 seconds after pressing login
+          '.ms-hero-bg-royal',
+          { timeout: 5000 }, //waits a maximum of 5 seconds after pressing login
         )
         .catch((err) => {
-          //if timeout it is assumed that the username or password is incorrect
+          //if there is a timeout, it is assumed that the username or password is incorrect
           err.message =
             'failed to login username or password might be incorrect';
           err.statusCode = 504;
@@ -99,26 +95,12 @@ export class ScraperService {
       await page.click('.searchable-select-holder');
 
       // get the different brands in the dropdown menu
-      const brandValues = await page.$$eval(
-        '.searchable-select-item',
-        (items) => items.map((item) => item.dataset.value),
-      );
-      const brandNames = await page.$$eval('.searchable-select-item', (items) =>
+      let brandNames = await page.$$eval('.searchable-select-item', (items) =>
         items.map((item) => item.innerHTML),
       );
 
-      const brands = [];
-      for (let i = 1; i < brandValues.length; i++) {
-        const brandName = '';
-        const brandValue = '';
-
-        const newBrand = { brandValue, brandName };
-
-        newBrand.brandValue = brandValues[i];
-        newBrand.brandName = brandNames[i];
-
-        brands.push(newBrand);
-      }
+      brandNames = brandNames.filter((obj) => obj !== brandNames[0]);
+      //console.log(brands);
 
       //closes dropdown menu
       await page.waitForSelector('.searchable-select-caret');
@@ -126,44 +108,51 @@ export class ScraperService {
 
       // get the different products
       const products = [];
-      for (const brand of brands) {
-        const dataValue = brand.brandValue;
-
+      for (const brand of brandNames) {
         //opens dropdown menu
         await page.waitForSelector('.searchable-select-holder');
         await page.click('.searchable-select-holder');
+        await page.waitForTimeout(1000);
 
         //clicks the next item in the list
-        await page.waitForSelector('div[data-value*="' + dataValue + '"]');
-        await page.click('div[data-value*="' + dataValue + '"]');
+        await page.type('.searchable-select-input', brand);
+        await page.waitForTimeout(500);
+        await page.keyboard.press('Enter');
 
         //gets the article names for the current brand
         await page.waitForSelector('.input-container');
-        const articleNames = await page.$$eval('.radio-tile-label', (labels) =>
-          labels.map((label) => label.textContent),
-        );
-        console.log(articleNames.length);
+        const articles = await page.$$('.input-container');
+        //console.log(articles);
 
         //gets the article number for the current brand
-        const articleNos = await page.$$eval(
-          '.card-block.pt-4.text-center',
-          (smalls) => smalls.map((small) => small.textContent),
-        );
-        console.log(articleNos.length);
-
-        //creates a product and pushes it to the products list
-        for (let i = 0; i < articleNames.length; i++) {
+        for (const article of articles) {
+          const articleName = await article.$eval(
+            '.color-primary',
+            (el) => el.textContent,
+          );
+          let articleNo = '';
+          articleNo = await article
+            .$eval('small', (el) => el.textContent)
+            .catch(() => {
+              articleNo = 'h:no article number';
+            });
+          if (articleNo == undefined) {
+            articleNo = 'h:no article number';
+          }
+          const splitter = articleNo.split(':');
+          articleNo = splitter[1].trim();
           const product: ProductModel = {
-            brandName: brand.brandName,
-            articleName: articleNames[i],
-            articleNo: articleNos[i],
+            brandName: brand,
+            articleName: articleName,
+            articleNo: articleNo,
           };
+          console.log(product);
           products.push(product);
         }
       }
 
       //console.log(products);
-      //this.writeToFile(products);
+      this.writeToFile(products);
 
       // We close the browser
       await browser.close();
@@ -184,7 +173,7 @@ export class ScraperService {
    * @private
    */
   private writeToFile(items: ProductModel[]) {
-    const file = this.fs.createWriteStream('testScrap.csv');
+    const file = this.fs.createWriteStream('testScrap.csv', 'utf-8');
     file.on('error', function (err) {
       throw err;
     });

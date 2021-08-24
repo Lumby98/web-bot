@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AppController } from '../controllers/app.controller';
-import { ScraperService } from '../../core/services/scraper/scraper.service';
+import { ScraperController } from './scraper.controller';
+import { ScraperService } from './scraper.service';
 
-describe('AppController', () => {
-  let controller: AppController;
+describe('ScraperController', () => {
+  let controller: ScraperController;
   const mockScraperService = {
     scrapNeskrid: jest.fn(() => {
       return [
@@ -22,15 +22,12 @@ describe('AppController', () => {
   };
 
   beforeEach(async () => {
-    const app: TestingModule = await Test.createTestingModule({
-      controllers: [AppController],
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [ScraperController],
       providers: [ScraperService],
-    })
-      .overrideProvider(ScraperService)
-      .useValue(mockScraperService)
-      .compile();
+    }).compile();
 
-    controller = app.get<AppController>(AppController);
+    controller = module.get<ScraperController>(ScraperController);
   });
 
   it('should be defined', () => {

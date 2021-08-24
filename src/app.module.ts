@@ -1,10 +1,25 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './api/controllers/app.controller';
-import { ScraperService } from './core/services/scraper/scraper.service';
+import { ConfigModule } from '@nestjs/config';
+import { DatabaseModule } from './infrastructure/database.module';
+import { ScraperModule } from './scraper/scraper.module';
+import * as Joi from '@hapi/joi';
 
 @Module({
-  imports: [],
-  controllers: [AppController],
-  providers: [ScraperService],
+  imports: [
+    ConfigModule.forRoot({
+      validationSchema: Joi.object({
+        POSTGRES_HOST: Joi.string().required(),
+        POSTGRES_PORT: Joi.number().required(),
+        POSTGRES_USER: Joi.string().required(),
+        POSTGRES_PASSWORD: Joi.string().required(),
+        POSTGRES_DB: Joi.string().required(),
+        PORT: Joi.number().required(),
+      }),
+    }),
+    DatabaseModule,
+    ScraperModule,
+  ],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}

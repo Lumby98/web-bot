@@ -1,10 +1,32 @@
 import { Injectable } from '@nestjs/common';
-import { ProductModel } from '../../models/product.model';
+import { CreateScraperDto } from './dto/create-scraper.dto';
+import { UpdateScraperDto } from './dto/update-scraper.dto';
+import { ProductModel } from '../core/models/product.model';
 
 @Injectable()
 export class ScraperService {
   puppeteer = require('puppeteer');
   fs = require('fs');
+
+  create(createScraperDto: CreateScraperDto) {
+    return 'This action adds a new scraper';
+  }
+
+  findAll() {
+    return `This action returns all scraper`;
+  }
+
+  findOne(id: number) {
+    return `This action returns a #${id} scraper`;
+  }
+
+  update(id: number, updateScraperDto: UpdateScraperDto) {
+    return `This action updates a #${id} scraper`;
+  }
+
+  remove(id: number) {
+    return `This action removes a #${id} scraper`;
+  }
 
   /**
    * scraps Neskrid and writes to a file

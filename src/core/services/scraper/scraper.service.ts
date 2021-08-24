@@ -24,13 +24,11 @@ export class ScraperService {
       const page = await browser.newPage();
 
       // navigates to the web page (Neskrid)
-      await page
-        .goto('https://www.neskrid.com/', { timeout: 4000 })
-        .catch((err) => {
-          err.message = 'could not reach Neskrid';
-          err.statusCode = 504;
-          throw new Error(err);
-        });
+      await page.goto('https://www.neskrid.com/').catch((err) => {
+        err.message = 'could not reach Neskrid';
+        err.statusCode = 504;
+        throw new Error(err);
+      });
 
       await page.waitForSelector(
         '#modallanguages > div > div > div.modal-body.text-center > ul > li:nth-child(1) > a',
@@ -42,7 +40,7 @@ export class ScraperService {
           '#modallanguages > div > div > div.modal-body.text-center > ul > li:nth-child(1) > a',
         )
         .catch((err) => {
-          err.message = 'could not find selector for login button';
+          err.message = 'could not find selector for language selection';
           err.statusCode = 504;
           throw new Error(err);
         });
@@ -80,10 +78,10 @@ export class ScraperService {
       await page
         .waitForSelector(
           '.ms-hero-bg-royal',
-          { timeout: 10000 }, //waits a maximum of 10 seconds after pressing login
+          { timeout: 5000 }, //waits a maximum of 5 seconds after pressing login
         )
         .catch((err) => {
-          //if timeout it is assumed that the username or password is incorrect
+          //if there is a timeout, it is assumed that the username or password is incorrect
           err.message =
             'failed to login username or password might be incorrect';
           err.statusCode = 504;
@@ -135,9 +133,14 @@ export class ScraperService {
           let articleNo = '';
           articleNo = await article
             .$eval('small', (el) => el.textContent)
-            .catch((err) => {
-              articleNo = '';
+            .catch(() => {
+              articleNo = 'h:no article number';
             });
+          if (articleNo == undefined) {
+            articleNo = 'h:no article number';
+          }
+          const splitter = articleNo.split(':');
+          articleNo = splitter[1].trim();
           const product: ProductModel = {
             brandName: brand,
             articleName: articleName,
@@ -155,7 +158,6 @@ export class ScraperService {
       await browser.close();
 
       // return the list of products
-      //console.log(products);
       return products;
     } catch (err) {
       console.log(err.message);

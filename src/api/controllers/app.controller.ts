@@ -20,8 +20,7 @@ export class AppController {
           throw err;
         });
       console.log(products);
-      const done = { message: 'complete' };
-      return done;
+      return { message: 'complete' };
     } catch (err) {
       console.log(err);
       throw new HttpException(err, err.statusCode);

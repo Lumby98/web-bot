@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ProductModel } from '../core/models/product.model';
+import { ProductModel } from '../models/product.model';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from '../infrastructure/product.entity';
 import { Repository } from 'typeorm';
@@ -20,8 +20,8 @@ export class ScraperService {
    * @param productToCreate
    */
   async create(productToCreate: ProductModel): Promise<ProductModel> {
-    let product = this.productRepository.create();
-    product.brand = productToCreate.brandName;
+    let product: Product = this.productRepository.create();
+    product.brand = productToCreate.brand;
     product.articleName = productToCreate.articleName;
     product.articleNo = productToCreate.articleNo;
     product.status = Status.NEW;
@@ -33,7 +33,7 @@ export class ScraperService {
    * finds all the products in the database
    */
   async findAll(): Promise<ProductModel[]> {
-    const productE = await this.productRepository.find();
+    const productE: Product[] = await this.productRepository.find();
     if (productE) {
       return JSON.parse(JSON.stringify(productE));
     } else {
@@ -64,13 +64,13 @@ export class ScraperService {
    * @param productToUpdate
    */
   async update(productToUpdate: ProductModel): Promise<ProductModel> {
-    const productTU = await this.productRepository.findOne({
-      brand: productToUpdate.brandName,
+    const productTU: Product = await this.productRepository.findOne({
+      brand: productToUpdate.brand,
       articleName: productToUpdate.articleName,
     });
     if (productTU) {
       await this.productRepository.update(
-        { articleName: productToUpdate.articleName },
+        { id: productTU.id },
         productToUpdate,
       );
       const updatedProduct = await this.productRepository.findOne({
@@ -226,7 +226,7 @@ export class ScraperService {
           const splitter = articleNo.split(':');
           articleNo = splitter[1].trim();
           const product: ProductModel = {
-            brandName: brand,
+            brand: brand,
             articleName: articleName,
             articleNo: articleNo,
           };
@@ -250,18 +250,21 @@ export class ScraperService {
 
   /**
    * takes an array of products and writes it to a csv file
-   * @param items =  []
-   * @private
    */
-  private writeToFile(items: ProductModel[]) {
+  public async writeToFile() {
+    const products = await this.findAll();
+    //sorts the list by brand
+    products.sort((obj1, obj2) => (obj1.brand < obj2.brand ? -1 : 1));
+    //creates file
     const file = this.fs.createWriteStream('testScrap.csv', 'utf-8');
     file.on('error', function (err) {
       throw err;
     });
 
-    items.forEach(function (productModel) {
+    //writes each product in the list to file
+    products.forEach((productModel) => {
       file.write(
-        productModel.brandName +
+        productModel.brand +
           ';' +
           productModel.articleName +
           ';' +
@@ -275,40 +278,54 @@ export class ScraperService {
     file.end();
   }
 
-  public async createFile(products: ProductModel[]) {
+  /**
+   * takes a list of products and sets there status, afterword calls writeFile() to create an .csv file
+   * @param products = []
+   */
+  public async updateAfterScrape(
+    products: ProductModel[],
+  ): Promise<ProductModel[]> {
     const completedList: ProductModel[] = [];
+    const productsInDatabase = await this.findAll();
     try {
       for (const product of products) {
         let p: ProductModel;
-        p = await this.findOne(product.brandName, product.articleName).catch(
+        p = await this.findOne(product.brand, product.articleName).catch(
           () =>
             (p = {
-              brandName: 'placeholder',
+              brand: 'placeholder',
               articleName: 'placeholder',
               articleNo: 'placeholder',
             }),
         );
 
-        if (p.brandName !== 'placeholder') {
+        if (p.brand !== 'placeholder') {
           if (p.status == Status.NEW) {
             product.status = Status.ACTIVE;
             await this.update(product);
-            console.log(product);
           } else if (p.status == Status.INACTIVE) {
             product.status = Status.ACTIVE;
             await this.update(product);
-            console.log(product);
-          } else if (p.status == Status.ACTIVE) {
           }
           completedList.push(p);
         } else {
           p = await this.create(product);
-          console.log(p);
+          completedList.push(p);
+        }
+      }
+      const inactive = productsInDatabase.filter(
+        (product) => completedList.indexOf(product) < 0,
+      );
+
+      if (inactive.length > 0) {
+        for (let p of inactive) {
+          p.status = Status.INACTIVE;
+          p = await this.update(p);
           completedList.push(p);
         }
       }
 
-      //this.writeToFile(completedList);
+      return completedList;
     } catch (err) {
       throw err;
     }

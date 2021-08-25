@@ -1,5 +1,8 @@
-import { Controller, Get, Query, HttpException } from '@nestjs/common';
+import { Controller, Get, Query, HttpException, Post } from '@nestjs/common';
 import { ScraperService } from './scraper.service';
+import { ProductModel } from '../models/product.model';
+import { ProductDTO } from './dto/product.dto';
+import { Status } from '../enums/status.enum';
 
 @Controller('scraper')
 export class ScraperController {
@@ -25,11 +28,29 @@ export class ScraperController {
         return { message: 'test done' };
       }
 
-      await this.scraperService.createFile(scrapeProducts);
+      const completedList = await this.scraperService.updateAfterScrape(
+        scrapeProducts,
+      );
       return { message: 'complete' };
     } catch (err) {
       console.log(err);
       throw new HttpException(err, err.statusCode);
+    }
+  }
+
+  @Get()
+  async getAllProducts() {
+    try {
+      const products = await this.scraperService.findAll();
+      const productsDto: ProductDTO[] = products.map((product) => ({
+        articleName: product.articleName,
+        articleNo: product.articleNo,
+        brand: product.brand,
+        status: product.status,
+      }));
+      return productsDto;
+    } catch (err) {
+      throw new HttpException(err, 404);
     }
   }
 }

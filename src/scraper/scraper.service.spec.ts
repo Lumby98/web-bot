@@ -3,6 +3,7 @@ import { ScraperService } from './scraper.service';
 import { Repository } from 'typeorm';
 import { Product } from '../infrastructure/product.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { UpdateResult } from 'typeorm';
 
 describe('ScraperService', () => {
   let service: ScraperService;
@@ -104,8 +105,9 @@ describe('ScraperService', () => {
         jest.spyOn(repo, 'create').mockImplementationOnce(() => {
           return testProduct;
         });
-        jest.spyOn(repo, 'findOne').mockImplementationOnce(() => {
-          return undefined;
+        jest.spyOn(repo, 'save').mockResolvedValueOnce(testProduct);
+        jest.spyOn(service, 'findOne').mockImplementationOnce(() => {
+          throw new Error('test error');
         });
         const expected = await service.create(testProductToCreate);
         expect(expected).toEqual(testProduct);
@@ -118,6 +120,20 @@ describe('ScraperService', () => {
           articleName: 'a',
           articleNo: 'test',
           active: 1,
+        };
+        jest.spyOn(repo, 'create').mockImplementationOnce(() => undefined);
+        expect(async () => {
+          await service.create(testProduct);
+        }).rejects.toThrow();
+      });
+
+      it('should throw an error if "product.active" is is not 1 or 0', () => {
+        const testProduct: Product = {
+          id: 'this',
+          brand: 'is',
+          articleName: 'a',
+          articleNo: 'test',
+          active: 2,
         };
         jest.spyOn(repo, 'create').mockImplementationOnce(() => undefined);
         expect(async () => {
@@ -141,7 +157,10 @@ describe('ScraperService', () => {
           articleNo: 'test',
           active: 1,
         };
-        jest.spyOn(repo, 'update').mockResolvedValueOnce(testProduct);
+        jest
+          .spyOn(repo, 'update')
+          .mockImplementationOnce(async () => await new UpdateResult());
+        jest.spyOn(repo, 'findOne').mockResolvedValueOnce(testProductUpdate);
         testProductUpdate.brand = 'is';
         expect(async () => {
           await service.update(testProductUpdate);

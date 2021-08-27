@@ -1,4 +1,10 @@
-import { Controller, Get, Query, HttpException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Query,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { ScraperService } from './scraper.service';
 import { ProductDTO } from './dto/product.dto';
 
@@ -13,7 +19,10 @@ export class ScraperController {
   ) {
     try {
       if (!username || !password) {
-        throw new HttpException('incomplete login information', 404);
+        throw new HttpException(
+          'incomplete login information',
+          HttpStatus.NOT_FOUND,
+        );
       }
       const scrapeProducts = await this.scraperService
         .scrapNeskrid(username, password)
@@ -46,7 +55,7 @@ export class ScraperController {
       }));
       return productsDto;
     } catch (err) {
-      throw new HttpException(err, 404);
+      throw new HttpException(err, err.statusCode);
     }
   }
 }

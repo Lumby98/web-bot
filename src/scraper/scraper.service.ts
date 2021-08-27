@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { ProductModel } from '../models/product.model';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from '../infrastructure/product.entity';
@@ -18,33 +18,50 @@ export class ScraperService {
    * @param productToCreate
    */
   async create(productToCreate: ProductModel): Promise<ProductModel> {
-    let check = this.findOne(
-      productToCreate.brand,
-      productToCreate.articleName,
-    ).catch(() => {
-      check = undefined;
-    });
-    if (check) {
-      throw new Error('product already exits');
+    try {
+      let check = this.findOne(
+        productToCreate.brand,
+        productToCreate.articleName,
+      ).catch((err) => {
+        check = undefined;
+      });
+      if (check) {
+        throw new HttpException('product already exists', HttpStatus.FOUND);
+      }
+      if (productToCreate.active > 1 || productToCreate.active < 0) {
+        throw new HttpException(
+          'active needs to be 1 or 0',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+      let product: Product = this.productRepository.create();
+      product.brand = productToCreate.brand;
+      product.articleName = productToCreate.articleName;
+      product.articleNo = productToCreate.articleNo;
+      product.active = productToCreate.active;
+      product = await this.productRepository.save(product);
+      return JSON.parse(JSON.stringify(product));
+    } catch (err) {
+      throw err;
     }
-    let product: Product = this.productRepository.create();
-    product.brand = productToCreate.brand;
-    product.articleName = productToCreate.articleName;
-    product.articleNo = productToCreate.articleNo;
-    product.active = productToCreate.active;
-    product = await this.productRepository.save(product);
-    return JSON.parse(JSON.stringify(product));
   }
 
   /**
    * finds all the products in the database
    */
   async findAll(): Promise<ProductModel[]> {
-    const productE: Product[] = await this.productRepository.find();
-    if (productE) {
-      return JSON.parse(JSON.stringify(productE));
-    } else {
-      throw new Error('could not find any products');
+    try {
+      const productE: Product[] = await this.productRepository.find();
+      if (productE) {
+        return JSON.parse(JSON.stringify(productE));
+      } else {
+        throw new HttpException(
+          'could not find any products',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+    } catch (err) {
+      throw err;
     }
   }
 
@@ -54,15 +71,22 @@ export class ScraperService {
    * @param brand
    */
   async findOne(brand: string, articleName: string): Promise<ProductModel> {
-    const product: Product = await this.productRepository.findOne({
-      brand: brand,
-      articleName: articleName,
-    });
+    try {
+      const product: Product = await this.productRepository.findOne({
+        brand: brand,
+        articleName: articleName,
+      });
 
-    if (product) {
-      return JSON.parse(JSON.stringify(product));
-    } else {
-      throw new Error('could not find the product');
+      if (product) {
+        return JSON.parse(JSON.stringify(product));
+      } else {
+        throw new HttpException(
+          'could not find the product',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+    } catch (err) {
+      throw err;
     }
   }
 
@@ -71,26 +95,36 @@ export class ScraperService {
    * @param productToUpdate
    */
   async update(productToUpdate: ProductModel): Promise<ProductModel> {
-    const productTU: Product = await this.productRepository.findOne({
-      brand: productToUpdate.brand,
-      articleName: productToUpdate.articleName,
-    });
-    if (productTU) {
-      await this.productRepository.update(
-        { id: productTU.id },
-        productToUpdate,
-      );
-      const updatedProduct = await this.productRepository.findOne({
+    try {
+      const productTU: Product = await this.productRepository.findOne({
+        brand: productToUpdate.brand,
         articleName: productToUpdate.articleName,
       });
+      if (productTU) {
+        await this.productRepository.update(
+          { id: productTU.id },
+          productToUpdate,
+        );
+        const updatedProduct = await this.productRepository.findOne({
+          articleName: productToUpdate.articleName,
+        });
 
-      if (updatedProduct) {
-        return JSON.parse(JSON.stringify(updatedProduct));
+        if (updatedProduct) {
+          return JSON.parse(JSON.stringify(updatedProduct));
+        } else {
+          throw new HttpException(
+            'This product was not updated',
+            HttpStatus.BAD_REQUEST,
+          );
+        }
       } else {
-        throw new Error('This product was not updated');
+        throw new HttpException(
+          'this product does not exist',
+          HttpStatus.BAD_REQUEST,
+        );
       }
-    } else {
-      throw new Error('this product does not exist');
+    } catch (err) {
+      throw err;
     }
   }
 
@@ -115,10 +149,11 @@ export class ScraperService {
       const page = await browser.newPage();
 
       // navigates to the web page (Neskrid)
-      await page.goto('https://www.neskrid.com/').catch((err) => {
-        err.message = 'could not reach Neskrid';
-        err.statusCode = 504;
-        throw new Error(err);
+      await page.goto('https://www.neskrid.com/').catch(() => {
+        throw new HttpException(
+          'could not reach Neskrid',
+          HttpStatus.GATEWAY_TIMEOUT,
+        );
       });
 
       await page.waitForSelector(
@@ -130,38 +165,43 @@ export class ScraperService {
         .click(
           '#modallanguages > div > div > div.modal-body.text-center > ul > li:nth-child(1) > a',
         )
-        .catch((err) => {
-          err.message = 'could not find selector for language selection';
-          err.statusCode = 504;
-          throw new Error(err);
+        .catch(() => {
+          throw new HttpException(
+            'could not find selector for language selection',
+            HttpStatus.GATEWAY_TIMEOUT,
+          );
         });
 
       //navigate to login
-      await page.waitForSelector('.last a').catch((err) => {
-        err.message = 'could not find selector for login button';
-        err.statusCode = 504;
-        throw new Error(err);
+      await page.waitForSelector('.last a').catch(() => {
+        throw new HttpException(
+          'could not find selector for login button',
+          HttpStatus.GATEWAY_TIMEOUT,
+        );
       });
       await page.click('.last a');
 
       //login
-      await page.waitForSelector('#gebruikerscode').catch((err) => {
-        err.message = 'could not find selector for input field for username';
-        err.statusCode = 504;
-        throw new Error(err);
+      await page.waitForSelector('#gebruikerscode').catch(() => {
+        throw new HttpException(
+          'could not find selector for input field for username',
+          HttpStatus.GATEWAY_TIMEOUT,
+        );
       });
 
       await page.type('#gebruikerscode', username);
-      await page.type('#gebruikerspass', password).catch((err) => {
-        err.message = 'could not find selector for input field for password';
-        err.statusCode = 504;
-        throw new Error(err);
+      await page.type('#gebruikerspass', password).catch(() => {
+        throw new HttpException(
+          'could not find selector for input field for password',
+          HttpStatus.GATEWAY_TIMEOUT,
+        );
       });
 
-      await page.click('.login-form button').catch((err) => {
-        err.message = 'could not find selector for login button';
-        err.statusCode = 504;
-        throw new Error(err);
+      await page.click('.login-form button').catch(() => {
+        throw new HttpException(
+          'could not find selector for login button',
+          HttpStatus.GATEWAY_TIMEOUT,
+        );
       });
       await page.waitForTimeout(5000);
 
@@ -171,12 +211,12 @@ export class ScraperService {
           '.ms-hero-bg-royal',
           { timeout: 5000 }, //waits a maximum of 5 seconds after pressing login
         )
-        .catch((err) => {
+        .catch(() => {
           //if there is a timeout, it is assumed that the username or password is incorrect
-          err.message =
-            'failed to login username or password might be incorrect';
-          err.statusCode = 504;
-          throw new Error(err);
+          throw new HttpException(
+            'failed to login username or password might be incorrect',
+            HttpStatus.GATEWAY_TIMEOUT,
+          );
         });
 
       await page.click(
@@ -291,6 +331,7 @@ export class ScraperService {
           completedList.push();
         }
       }
+
       return completedList;
     } catch (err) {
       throw err;

@@ -142,7 +142,7 @@ describe('ScraperService', () => {
       });
     });
     describe('update', () => {
-      it('should update a product', () => {
+      it('should update a product', async () => {
         const testProductUpdate: Product = {
           id: 'this',
           brand: 'test',
@@ -162,9 +162,7 @@ describe('ScraperService', () => {
           .mockImplementationOnce(async () => await new UpdateResult());
         jest.spyOn(repo, 'findOne').mockResolvedValueOnce(testProductUpdate);
         testProductUpdate.brand = 'is';
-        expect(async () => {
-          await service.update(testProductUpdate);
-        }).toEqual(testProduct);
+        expect(await service.update(testProductUpdate)).toEqual(testProduct);
       });
       it('should throw an error if product could not be updated', () => {
         const testProduct: Product = {

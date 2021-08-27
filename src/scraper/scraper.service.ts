@@ -22,9 +22,10 @@ export class ScraperService {
       let check = this.findOne(
         productToCreate.brand,
         productToCreate.articleName,
-      ).catch((err) => {
+      ).catch(() => {
         check = undefined;
       });
+
       if (check) {
         throw new HttpException('product already exists', HttpStatus.FOUND);
       }

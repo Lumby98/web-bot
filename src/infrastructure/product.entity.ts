@@ -1,5 +1,4 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-import { Status } from '../enums/status.enum';
 
 @Entity()
 export class Product {
@@ -15,6 +14,7 @@ export class Product {
   @Column()
   public articleNo: string;
 
-  @Column({ type: 'enum', enum: Status, default: Status.NEW })
-  public status: Status;
+  // true = active = 1 | false = inactive = 0
+  @Column({ type: 'bit' })
+  public active: number;
 }

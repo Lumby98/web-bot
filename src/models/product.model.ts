@@ -1,8 +1,6 @@
-import { Status } from '../enums/status.enum';
-
 export interface ProductModel {
+  brand: string;
   articleName: string;
   articleNo: string;
-  brand: string;
-  status?: Status;
+  active: number;
 }

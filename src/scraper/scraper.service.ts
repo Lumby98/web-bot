@@ -3,12 +3,10 @@ import { ProductModel } from '../models/product.model';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from '../infrastructure/product.entity';
 import { Repository } from 'typeorm';
-import { Status } from '../enums/status.enum';
 
 @Injectable()
 export class ScraperService {
   puppeteer = require('puppeteer');
-  fs = require('fs');
 
   constructor(
     @InjectRepository(Product)
@@ -20,11 +18,20 @@ export class ScraperService {
    * @param productToCreate
    */
   async create(productToCreate: ProductModel): Promise<ProductModel> {
+    let check = this.findOne(
+      productToCreate.brand,
+      productToCreate.articleName,
+    ).catch(() => {
+      check = undefined;
+    });
+    if (check) {
+      throw new Error('product already exits');
+    }
     let product: Product = this.productRepository.create();
     product.brand = productToCreate.brand;
     product.articleName = productToCreate.articleName;
     product.articleNo = productToCreate.articleNo;
-    product.status = Status.NEW;
+    product.active = productToCreate.active;
     product = await this.productRepository.save(product);
     return JSON.parse(JSON.stringify(product));
   }
@@ -229,8 +236,8 @@ export class ScraperService {
             brand: brand,
             articleName: articleName,
             articleNo: articleNo,
+            active: 1,
           };
-          console.log(product);
           products.push(product);
         }
       }
@@ -249,36 +256,6 @@ export class ScraperService {
   }
 
   /**
-   * takes an array of products and writes it to a csv file
-   */
-  public async writeToFile() {
-    const products = await this.findAll();
-    //sorts the list by brand
-    products.sort((obj1, obj2) => (obj1.brand < obj2.brand ? -1 : 1));
-    //creates file
-    const file = this.fs.createWriteStream('testScrap.csv', 'utf-8');
-    file.on('error', function (err) {
-      throw err;
-    });
-
-    //writes each product in the list to file
-    products.forEach((productModel) => {
-      file.write(
-        productModel.brand +
-          ';' +
-          productModel.articleName +
-          ';' +
-          productModel.articleNo +
-          ';' +
-          productModel.status.toString() +
-          '\n',
-      );
-    });
-
-    file.end();
-  }
-
-  /**
    * takes a list of products and sets there status, afterword calls writeFile() to create an .csv file
    * @param products = []
    */
@@ -286,45 +263,34 @@ export class ScraperService {
     products: ProductModel[],
   ): Promise<ProductModel[]> {
     const completedList: ProductModel[] = [];
-    const productsInDatabase = await this.findAll();
     try {
+      const productsInDatabase = await this.findAll();
+
       for (const product of products) {
         let p: ProductModel;
-        p = await this.findOne(product.brand, product.articleName).catch(
-          () =>
-            (p = {
-              brand: 'placeholder',
-              articleName: 'placeholder',
-              articleNo: 'placeholder',
-            }),
+        p = productsInDatabase.find(
+          (x) =>
+            x.brand === product.brand && x.articleName === product.articleName,
         );
-
-        if (p.brand !== 'placeholder') {
-          if (p.status == Status.NEW) {
-            product.status = Status.ACTIVE;
-            await this.update(product);
-          } else if (p.status == Status.INACTIVE) {
-            product.status = Status.ACTIVE;
-            await this.update(product);
+        if (p) {
+          if (product.active == 1 && p.active == 1) {
+            completedList.push(p);
+          } else if (product.active == 0 && p.active == 0) {
+            completedList.push(p);
+          } else if (product.active == 1 && p.active == 0) {
+            p.active = 1;
+            p = await this.update(p);
+            completedList.push(p);
+          } else {
+            p.active = 0;
+            p = await this.update(p);
+            completedList.push(p);
           }
-          completedList.push(p);
         } else {
           p = await this.create(product);
-          completedList.push(p);
+          completedList.push();
         }
       }
-      const inactive = productsInDatabase.filter(
-        (product) => completedList.indexOf(product) < 0,
-      );
-
-      if (inactive.length > 0) {
-        for (let p of inactive) {
-          p.status = Status.INACTIVE;
-          p = await this.update(p);
-          completedList.push(p);
-        }
-      }
-
       return completedList;
     } catch (err) {
       throw err;

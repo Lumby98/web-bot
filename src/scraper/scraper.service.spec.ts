@@ -106,12 +106,9 @@ describe('ScraperService', () => {
           return testProduct;
         });
         jest.spyOn(repo, 'save').mockResolvedValueOnce(testProduct);
-        jest.spyOn(service, 'findOne').mockImplementationOnce(() => {
-          throw new Error('test error');
-        });
+        jest.spyOn(repo, 'findOne').mockResolvedValueOnce(undefined);
         const expected = await service.create(testProductToCreate);
         expect(expected).toEqual(testProduct);
-        expect(repo.create).toHaveBeenCalledWith(testProductToCreate);
       });
       it('should throw an error if product could not be created', () => {
         const testProduct: Product = {
@@ -162,6 +159,7 @@ describe('ScraperService', () => {
           .mockImplementationOnce(async () => await new UpdateResult());
         jest.spyOn(repo, 'findOne').mockResolvedValueOnce(testProductUpdate);
         testProductUpdate.brand = 'is';
+        jest.spyOn(repo, 'findOne').mockResolvedValueOnce(testProduct);
         expect(await service.update(testProductUpdate)).toEqual(testProduct);
       });
       it('should throw an error if product could not be updated', () => {

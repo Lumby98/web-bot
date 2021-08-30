@@ -19,14 +19,12 @@ export class ScraperService {
    */
   async create(productToCreate: ProductModel): Promise<ProductModel> {
     try {
-      let check = this.findOne(
-        productToCreate.brand,
-        productToCreate.articleName,
-      ).catch(() => {
-        check = undefined;
+      const check = await this.productRepository.findOne({
+        brand: productToCreate.brand,
+        articleName: productToCreate.articleName,
       });
 
-      if (check) {
+      if (check != undefined) {
         throw new HttpException('product already exists', HttpStatus.FOUND);
       }
       if (productToCreate.active > 1 || productToCreate.active < 0) {

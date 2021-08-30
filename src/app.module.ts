@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { DatabaseModule } from './infrastructure/database.module';
-import { ScraperModule } from './scraper/scraper.module';
-import { UserModule } from './user/user.module';
-import { AuthenticationService } from './authentication/authentication.service';
+import { ScraperModule } from './api/modules/scraper.module';
+import { UserModule } from './api/modules/user.module';
+import { AuthenticationService } from './core/service/authentication.service';
 import * as Joi from '@hapi/joi';
 
 @Module({

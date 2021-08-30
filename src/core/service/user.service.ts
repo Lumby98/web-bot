@@ -1,8 +1,8 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { CreateUserDto } from '../../api/dto/user/create-user.dto';
+import { UpdateUserDto } from '../../api/dto/user/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { User } from '../infrastructure/entities/user.entity';
+import { User } from '../../infrastructure/entities/user.entity';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -55,18 +55,45 @@ export class UserService {
     }
   }
 
-  update(username: string, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${username} user`;
+  async update(username: string, updateUserDto: UpdateUserDto) {
+    try {
+      const userTU: User = await this.userRepository.findOne({
+        username: username,
+      });
+
+      if (userTU) {
+        await this.userRepository.update({ id: userTU.id }, updateUserDto);
+        const updatedProduct = await this.userRepository.findOne({
+          username: updateUserDto.username,
+        });
+        if (updatedProduct) {
+          updatedProduct.password = undefined;
+          return updatedProduct;
+        }
+      }
+      throw new HttpException(
+        'The user was not updated',
+        HttpStatus.BAD_REQUEST,
+      );
+    } catch (err) {
+      throw err;
+    }
   }
 
   async remove(username: string) {
     try {
-      const deleteUser = await this.userRepository.findOne({
+      const userToDelete = await this.userRepository.findOne({
         username: username,
       });
-      if (deleteUser) {
-        await this.userRepository.delete(deleteUser);
-        return true;
+      if (userToDelete) {
+        await this.userRepository.remove(userToDelete);
+
+        const deletedUser = await this.userRepository.findOne({
+          username: username,
+        });
+        if (!deletedUser) {
+          return true;
+        }
       }
       throw new HttpException(
         'could not find user to delete',

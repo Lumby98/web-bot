@@ -7,12 +7,12 @@ import {
   Res,
   UseGuards
 } from "@nestjs/common";
-import { AuthenticationService } from './authentication.service';
-import { RegisterDto } from './register.dto';
-import { LocalAuthenticationGuard } from './localAuthentication.guard';
-import { RequestWithUser } from './requestWithUser.interface';
+import { AuthenticationService } from '../../core/service/authentication.service';
+import { RegisterDto } from '../dto/authentication/register.dto';
+import { LocalAuthenticationGuard } from '../guard/localAuthentication.guard';
+import { RequestWithUser } from '../../authentication/interface/requestWithUser.interface';
 import { Response } from 'express';
-import { jwtAuthenticationGuard } from './jwt-authentication.guard';
+import { jwtAuthenticationGuard } from '../guard/jwt-authentication.guard';
 
 @Controller('authentication')
 export class AuthenticationController {

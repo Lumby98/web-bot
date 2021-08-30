@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
-import { ScraperService } from './scraper.service';
-import { ScraperController } from './scraper.controller';
+import { ScraperService } from '../../core/service/scraper.service';
+import { ScraperController } from '../controllers/scraper.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Product } from '../infrastructure/entities/product.entity';
+import { Product } from '../../infrastructure/entities/product.entity';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Product])],

@@ -1,17 +1,16 @@
-import { UserService } from '../user/user.service';
-import { RegisterDto } from './register.dto';
+import { UserService } from './user.service';
+import { RegisterDto } from '../../api/dto/authentication/register.dto';
 import * as bcrypt from 'bcrypt';
 import { HttpException, HttpStatus } from '@nestjs/common';
-import { AST } from "eslint";
-import Token = AST.Token;
-import { JwtService } from "@nestjs/jwt";
-import { ConfigService } from "@nestjs/config";
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 
 export class AuthenticationService {
   constructor(
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
-    private readonly configService: ConfigService) {}
+    private readonly configService: ConfigService,
+  ) {}
 
   public async register(registrationData: RegisterDto) {
     const hashedPassword = await bcrypt.hash(registrationData.password, 10);

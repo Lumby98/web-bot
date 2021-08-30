@@ -5,8 +5,8 @@ import {
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
-import { ScraperService } from './scraper.service';
-import { ProductDTO } from './dto/product.dto';
+import { ScraperService } from '../../core/service/scraper.service';
+import { ProductDTO } from '../dto/product/product.dto';
 
 @Controller('scraper')
 export class ScraperController {

@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ScraperService } from './scraper.service';
+import { ScraperService } from '../scraper.service';
 import { Repository } from 'typeorm';
-import { Product } from '../infrastructure/entities/product.entity';
+import { Product } from '../../../infrastructure/entities/product.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { UpdateResult } from 'typeorm';
 
@@ -160,7 +160,7 @@ describe('ScraperService', () => {
         jest.spyOn(repo, 'findOne').mockResolvedValueOnce(testProductUpdate);
         testProductUpdate.brand = 'is';
         jest.spyOn(repo, 'findOne').mockResolvedValueOnce(testProduct);
-        expect(await service.update(testProductUpdate)).toEqual(testProduct);
+        expect(await service.update(testProduct)).toEqual(testProduct);
       });
       it('should throw an error if product could not be updated', () => {
         const testProduct: Product = {

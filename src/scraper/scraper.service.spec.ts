@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ScraperService } from './scraper.service';
 import { Repository } from 'typeorm';
-import { Product } from '../infrastructure/product.entity';
+import { Product } from '../infrastructure/entities/product.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { UpdateResult } from 'typeorm';
 

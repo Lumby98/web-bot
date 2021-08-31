@@ -1,12 +1,13 @@
 import {
   Body,
-  Controller, Get,
+  Controller,
+  Get,
   HttpCode,
   Post,
   Req,
   Res,
-  UseGuards
-} from "@nestjs/common";
+  UseGuards,
+} from '@nestjs/common';
 import { AuthenticationService } from '../../core/service/authentication.service';
 import { RegisterDto } from '../dto/authentication/register.dto';
 import { LocalAuthenticationGuard } from '../guard/localAuthentication.guard';
@@ -19,8 +20,12 @@ export class AuthenticationController {
   constructor(private readonly authenticationService: AuthenticationService) {}
 
   @Post('register')
-  async register(@Body() registationData: RegisterDto) {
-    return this.authenticationService.register(registationData);
+  async register(@Body() registrationData: RegisterDto) {
+    return this.authenticationService
+      .register(registrationData)
+      .catch((err) => {
+        throw err;
+      });
   }
 
   @HttpCode(200)

@@ -5,6 +5,7 @@ import { ScraperModule } from './api/modules/scraper.module';
 import { UserModule } from './api/modules/user.module';
 import { AuthenticationService } from './core/service/authentication.service';
 import * as Joi from '@hapi/joi';
+import { AuthenticationModule } from './api/modules/authentication.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import * as Joi from '@hapi/joi';
     DatabaseModule,
     ScraperModule,
     UserModule,
+    AuthenticationModule,
   ],
   controllers: [],
   providers: [AuthenticationService],

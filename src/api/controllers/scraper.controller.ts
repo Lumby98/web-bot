@@ -4,15 +4,18 @@ import {
   Query,
   HttpException,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import { ScraperService } from '../../core/service/scraper.service';
 import { ProductDTO } from '../dto/product/product.dto';
+import { jwtAuthenticationGuard } from '../guard/jwt-authentication.guard';
 
 @Controller('scraper')
 export class ScraperController {
   constructor(private readonly scraperService: ScraperService) {}
 
   @Get('scrap')
+  //@UseGuards(jwtAuthenticationGuard)
   async scrap(
     @Query('username') username: string,
     @Query('password') password: string,

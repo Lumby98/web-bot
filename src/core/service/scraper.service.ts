@@ -277,6 +277,7 @@ export class ScraperService {
             articleNo: articleNo,
             active: 1,
           };
+          console.log(product);
           products.push(product);
         }
       }
@@ -326,8 +327,10 @@ export class ScraperService {
             completedList.push(p);
           }
         } else {
-          p = await this.create(product);
-          completedList.push();
+          p = await this.create(product).catch(() => (p = undefined));
+          if (p) {
+            completedList.push(p);
+          }
         }
       }
 

@@ -4,6 +4,7 @@ import * as bcrypt from 'bcrypt';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { CreateUserDto } from '../../api/dto/user/create-user.dto';
 
 export class AuthenticationService {
   constructor(
@@ -13,12 +14,16 @@ export class AuthenticationService {
   ) {}
 
   public async register(registrationData: RegisterDto) {
-    const hashedPassword = await bcrypt.hash(registrationData.password, 10);
     try {
-      const createdUser = await this.userService.create({
-        ...registrationData,
+      console.log(registrationData);
+      const hashedPassword = await bcrypt.hash(registrationData.password, 10);
+      const userDto: CreateUserDto = {
+        username: registrationData.username,
         password: hashedPassword,
-      });
+        admin: registrationData.admin,
+      };
+      console.log(userDto);
+      const createdUser = await this.userService.create(userDto);
       createdUser.password = undefined;
       return createdUser;
     } catch (err) {

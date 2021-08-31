@@ -1,11 +1,12 @@
 import { UserService } from './user.service';
 import { RegisterDto } from '../../api/dto/authentication/register.dto';
 import * as bcrypt from 'bcrypt';
-import { HttpException, HttpStatus } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { CreateUserDto } from '../../api/dto/user/create-user.dto';
 
+@Injectable()
 export class AuthenticationService {
   constructor(
     private readonly userService: UserService,

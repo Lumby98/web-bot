@@ -34,15 +34,19 @@ export class AuthenticationController {
   @UseGuards(LocalAuthenticationGuard)
   @Post('log-in')
   async logIn(@Req() request: RequestWithUser, @Res() response: Response) {
-    const { user } = request;
-    const dto: UserDto = {
-      id: user.id,
-      username: user.username,
-      admin: user.admin,
-    };
-    const cookie = this.authenticationService.getCookieWithJwtToken(user.id);
-    response.setHeader('Set-Cookie', cookie);
-    return response.send(dto);
+    try {
+      const { user } = request;
+      const dto: UserDto = {
+        id: user.id,
+        username: user.username,
+        admin: user.admin,
+      };
+      const cookie = this.authenticationService.getCookieWithJwtToken(user.id);
+      response.setHeader('Set-Cookie', cookie);
+      return response.send(dto);
+    } catch (err) {
+      throw new Error(err.message);
+    }
   }
 
   @UseGuards(jwtAuthenticationGuard)

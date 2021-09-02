@@ -5,6 +5,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { CreateUserDto } from '../../api/dto/user/create-user.dto';
+import { UserDto } from '../../api/dto/user/user.dto';
 
 @Injectable()
 export class AuthenticationService {
@@ -14,19 +15,16 @@ export class AuthenticationService {
     private readonly configService: ConfigService,
   ) {}
 
-  public async register(registrationData: RegisterDto) {
+  public async register(registrationData: RegisterDto): Promise<UserDto> {
     try {
-      console.log(registrationData);
       const hashedPassword = await bcrypt.hash(registrationData.password, 10);
       const userDto: CreateUserDto = {
         username: registrationData.username,
         password: hashedPassword,
         admin: registrationData.admin,
       };
-      console.log(userDto);
       const createdUser = await this.userService.create(userDto);
-      createdUser.password = undefined;
-      return createdUser;
+      return JSON.parse(JSON.stringify(createdUser));
     } catch (err) {
       throw err;
     }
@@ -35,12 +33,11 @@ export class AuthenticationService {
   public async getAuthenticatedUser(
     username: string,
     plainTextPassword: string,
-  ) {
+  ): Promise<UserDto> {
     try {
       const user = await this.userService.getByUsername(username);
       await this.verifyPassword(plainTextPassword, user.password);
-      user.password = undefined;
-      return user;
+      return JSON.parse(JSON.stringify(user));
     } catch (err) {
       throw new HttpException(
         'Wrong credentials provided',
@@ -71,10 +68,10 @@ export class AuthenticationService {
     const token = this.jwtService.sign(payload);
     return `Authentication=${token}; HttpOnly; Path=/; Max-Age=${this.configService.get(
       'JWT_EXPIRATION_TIME',
-    )}`;
+    )};`;
   }
 
-  public getCokkieForLogOut() {
+  public getCookieForLogOut() {
     return `Authentication=; HttpOnly; Path=/; Max-Age=0`;
   }
 }

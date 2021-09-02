@@ -4,6 +4,7 @@ import { UpdateUserDto } from '../../api/dto/user/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '../../infrastructure/entities/user.entity';
 import { Repository } from 'typeorm';
+import { UserModel } from '../models/user.model';
 
 @Injectable()
 export class UserService {
@@ -12,24 +13,24 @@ export class UserService {
     private userRepository: Repository<User>,
   ) {}
 
-  async create(createUserDto: CreateUserDto) {
+  async create(createUserDto: CreateUserDto): Promise<UserModel> {
     try {
       if (createUserDto.admin < 0 || createUserDto.admin > 1) {
         throw Error();
       }
       const newUser = await this.userRepository.create(createUserDto);
       await this.userRepository.save(newUser);
-      return newUser;
+      return JSON.parse(JSON.stringify(newUser));
     } catch (err) {
       throw new HttpException('could not create user', HttpStatus.BAD_REQUEST);
     }
   }
 
-  async getByUsername(username: string) {
+  async getByUsername(username: string): Promise<UserModel> {
     try {
       const user = await this.userRepository.findOne({ username });
       if (user) {
-        return user;
+        return JSON.parse(JSON.stringify(user));
       }
       throw new HttpException(
         'User with this username does not exist',
@@ -40,11 +41,11 @@ export class UserService {
     }
   }
 
-  async getById(id: number) {
+  async getById(id: number): Promise<UserModel> {
     try {
       const user = await this.userRepository.findOne({ id });
       if (user) {
-        return user;
+        return JSON.parse(JSON.stringify(user));
       }
       throw new HttpException(
         'User with this id does not exist',
@@ -55,7 +56,10 @@ export class UserService {
     }
   }
 
-  async update(username: string, updateUserDto: UpdateUserDto) {
+  async update(
+    username: string,
+    updateUserDto: UpdateUserDto,
+  ): Promise<UserModel> {
     try {
       const userTU: User = await this.userRepository.findOne({
         username: username,
@@ -63,12 +67,12 @@ export class UserService {
 
       if (userTU) {
         await this.userRepository.update({ id: userTU.id }, updateUserDto);
-        const updatedProduct = await this.userRepository.findOne({
+        const updatedUser = await this.userRepository.findOne({
           username: updateUserDto.username,
         });
-        if (updatedProduct) {
-          updatedProduct.password = undefined;
-          return updatedProduct;
+        if (updatedUser) {
+          updatedUser.password = undefined;
+          return JSON.parse(JSON.stringify(updatedUser));
         }
       }
       throw new HttpException(

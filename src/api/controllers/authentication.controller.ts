@@ -14,11 +14,13 @@ import { LocalAuthenticationGuard } from '../guard/localAuthentication.guard';
 import { RequestWithUser } from '../../authentication/interface/requestWithUser.interface';
 import { Response } from 'express';
 import { jwtAuthenticationGuard } from '../guard/jwt-authentication.guard';
+import { UserDto } from '../dto/user/user.dto';
 
 @Controller('authentication')
 export class AuthenticationController {
   constructor(private readonly authenticationService: AuthenticationService) {}
 
+  @UseGuards(jwtAuthenticationGuard)
   @Post('register')
   async register(@Body() registrationData: RegisterDto) {
     return this.authenticationService
@@ -33,10 +35,15 @@ export class AuthenticationController {
   @Post('log-in')
   async logIn(@Req() request: RequestWithUser, @Res() response: Response) {
     const { user } = request;
+    console.log(user);
     const cookie = this.authenticationService.getCookieWithJwtToken(user.id);
     response.setHeader('Set-Cookie', cookie);
-    user.password = undefined;
-    return response.send(user);
+    const dto: UserDto = {
+      id: user.id,
+      username: user.username,
+      admin: user.admin,
+    };
+    return response.send(dto);
   }
 
   @UseGuards(jwtAuthenticationGuard)
@@ -44,7 +51,7 @@ export class AuthenticationController {
   async logOut(@Req() request: RequestWithUser, @Res() response: Response) {
     response.setHeader(
       'set-Cookie',
-      this.authenticationService.getCokkieForLogOut(),
+      this.authenticationService.getCookieForLogOut(),
     );
     return response.sendStatus(200);
   }
@@ -53,7 +60,12 @@ export class AuthenticationController {
   @Get()
   authenticate(@Req() request: RequestWithUser) {
     const user = request.user;
-    user.password = undefined;
-    return user;
+    const dto: UserDto = {
+      id: user.id,
+      username: user.username,
+      admin: user.admin,
+    };
+    console.log(dto);
+    return dto;
   }
 }

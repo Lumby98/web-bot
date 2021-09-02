@@ -1,34 +1,34 @@
 import {
   Controller,
   Get,
-  Query,
   HttpException,
   HttpStatus,
   UseGuards,
+  Body,
+  Post,
 } from '@nestjs/common';
 import { ScraperService } from '../../core/service/scraper.service';
 import { ProductDTO } from '../dto/product/product.dto';
 import { jwtAuthenticationGuard } from '../guard/jwt-authentication.guard';
+import { LoginDto } from '../dto/user/login.dto';
+import { log } from 'util';
 
 @Controller('scraper')
 export class ScraperController {
   constructor(private readonly scraperService: ScraperService) {}
 
-  @Get('scrap')
-  //@UseGuards(jwtAuthenticationGuard)
-  async scrap(
-    @Query('username') username: string,
-    @Query('password') password: string,
-  ) {
+  @Post('scrape')
+  @UseGuards(jwtAuthenticationGuard)
+  async scrap(@Body() loginDto: LoginDto) {
     try {
-      if (!username || !password) {
+      if (!loginDto.username || !loginDto.password) {
         throw new HttpException(
           'incomplete login information',
           HttpStatus.NOT_FOUND,
         );
       }
       const scrapeProducts = await this.scraperService
-        .scrapNeskrid(username, password)
+        .scrapNeskrid(loginDto.username, loginDto.password)
         .catch((err) => {
           throw err;
         });
@@ -46,6 +46,7 @@ export class ScraperController {
     }
   }
 
+  @UseGuards(jwtAuthenticationGuard)
   @Get()
   async getAllProducts() {
     try {

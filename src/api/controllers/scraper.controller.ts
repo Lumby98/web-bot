@@ -11,7 +11,6 @@ import { ScraperService } from '../../core/service/scraper.service';
 import { ProductDTO } from '../dto/product/product.dto';
 import { jwtAuthenticationGuard } from '../guard/jwt-authentication.guard';
 import { LoginDto } from '../dto/user/login.dto';
-import { log } from 'util';
 
 @Controller('scraper')
 export class ScraperController {

@@ -10,8 +10,8 @@ async function bootstrap() {
   app.enableCors({
     origin: configService.get('ORIGIN'),
     credentials: true,
-    allowedHeaders: 'Content-Type ,Authentication, Set-Cookie',
-    exposedHeaders: 'Set-Cookie, Content-Type ,Authentication',
+    allowedHeaders: 'Content-Type ,Authentication, Set-Cookie, timeout',
+    exposedHeaders: 'Set-Cookie, Content-Type ,Authentication, timeout',
   });
   await app.listen(configService.get('PORT'));
 }

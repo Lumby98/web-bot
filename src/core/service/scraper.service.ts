@@ -202,7 +202,7 @@ export class ScraperService {
           HttpStatus.GATEWAY_TIMEOUT,
         );
       });
-      await page.waitForTimeout(5000);
+      await page.waitForTimeout(2000);
 
       //navigate to scraping content
       await page
@@ -242,11 +242,10 @@ export class ScraperService {
         //opens dropdown menu
         await page.waitForSelector('.searchable-select-holder');
         await page.click('.searchable-select-holder');
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(500);
 
         //clicks the next item in the list
         await page.type('.searchable-select-input', brand);
-        await page.waitForTimeout(500);
         await page.keyboard.press('Enter');
 
         //gets the article names for the current brand

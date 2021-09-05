@@ -41,6 +41,18 @@ export class UserService {
     }
   }
 
+  async findAll(): Promise<UserModel[]> {
+    try {
+      const users = await this.userRepository.find();
+      if (users) {
+        return JSON.parse(JSON.stringify(users));
+      }
+      throw new HttpException('Could not retrive users', HttpStatus.NOT_FOUND);
+    } catch (err) {
+      throw err;
+    }
+  }
+
   async getById(id: number): Promise<UserModel> {
     try {
       const user = await this.userRepository.findOne({ id });

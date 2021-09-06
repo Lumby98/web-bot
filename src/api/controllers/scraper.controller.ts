@@ -10,7 +10,7 @@ import {
 import { ScraperService } from '../../core/service/scraper.service';
 import { ProductDTO } from '../dto/product/product.dto';
 import { jwtAuthenticationGuard } from '../guard/jwt-authentication.guard';
-import { LoginDto } from '../dto/user/login.dto';
+import { ScrapeDto } from '../dto/scrape/scrape.dto';
 
 @Controller('scraper')
 export class ScraperController {
@@ -18,19 +18,38 @@ export class ScraperController {
 
   @Post('scrape')
   @UseGuards(jwtAuthenticationGuard)
-  async scrap(@Body() loginDto: LoginDto) {
+  async scrap(@Body() scraping: ScrapeDto) {
     try {
-      if (!loginDto.username || !loginDto.password) {
+      if (!scraping.username || !scraping.password) {
         throw new HttpException(
           'incomplete login information',
           HttpStatus.NOT_FOUND,
         );
       }
-      const scrapeProducts = await this.scraperService
-        .scrapNeskrid(loginDto.username, loginDto.password)
-        .catch((err) => {
-          throw err;
-        });
+      let scrapeProducts;
+      switch (scraping.website) {
+        case 'Neskrid': {
+          scrapeProducts = await this.scraperService
+            .scrapNeskrid(scraping.username, scraping.password)
+            .catch((err) => {
+              throw err;
+            });
+          break;
+        }
+        case 'Hultafors': {
+          scrapeProducts = await this.scraperService.scrapeHultafors(
+            scraping.username,
+            scraping.password,
+          );
+          return 'found Hultafors';
+        }
+        default: {
+          throw new HttpException(
+            'Website could not be found',
+            HttpStatus.NOT_FOUND,
+          );
+        }
+      }
 
       //for testing connection (delete later)
       if (scrapeProducts.length == 0) {

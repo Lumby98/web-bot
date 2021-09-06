@@ -2,10 +2,10 @@ import { Module } from '@nestjs/common';
 import { ScraperService } from '../../core/service/scraper.service';
 import { ScraperController } from '../controllers/scraper.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Product } from '../../infrastructure/entities/product.entity';
+import { NeskridProduct } from '../../infrastructure/entities/neskrid.product.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Product])],
+  imports: [TypeOrmModule.forFeature([NeskridProduct])],
   controllers: [ScraperController],
   providers: [ScraperService],
 })

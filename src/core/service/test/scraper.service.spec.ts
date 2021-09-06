@@ -1,27 +1,27 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ScraperService } from '../scraper.service';
 import { Repository } from 'typeorm';
-import { Product } from '../../../infrastructure/entities/product.entity';
+import { NeskridProduct } from '../../../infrastructure/entities/neskrid.product.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { UpdateResult } from 'typeorm';
 
 describe('ScraperService', () => {
   let service: ScraperService;
-  let repo: Repository<Product>;
+  let repo: Repository<NeskridProduct>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ScraperService,
         {
-          provide: getRepositoryToken(Product),
+          provide: getRepositoryToken(NeskridProduct),
           useClass: Repository,
         },
       ],
     }).compile();
 
     service = module.get<ScraperService>(ScraperService);
-    repo = module.get(getRepositoryToken(Product));
+    repo = module.get(getRepositoryToken(NeskridProduct));
   });
 
   it('should be defined', () => {
@@ -30,7 +30,7 @@ describe('ScraperService', () => {
 
   describe('findAll', () => {
     it('should return a list of products', async () => {
-      const testProduct: Product[] = [
+      const testProduct: NeskridProduct[] = [
         {
           id: 'this',
           brand: 'is',
@@ -46,7 +46,7 @@ describe('ScraperService', () => {
     });
 
     it('should throw an error if there is no products in the list', async () => {
-      const test: Product[] = undefined;
+      const test: NeskridProduct[] = undefined;
       jest.spyOn(repo, 'find').mockResolvedValueOnce(test);
       await expect(service.findAll()).rejects.toThrow();
       expect(repo.find).toHaveBeenCalled();
@@ -89,7 +89,7 @@ describe('ScraperService', () => {
 
     describe('create', () => {
       it('should create a product', async () => {
-        const testProduct: Product = {
+        const testProduct: NeskridProduct = {
           id: 'this',
           brand: 'is',
           articleName: 'a',
@@ -111,7 +111,7 @@ describe('ScraperService', () => {
         expect(expected).toEqual(testProduct);
       });
       it('should throw an error if product could not be created', () => {
-        const testProduct: Product = {
+        const testProduct: NeskridProduct = {
           id: 'this',
           brand: 'is',
           articleName: 'a',
@@ -125,7 +125,7 @@ describe('ScraperService', () => {
       });
 
       it('should throw an error if "product.active" is is not 1 or 0', () => {
-        const testProduct: Product = {
+        const testProduct: NeskridProduct = {
           id: 'this',
           brand: 'is',
           articleName: 'a',
@@ -140,14 +140,14 @@ describe('ScraperService', () => {
     });
     describe('update', () => {
       it('should update a product', async () => {
-        const testProductUpdate: Product = {
+        const testProductUpdate: NeskridProduct = {
           id: 'this',
           brand: 'test',
           articleName: 'a',
           articleNo: 'test',
           active: 1,
         };
-        const testProduct: Product = {
+        const testProduct: NeskridProduct = {
           id: 'this',
           brand: 'is',
           articleName: 'a',
@@ -163,7 +163,7 @@ describe('ScraperService', () => {
         expect(await service.update(testProduct)).toEqual(testProduct);
       });
       it('should throw an error if product could not be updated', () => {
-        const testProduct: Product = {
+        const testProduct: NeskridProduct = {
           id: 'this',
           brand: 'is',
           articleName: 'a',

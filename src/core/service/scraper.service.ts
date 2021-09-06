@@ -1,16 +1,17 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { ProductModel } from '../models/product.model';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Product } from '../../infrastructure/entities/product.entity';
+import { NeskridProduct } from '../../infrastructure/entities/neskrid.product.entity';
 import { Repository } from 'typeorm';
+import { HultaforsModel } from '../models/hultafors.model';
 
 @Injectable()
 export class ScraperService {
   puppeteer = require('puppeteer');
 
   constructor(
-    @InjectRepository(Product)
-    private productRepository: Repository<Product>,
+    @InjectRepository(NeskridProduct)
+    private productRepository: Repository<NeskridProduct>,
   ) {}
 
   /**
@@ -33,7 +34,7 @@ export class ScraperService {
           HttpStatus.BAD_REQUEST,
         );
       }
-      let product: Product = this.productRepository.create();
+      let product: NeskridProduct = this.productRepository.create();
       product.brand = productToCreate.brand;
       product.articleName = productToCreate.articleName;
       product.articleNo = productToCreate.articleNo;
@@ -50,7 +51,7 @@ export class ScraperService {
    */
   async findAll(): Promise<ProductModel[]> {
     try {
-      const productE: Product[] = await this.productRepository.find();
+      const productE: NeskridProduct[] = await this.productRepository.find();
       if (productE) {
         return JSON.parse(JSON.stringify(productE));
       } else {
@@ -71,7 +72,7 @@ export class ScraperService {
    */
   async findOne(brand: string, articleName: string): Promise<ProductModel> {
     try {
-      const product: Product = await this.productRepository.findOne({
+      const product: NeskridProduct = await this.productRepository.findOne({
         brand: brand,
         articleName: articleName,
       });
@@ -95,7 +96,7 @@ export class ScraperService {
    */
   async update(productToUpdate: ProductModel): Promise<ProductModel> {
     try {
-      const productTU: Product = await this.productRepository.findOne({
+      const productTU: NeskridProduct = await this.productRepository.findOne({
         brand: productToUpdate.brand,
         articleName: productToUpdate.articleName,
       });
@@ -288,6 +289,100 @@ export class ScraperService {
       return products;
     } catch (err) {
       console.log(err.message);
+      throw err;
+    } finally {
+      await browser.close();
+    }
+  }
+
+  async scrapeHultafors(username: string, password: string): Promise<any[]> {
+    //test in place for checking connection between frontend and backend (delete later)
+    if (username == 'test' || password == 'test') {
+      return [];
+    }
+    // Launch the browser
+    const browser = await this.puppeteer.launch({ headless: false });
+
+    try {
+      // Creates a new instance of the page
+      const page = await browser.newPage();
+
+      // navigates to the web page (hultafors)
+      await page
+        .goto(
+          'https://partnerportal.hultaforsgroup.dk/user/login?ReturnUrl=%2f',
+        )
+        .catch(() => {
+          throw new HttpException(
+            'could not reach Hultafors',
+            HttpStatus.GATEWAY_TIMEOUT,
+          );
+        });
+
+      // login to site
+      await page.waitForSelector('#User_UserName');
+      await page.type('#User_UserName', username);
+      await page.type('#User_Password', password);
+      await page.click(
+        '#loginform > div > div.col-md-10.center-col > div.col-md-12.top30 > button',
+      );
+
+      //waiting for login, if login failed will thorw exception 5 sec afterward
+      await page
+        .waitForSelector(
+          'body > div.page.pt-page-index > div.header.menu.-mobile.top-bar.menu-mobile >' +
+            ' div > div.col-sm-3.col-xs-3 > section > div',
+          {
+            timeout: 5000,
+          },
+        )
+        .catch(() => {
+          throw new HttpException(
+            'failed to login username and/or password is incorrect',
+            HttpStatus.GATEWAY_TIMEOUT,
+          );
+        });
+      await page.click(
+        'body > div.page.pt-page-index > div.header.menu.-mobile.top-bar.menu-mobile >' +
+          ' div > div.col-sm-3.col-xs-3 > section > div',
+      );
+
+      //goes to products
+      await page.click(
+        'body > div.page.pt-page-index > div:nth-child(7) > div > div > div.menu >' +
+          ' div > section > div > div > div > ul > li.toggle-item.mainmenuproducts > div > a',
+      );
+      await page.waitForSelector(
+        '#searchboxform > div > div:nth-child(3) > div > div > div:nth-child(3) > a',
+      );
+      await page.click(
+        '#searchboxform > div > div:nth-child(3) > div > div > div:nth-child(3) > a',
+      );
+      await page.waitForTimeout(1000); //let's the page load
+      await page.click(
+        '#searchboxform > div > div:nth-child(4) > div > div > div >' +
+          ' div.btn-group.js-lvl-1 > button',
+      );
+      await page.waitForSelector(
+        '#searchboxform > div > div:nth-child(4) > div > div > div >' +
+          ' div.btn-group.js-lvl-1.open > ul > li:nth-child(1) > a',
+      );
+      await page.click(
+        '#searchboxform > div > div:nth-child(4) > div > div > div >' +
+          ' div.btn-group.js-lvl-1.open > ul > li:nth-child(1) > a',
+      );
+      await page.select('#PageSizeSelection', '100');
+
+      const pageCount = await page.$$eval(
+        '#productlist > div:nth-child(4) > div > div > ul > li',
+        (items) => {
+          items.map((item) => item);
+        },
+      );
+
+      console.log(pageCount);
+      return [];
+    } catch (err) {
       throw err;
     } finally {
       await browser.close();

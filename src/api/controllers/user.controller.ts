@@ -13,6 +13,7 @@ import { CreateUserDto } from '../dto/user/create-user.dto';
 import { UpdateUserDto } from '../dto/user/update-user.dto';
 import { jwtAuthenticationGuard } from '../guard/jwt-authentication.guard';
 import { UserDto } from '../dto/user/user.dto';
+import { EditUserDto } from '../dto/user/edit-user.dot';
 
 @UseGuards(jwtAuthenticationGuard)
 @Controller('user')
@@ -44,11 +45,8 @@ export class UserController {
 
   @UseGuards(jwtAuthenticationGuard)
   @Patch(':username')
-  update(
-    @Param('username') username: string,
-    @Body() updateUserDto: UpdateUserDto,
-  ) {
-    return this.userService.update(username, updateUserDto);
+  update(@Param('username') username: string, @Body() editUser: EditUserDto) {
+    return this.userService.update(username, editUser);
   }
 
   @UseGuards(jwtAuthenticationGuard)

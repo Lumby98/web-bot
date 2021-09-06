@@ -5,6 +5,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '../../infrastructure/entities/user.entity';
 import { Repository } from 'typeorm';
 import { UserModel } from '../models/user.model';
+import { EditUserDto } from '../../api/dto/user/edit-user.dot';
+import * as bcrypt from "bcrypt";
 
 @Injectable()
 export class UserService {
@@ -68,19 +70,28 @@ export class UserService {
     }
   }
 
-  async update(
-    username: string,
-    updateUserDto: UpdateUserDto,
-  ): Promise<UserModel> {
+  async update(username: string, editUser: EditUserDto): Promise<UserModel> {
     try {
       const userTU: User = await this.userRepository.findOne({
         username: username,
       });
-
+      let hashedPassword: string;
       if (userTU) {
-        await this.userRepository.update({ id: userTU.id }, updateUserDto);
+        if (editUser.password == undefined) {
+          hashedPassword = userTU.password;
+        } else {
+          hashedPassword = await bcrypt.hash(editUser.password, 10);
+        }
+
+        const updateUser: UpdateUserDto = {
+          username: editUser.username,
+          password: hashedPassword,
+          admin: editUser.admin,
+        };
+
+        await this.userRepository.update({ id: userTU.id }, updateUser);
         const updatedUser = await this.userRepository.findOne({
-          username: updateUserDto.username,
+          username: updateUser.username,
         });
         if (updatedUser) {
           updatedUser.password = undefined;

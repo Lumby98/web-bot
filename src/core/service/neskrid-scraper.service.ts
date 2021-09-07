@@ -225,7 +225,9 @@ export class NeskridScraperService {
       await page.click(
         '.card.card-yellow.animated.fadeInUp.animation-delay-7 .ms-hero-bg-royal',
       );
-      await page.waitForSelector('.searchable-select-holder');
+      await page.waitForSelector('.searchable-select-holder', {
+        timeout: 5000,
+      });
       await page.click('.searchable-select-holder');
 
       // get the different brands in the dropdown menu

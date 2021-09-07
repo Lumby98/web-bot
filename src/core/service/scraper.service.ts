@@ -142,7 +142,7 @@ export class ScraperService {
       return [];
     }
     // Launch the browser
-    const browser = await this.puppeteer.launch({ headless: false });
+    const browser = await this.puppeteer.launch();
 
     try {
       // Creates a new instance of the page
@@ -373,12 +373,10 @@ export class ScraperService {
       );
       await page.select('#PageSizeSelection', '100');
 
-      const pageCount = await page.$$eval(
-        '#productlist > div:nth-child(4) > div > div > ul > li',
-        (items) => {
-          items.map((item) => item);
-        },
-      );
+      //get the amount of pages the scraper needs to go through
+      const pageCount = await page.$$eval('[data-page]', (items) => {
+        items.map((item) => item.innerHTML);
+      });
 
       console.log(pageCount);
       return [];

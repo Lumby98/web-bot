@@ -7,36 +7,38 @@ import {
   Body,
   Post,
 } from '@nestjs/common';
-import { ScraperService } from '../../core/service/scraper.service';
+import { NeskridScraperService } from '../../core/service/neskrid-scraper.service';
 import { ProductDTO } from '../dto/product/product.dto';
 import { jwtAuthenticationGuard } from '../guard/jwt-authentication.guard';
 import { LoginDto } from '../dto/user/login.dto';
 
 @Controller('scraper')
 export class ScraperController {
-  constructor(private readonly scraperService: ScraperService) {}
+  constructor(private readonly scraperService: NeskridScraperService) {}
 
+  /**
+   * starts the scraper
+   * @param loginDto
+   */
   @Post('scrape')
   @UseGuards(jwtAuthenticationGuard)
   async scrap(@Body() loginDto: LoginDto) {
     try {
+      //checks if there is a username and password
       if (!loginDto.username || !loginDto.password) {
         throw new HttpException(
           'incomplete login information',
           HttpStatus.NOT_FOUND,
         );
       }
+      //starts scraping
       const scrapeProducts = await this.scraperService
         .scrapNeskrid(loginDto.username, loginDto.password)
         .catch((err) => {
           throw err;
         });
 
-      //for testing connection (delete later)
-      if (scrapeProducts.length == 0) {
-        return { message: 'test done' };
-      }
-
+      //updates the list in the database using the returned list
       await this.scraperService.updateAfterScrape(scrapeProducts);
       return { message: 'complete' };
     } catch (err) {
@@ -45,6 +47,7 @@ export class ScraperController {
     }
   }
 
+  // gets list of products
   @UseGuards(jwtAuthenticationGuard)
   @Get()
   async getAllProducts() {

@@ -6,7 +6,7 @@ import { User } from '../../infrastructure/entities/user.entity';
 import { Repository } from 'typeorm';
 import { UserModel } from '../models/user.model';
 import { EditUserDto } from '../../api/dto/user/edit-user.dot';
-import * as bcrypt from "bcrypt";
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
@@ -15,6 +15,10 @@ export class UserService {
     private userRepository: Repository<User>,
   ) {}
 
+  /**
+   * create a new user in the database
+   * @param createUserDto
+   */
   async create(createUserDto: CreateUserDto): Promise<UserModel> {
     try {
       if (createUserDto.admin < 0 || createUserDto.admin > 1) {
@@ -28,6 +32,10 @@ export class UserService {
     }
   }
 
+  /**
+   * finds a user based on username
+   * @param username
+   */
   async getByUsername(username: string): Promise<UserModel> {
     try {
       const user = await this.userRepository.findOne({ username });
@@ -43,6 +51,9 @@ export class UserService {
     }
   }
 
+  /**
+   * finds all users
+   */
   async findAll(): Promise<UserModel[]> {
     try {
       const users = await this.userRepository.find();
@@ -55,6 +66,10 @@ export class UserService {
     }
   }
 
+  /**
+   * finds user by id
+   * @param id
+   */
   async getById(id: number): Promise<UserModel> {
     try {
       const user = await this.userRepository.findOne({ id });
@@ -70,6 +85,11 @@ export class UserService {
     }
   }
 
+  /**
+   * updates user
+   * @param username
+   * @param editUser
+   */
   async update(username: string, editUser: EditUserDto): Promise<UserModel> {
     try {
       const userTU: User = await this.userRepository.findOne({
@@ -107,6 +127,10 @@ export class UserService {
     }
   }
 
+  /**
+   * removes user from database
+   * @param username
+   */
   async remove(username: string) {
     try {
       const userToDelete = await this.userRepository.findOne({

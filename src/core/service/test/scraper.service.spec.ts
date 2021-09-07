@@ -1,18 +1,18 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ScraperService } from '../scraper.service';
+import { NeskridScraperService } from '../neskrid-scraper.service';
 import { Repository } from 'typeorm';
 import { Product } from '../../../infrastructure/entities/product.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { UpdateResult } from 'typeorm';
 
 describe('ScraperService', () => {
-  let service: ScraperService;
+  let service: NeskridScraperService;
   let repo: Repository<Product>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        ScraperService,
+        NeskridScraperService,
         {
           provide: getRepositoryToken(Product),
           useClass: Repository,
@@ -20,7 +20,7 @@ describe('ScraperService', () => {
       ],
     }).compile();
 
-    service = module.get<ScraperService>(ScraperService);
+    service = module.get<NeskridScraperService>(NeskridScraperService);
     repo = module.get(getRepositoryToken(Product));
   });
 

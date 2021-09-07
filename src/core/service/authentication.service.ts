@@ -15,6 +15,10 @@ export class AuthenticationService {
     private readonly configService: ConfigService,
   ) {}
 
+  /**
+   * creates a new user, hashes their password and saves it to the database
+   * @param registrationData
+   */
   public async register(registrationData: RegisterDto): Promise<UserDto> {
     try {
       const hashedPassword = await bcrypt.hash(registrationData.password, 10);
@@ -30,6 +34,12 @@ export class AuthenticationService {
     }
   }
 
+  /**
+   * check if user password matches the hashed password saved in the database
+   * returns the user if the passwords match
+   * @param username
+   * @param plainTextPassword
+   */
   public async getAuthenticatedUser(
     username: string,
     plainTextPassword: string,
@@ -46,6 +56,11 @@ export class AuthenticationService {
     }
   }
 
+  /**
+   * compares two passwords and returns a boolean depending on the result
+   * @param plainTextPassword
+   * @param hashedPassword
+   */
   public async verifyPassword(
     plainTextPassword: string,
     hashedPassword: string,
@@ -63,6 +78,10 @@ export class AuthenticationService {
     }
   }
 
+  /**
+   * creates a new jwt token
+   * @param userId
+   */
   public getCookieWithJwtToken(userId: number) {
     const payload: TokenPayload = { userId };
     const token = this.jwtService.sign(payload);
@@ -71,6 +90,9 @@ export class AuthenticationService {
     )};`;
   }
 
+  /**
+   * sets the jwt token to expire, so the log out action can be executed
+   */
   public getCookieForLogOut() {
     return `Authentication=; HttpOnly; Path=/; Max-Age=0`;
   }

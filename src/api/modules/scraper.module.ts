@@ -3,10 +3,11 @@ import { NeskridScraperService } from '../../core/service/neskrid-scraper.servic
 import { ScraperController } from '../controllers/scraper.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Product } from '../../infrastructure/entities/product.entity';
+import { ScrapeGateway } from '../gateway/scrapeGateway';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Product])],
   controllers: [ScraperController],
-  providers: [NeskridScraperService],
+  providers: [NeskridScraperService, ScrapeGateway],
 })
 export class ScraperModule {}

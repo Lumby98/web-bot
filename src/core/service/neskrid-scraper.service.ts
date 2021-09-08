@@ -145,7 +145,7 @@ export class NeskridScraperService {
       return [];
     }
     // Launch the browser
-    const browser = await this.puppeteer.launch();
+    const browser = await this.puppeteer.launch({ headless: false });
 
     try {
       // Creates a new instance of the page

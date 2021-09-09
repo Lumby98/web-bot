@@ -11,18 +11,22 @@ import { NeskridScraperService } from '../../core/service/neskrid-scraper.servic
 import { ProductDTO } from '../dto/product/product.dto';
 import { jwtAuthenticationGuard } from '../guard/jwt-authentication.guard';
 import { ScrapeDto } from '../dto/scrape/scrape.dto';
+import { HultaforsScraperService } from '../../core/service/hultafors-scraper.service';
 
 @Controller('scraper')
 export class ScraperController {
-  constructor(private readonly scraperService: NeskridScraperService) {}
+  constructor(
+    private readonly neskridScraperService: NeskridScraperService,
+    private readonly hultaForsService: HultaforsScraperService,
+  ) {}
 
   /**
    * starts the scraper
-   * @param loginDto
+   * @param scraping
    */
   @Post('scrape')
   @UseGuards(jwtAuthenticationGuard)
-  async scrap(@Body() scraping: ScrapeDto) {
+  async scrape(@Body() scraping: ScrapeDto) {
     try {
       if (!scraping.username || !scraping.password) {
         throw new HttpException(
@@ -33,7 +37,7 @@ export class ScraperController {
       let scrapeProducts;
       switch (scraping.website) {
         case 'Neskrid': {
-          scrapeProducts = await this.scraperService
+          scrapeProducts = await this.neskridScraperService
             .scrapNeskrid(scraping.username, scraping.password)
             .catch((err) => {
               throw err;
@@ -41,7 +45,7 @@ export class ScraperController {
           break;
         }
         case 'Hultafors': {
-          scrapeProducts = await this.scraperService.scrapeHultafors(
+          scrapeProducts = await this.hultaForsService.scrapeHultafors(
             scraping.username,
             scraping.password,
           );
@@ -56,7 +60,7 @@ export class ScraperController {
       }
 
       //updates the list in the database using the returned list
-      await this.scraperService.updateAfterScrape(scrapeProducts);
+      await this.neskridScraperService.updateAfterScrape(scrapeProducts);
       return { message: 'complete' };
     } catch (err) {
       console.log(err);
@@ -69,7 +73,7 @@ export class ScraperController {
   @Get()
   async getAllProducts() {
     try {
-      const products = await this.scraperService.findAll();
+      const products = await this.neskridScraperService.findAll();
       const productsDto: ProductDTO[] = products.map((product) => ({
         brand: product.brand,
         articleName: product.articleName,

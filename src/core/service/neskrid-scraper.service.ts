@@ -6,7 +6,7 @@ import { Repository } from 'typeorm';
 import { HultaforsModel } from '../models/hultafors.model';
 
 @Injectable()
-export class ScraperService {
+export class NeskridScraperService {
   puppeteer = require('puppeteer');
 
   constructor(
@@ -20,6 +20,7 @@ export class ScraperService {
    */
   async create(productToCreate: ProductModel): Promise<ProductModel> {
     try {
+      //checks if the product already exists
       const check = await this.productRepository.findOne({
         brand: productToCreate.brand,
         articleName: productToCreate.articleName,
@@ -28,12 +29,14 @@ export class ScraperService {
       if (check != undefined) {
         throw new HttpException('product already exists', HttpStatus.FOUND);
       }
+      //makes sure the the active variable is either 1 or 0
       if (productToCreate.active > 1 || productToCreate.active < 0) {
         throw new HttpException(
           'active needs to be 1 or 0',
           HttpStatus.BAD_REQUEST,
         );
       }
+      //creates and retruns the product
       let product: NeskridProduct = this.productRepository.create();
       product.brand = productToCreate.brand;
       product.articleName = productToCreate.articleName;
@@ -141,8 +144,8 @@ export class ScraperService {
     if (username == 'test' || password == 'test') {
       return [];
     }
-    // Launch the browser
-    const browser = await this.puppeteer.launch();
+    // Launch the browser (use {headless: false} in the launch method, to se how the scraper operates)
+    const browser = await this.puppeteer.launch({ headless: false });
 
     try {
       // Creates a new instance of the page
@@ -160,7 +163,7 @@ export class ScraperService {
         '#modallanguages > div > div > div.modal-body.text-center > ul > li:nth-child(1) > a',
       );
 
-      //set language on the page
+      //set language on page
       await page
         .click(
           '#modallanguages > div > div > div.modal-body.text-center > ul > li:nth-child(1) > a',
@@ -222,7 +225,9 @@ export class ScraperService {
       await page.click(
         '.card.card-yellow.animated.fadeInUp.animation-delay-7 .ms-hero-bg-royal',
       );
-      await page.waitForSelector('.searchable-select-holder');
+      await page.waitForSelector('.searchable-select-holder', {
+        timeout: 5000,
+      });
       await page.click('.searchable-select-holder');
 
       // get the different brands in the dropdown menu
@@ -388,7 +393,7 @@ export class ScraperService {
   }
 
   /**
-   * takes a list of products and sets there status, afterword calls writeFile() to create an .csv file
+   * updates the database table by comparing the different them with the given list
    * @param products = []
    */
   public async updateAfterScrape(

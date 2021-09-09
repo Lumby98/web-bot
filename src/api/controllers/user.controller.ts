@@ -20,11 +20,9 @@ import { EditUserDto } from '../dto/user/edit-user.dot';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.userService.create(createUserDto);
-  }
-
+  /**
+   * gets all users
+   */
   @UseGuards(jwtAuthenticationGuard)
   @Get()
   async findAll() {
@@ -37,18 +35,31 @@ export class UserController {
     return userDtos;
   }
 
+  /**
+   * finds a user based on there username
+   * @param username
+   */
   @UseGuards(jwtAuthenticationGuard)
   @Get(':username')
   findOne(@Param('username') username: string) {
     return this.userService.getByUsername(username);
   }
 
+  /**
+   * updates a user
+   * @param username
+   * @param editUser
+   */
   @UseGuards(jwtAuthenticationGuard)
   @Patch(':username')
   update(@Param('username') username: string, @Body() editUser: EditUserDto) {
     return this.userService.update(username, editUser);
   }
 
+  /**
+   * deletes a user
+   * @param username
+   */
   @UseGuards(jwtAuthenticationGuard)
   @Delete(':username')
   remove(@Param('username') username: string) {

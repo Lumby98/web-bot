@@ -20,6 +20,11 @@ import { UserDto } from '../dto/user/user.dto';
 export class AuthenticationController {
   constructor(private readonly authenticationService: AuthenticationService) {}
 
+  /**
+   * calls the authentication service to create a user,
+   * if the request has an jwt token attached to it
+   * @param registrationData
+   */
   @UseGuards(jwtAuthenticationGuard)
   @Post('register')
   async register(@Body() registrationData: RegisterDto) {
@@ -30,6 +35,11 @@ export class AuthenticationController {
       });
   }
 
+  /**
+   * logs a user in and gives them a jwt token
+   * @param request
+   * @param response
+   */
   @HttpCode(200)
   @UseGuards(LocalAuthenticationGuard)
   @Post('log-in')
@@ -49,6 +59,11 @@ export class AuthenticationController {
     }
   }
 
+  /**
+   * logs out the user and removes the jwt token
+   * @param request
+   * @param response
+   */
   @UseGuards(jwtAuthenticationGuard)
   @Post('log-out')
   async logOut(@Req() request: RequestWithUser, @Res() response: Response) {
@@ -59,6 +74,10 @@ export class AuthenticationController {
     return response.sendStatus(200);
   }
 
+  /**
+   * gets a user
+   * @param request
+   */
   @UseGuards(jwtAuthenticationGuard)
   @Get()
   authenticate(@Req() request: RequestWithUser) {

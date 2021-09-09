@@ -144,7 +144,7 @@ export class NeskridScraperService {
     if (username == 'test' || password == 'test') {
       return [];
     }
-    // Launch the browser (use {headless: false} in the launch method, to se how the scraper operates
+    // Launch the browser (use {headless: false} in the launch method, to se how the scraper operates)
     const browser = await this.puppeteer.launch({ headless: false });
 
     try {

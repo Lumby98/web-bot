@@ -80,7 +80,7 @@ export class HultaforsScraperService {
       );
 
       //selects shoes to only display shoes on the page
-      await page.waitForTimeout(5000);
+      await page.waitForTimeout(1000);
       await page.click(
         '#searchboxform > div > div:nth-child(4) > div > div > div > div.btn-group.js-lvl-1 > button',
       );
@@ -134,52 +134,81 @@ export class HultaforsScraperService {
       links = [...uniqueSet];
       console.log(links.length);
 
-      this.goToProduct(links, page);
+      const sizes: SizeModel[] = [
+        { size: 35, productName: '', status: 0 },
+        { size: 36, productName: '', status: 0 },
+        { size: 37, productName: '', status: 0 },
+        { size: 38, productName: '', status: 0 },
+        { size: 39, productName: '', status: 0 },
+        { size: 40, productName: '', status: 0 },
+        { size: 41, productName: '', status: 0 },
+        { size: 42, productName: '', status: 0 },
+        { size: 43, productName: '', status: 0 },
+        { size: 44, productName: '', status: 0 },
+        { size: 45, productName: '', status: 0 },
+        { size: 46, productName: '', status: 0 },
+        { size: 47, productName: '', status: 0 },
+        { size: 48, productName: '', status: 0 },
+        { size: 49, productName: '', status: 0 },
+        { size: 50, productName: '', status: 0 },
+        { size: 51, productName: '', status: 0 },
+        { size: 52, productName: '', status: 0 },
+        { size: 53, productName: '', status: 0 },
+      ];
+      for (const link of links) {
+        await page.goto(link);
+        //gets article name and number
+        await page.waitForSelector('#section_4920 > h1');
+        const articleName = await page.$eval(
+          '#section_4920 > h1',
+          (h1) => h1.textContent,
+        );
+        const articleNumber = await page.$eval(
+          '#section_4919 > p > strong',
+          (strong) => strong.textContent,
+        );
+        console.log(articleName + ' ' + articleNumber);
+
+        //goes to sizes
+        await page.waitForSelector(
+          '#section_4937 > ul > li.dropdown.hidden-lg > a',
+        );
+        await page.click('#section_4937 > ul > li.dropdown.hidden-lg > a');
+
+        await page.waitForSelector(
+          '#section_4937 > ul > li.dropdown.hidden-lg.open > ul > li:nth-child(3) > a',
+        );
+        await page.click(
+          '#section_4937 > ul > li.dropdown.hidden-lg.open > ul > li:nth-child(3) > a',
+        );
+
+        await page.waitForSelector('.table.add-to-basket-matrix-table');
+        const s = await page.$$eval(
+          '.table.add-to-basket-matrix-table tbody > tr > th',
+          (el) => el.map((e) => e.innerText),
+        );
+
+        const a = await page.$$eval(
+          '#section_469 > div.js-add-to-basket-by-attribute-matrix > table > tbody > tr:nth-child(2) > td > div > input',
+          (elements) => elements.map((e) => e.getAttribute('classname')),
+        );
+
+        const sa = (size, active) => {
+          const map = new Map();
+          for (let i = 0; i < size.length; i++) {
+            map.set(size[i], active[i]);
+          }
+          return map;
+        };
+
+        console.log(sa(s, a));
+      }
 
       return [];
     } catch (err) {
       throw err;
     } finally {
       await browser.close();
-    }
-  }
-
-  async goToProduct(links: string[], page: Page) {
-    const sizes: SizeModel[] = [
-      { size: 39, productName: '', status: 0 },
-      { size: 40, productName: '', status: 0 },
-      { size: 41, productName: '', status: 0 },
-      { size: 42, productName: '', status: 0 },
-      { size: 43, productName: '', status: 0 },
-      { size: 44, productName: '', status: 0 },
-      { size: 45, productName: '', status: 0 },
-      { size: 46, productName: '', status: 0 },
-      { size: 47, productName: '', status: 0 },
-      { size: 48, productName: '', status: 0 },
-      { size: 49, productName: '', status: 0 },
-      { size: 50, productName: '', status: 0 },
-      { size: 51, productName: '', status: 0 },
-      { size: 52, productName: '', status: 0 },
-      { size: 53, productName: '', status: 0 },
-      { size: 54, productName: '', status: 0 },
-      { size: 55, productName: '', status: 0 },
-    ];
-    for (const link of links) {
-      await page.goto(link);
-      //gets article name and number
-      await page.waitForSelector('#section_4920 > h1');
-      const articleName = await page.$eval(
-        '#section_4920 > h1',
-        (h1) => h1.textContent,
-      );
-      const articleNumber = await page.$eval(
-        '#section_4919 > p > strong',
-        (strong) => strong.textContent,
-      );
-
-      //checks the different sizes
-      await page.waitForSelector('#section_4937 > ul > li:nth-child(3)');
-      await page.click('#section_4937 > ul > li:nth-child(3)');
     }
   }
 }

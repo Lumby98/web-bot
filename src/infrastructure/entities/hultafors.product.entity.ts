@@ -12,6 +12,6 @@ export class HultaforsProduct {
   @Column()
   articleName: string;
 
-  @OneToMany(() => Size, (size) => size.product)
+  @OneToMany(() => Size, (size) => size.product, { cascade: true })
   sizes: Size[];
 }

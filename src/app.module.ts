@@ -5,6 +5,7 @@ import { ScraperModule } from './api/modules/scraper.module';
 import { UserModule } from './api/modules/user.module';
 import * as Joi from '@hapi/joi';
 import { AuthenticationModule } from './api/modules/authentication.module';
+import { HultaforsService } from './core/service/hultafors.service';
 
 @Module({
   imports: [
@@ -26,6 +27,6 @@ import { AuthenticationModule } from './api/modules/authentication.module';
     AuthenticationModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [HultaforsService],
 })
 export class AppModule {}

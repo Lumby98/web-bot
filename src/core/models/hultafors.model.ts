@@ -1,7 +1,7 @@
 import { SizeModel } from './size.model';
 
 export class HultaforsModel {
-  id: number;
+  id?: string;
   articleNumber: string;
   articleName: string;
   sizes: SizeModel[];

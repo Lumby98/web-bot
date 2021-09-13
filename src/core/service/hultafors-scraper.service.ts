@@ -1,8 +1,4 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { HultaforsProduct } from '../../infrastructure/entities/hultafors.product.entity';
-import { Repository } from 'typeorm';
-import { Size } from '../../infrastructure/entities/size.entity';
 import { HultaforsModel } from '../models/hultafors.model';
 import { Page } from 'puppeteer';
 import { SizeModel } from '../models/size.model';
@@ -11,12 +7,7 @@ import { SizeModel } from '../models/size.model';
 export class HultaforsScraperService {
   puppeteer = require('puppeteer');
 
-  constructor(
-    @InjectRepository(HultaforsProduct)
-    private productRepository: Repository<HultaforsProduct>,
-    @InjectRepository(Size)
-    private sizeRepository: Repository<Size>,
-  ) {}
+  constructor() {}
 
   async scrapeHultafors(username: string, password: string): Promise<any[]> {
     //test in place for checking connection between frontend and backend (delete later)
@@ -102,7 +93,6 @@ export class HultaforsScraperService {
       if (nextPage) {
         morePages = true;
       }
-      const Products: HultaforsModel[] = [];
       let links: string[] = [];
       //gets the links to the different products
       while (morePages) {
@@ -123,7 +113,7 @@ export class HultaforsScraperService {
           await page.click(
             '#productlist > div:nth-child(4) > div > div > ul > li.nextpage > a',
           );
-          await page.waitForTimeout(2000);
+          await page.waitForTimeout(5000);
         } else {
           morePages = false;
         }
@@ -134,29 +124,50 @@ export class HultaforsScraperService {
       links = [...uniqueSet];
       console.log(links.length);
 
-      const sizes: SizeModel[] = [
-        { size: 35, productName: '', status: 0 },
-        { size: 36, productName: '', status: 0 },
-        { size: 37, productName: '', status: 0 },
-        { size: 38, productName: '', status: 0 },
-        { size: 39, productName: '', status: 0 },
-        { size: 40, productName: '', status: 0 },
-        { size: 41, productName: '', status: 0 },
-        { size: 42, productName: '', status: 0 },
-        { size: 43, productName: '', status: 0 },
-        { size: 44, productName: '', status: 0 },
-        { size: 45, productName: '', status: 0 },
-        { size: 46, productName: '', status: 0 },
-        { size: 47, productName: '', status: 0 },
-        { size: 48, productName: '', status: 0 },
-        { size: 49, productName: '', status: 0 },
-        { size: 50, productName: '', status: 0 },
-        { size: 51, productName: '', status: 0 },
-        { size: 52, productName: '', status: 0 },
-        { size: 53, productName: '', status: 0 },
-      ];
+      return await this.createListOfProducts(links, page);
+    } catch (err) {
+      throw err;
+    } finally {
+      await browser.close();
+    }
+  }
+
+  /**
+   * handles going through the links and getting the data to create a product
+   * @param links
+   * @param page
+   * @private
+   */
+  private async createListOfProducts(
+    links: string[],
+    page: Page,
+  ): Promise<HultaforsModel[]> {
+    const productList: HultaforsModel[] = [];
+    try {
       for (const link of links) {
-        await page.goto(link);
+        const sizes: SizeModel[] = [
+          { size: 35, productName: '', status: 0 },
+          { size: 36, productName: '', status: 0 },
+          { size: 37, productName: '', status: 0 },
+          { size: 38, productName: '', status: 0 },
+          { size: 39, productName: '', status: 0 },
+          { size: 40, productName: '', status: 0 },
+          { size: 41, productName: '', status: 0 },
+          { size: 42, productName: '', status: 0 },
+          { size: 43, productName: '', status: 0 },
+          { size: 44, productName: '', status: 0 },
+          { size: 45, productName: '', status: 0 },
+          { size: 46, productName: '', status: 0 },
+          { size: 47, productName: '', status: 0 },
+          { size: 48, productName: '', status: 0 },
+          { size: 49, productName: '', status: 0 },
+          { size: 50, productName: '', status: 0 },
+          { size: 51, productName: '', status: 0 },
+          { size: 52, productName: '', status: 0 },
+          { size: 53, productName: '', status: 0 },
+        ];
+        console.log(sizes);
+        await page.goto(links[1]);
         //gets article name and number
         await page.waitForSelector('#section_4920 > h1');
         const articleName = await page.$eval(
@@ -168,6 +179,7 @@ export class HultaforsScraperService {
           (strong) => strong.textContent,
         );
         console.log(articleName + ' ' + articleNumber);
+        sizes.forEach((s) => (s.productName = articleName));
 
         //goes to sizes
         await page.waitForSelector(
@@ -183,14 +195,18 @@ export class HultaforsScraperService {
         );
 
         await page.waitForSelector('.table.add-to-basket-matrix-table');
-        const s = await page.$$eval(
-          '.table.add-to-basket-matrix-table tbody > tr > th',
-          (el) => el.map((e) => e.innerText),
-        );
+        const s = (
+          await page.$$eval(
+            '.table.add-to-basket-matrix-table tbody > tr > th',
+            (el) => el.map((e) => e.textContent),
+          )
+        ).map((x) => +x);
+
+        s.shift();
 
         const a = await page.$$eval(
-          '#section_469 > div.js-add-to-basket-by-attribute-matrix > table > tbody > tr:nth-child(2) > td > div > input',
-          (elements) => elements.map((e) => e.getAttribute('classname')),
+          '#section_469 > div.js-add-to-basket-by-attribute-matrix > table > tbody > tr > td > div > input',
+          (elements) => elements.map((e) => e.getAttribute('class')),
         );
 
         const sa = (size, active) => {
@@ -202,13 +218,35 @@ export class HultaforsScraperService {
         };
 
         console.log(sa(s, a));
+
+        for (const size of sa(s, a)) {
+          const status = size[1];
+          const statusSubstring = 'noQtyAvailable';
+          const result = sizes.find((arraySize) => {
+            return arraySize.size === size[0];
+          });
+          console.log(result);
+          console.log(status);
+          if (!status.includes(statusSubstring)) {
+            //in stock
+            result.status = 1;
+          }
+          result.productName = articleName;
+        }
+        console.log(sizes);
+        const product: HultaforsModel = {
+          articleName: articleName,
+          articleNumber: articleNumber,
+          sizes: sizes,
+        };
+
+        productList.push(product);
+        //await page.waitForTimeout(60000); //waits 1 min before going to the next product
       }
 
-      return [];
+      return productList;
     } catch (err) {
-      throw err;
-    } finally {
-      await browser.close();
+      throw new Error('failed to get products');
     }
   }
 }

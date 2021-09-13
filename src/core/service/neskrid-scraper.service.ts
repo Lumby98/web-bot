@@ -26,7 +26,7 @@ export class NeskridScraperService {
         articleName: productToCreate.articleName,
       });
 
-      if (check != undefined) {
+      if (check) {
         throw new HttpException('product already exists', HttpStatus.FOUND);
       }
       //makes sure the the active variable is either 1 or 0

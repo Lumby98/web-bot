@@ -27,6 +27,6 @@ import { HultaforsService } from './core/service/hultafors.service';
     AuthenticationModule,
   ],
   controllers: [],
-  providers: [HultaforsService],
+  providers: [],
 })
 export class AppModule {}

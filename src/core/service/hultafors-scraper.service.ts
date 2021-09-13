@@ -7,8 +7,6 @@ import { SizeModel } from '../models/size.model';
 export class HultaforsScraperService {
   puppeteer = require('puppeteer');
 
-  constructor() {}
-
   async scrapeHultafors(username: string, password: string): Promise<any[]> {
     //test in place for checking connection between frontend and backend (delete later)
     if (username == 'test' || password == 'test') {
@@ -166,6 +164,7 @@ export class HultaforsScraperService {
           { size: 52, productName: '', status: 0 },
           { size: 53, productName: '', status: 0 },
         ];
+
         console.log(sizes);
         await page.goto(links[1]);
         //gets article name and number

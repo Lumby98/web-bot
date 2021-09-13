@@ -15,6 +15,9 @@ export class HultaforsService {
     private sizeRepository: Repository<Size>,
   ) {}
 
+  /**
+   * finds all products with sizes
+   */
   async findAllProducts(): Promise<HultaforsModel[]> {
     try {
       const products = await this.productRepository.find({
@@ -26,6 +29,10 @@ export class HultaforsService {
     }
   }
 
+  /**
+   * finds one product by articleName
+   * @param articleName
+   */
   async findProductByArticleName(articleName: string): Promise<HultaforsModel> {
     try {
       const product = await this.productRepository.findOne({
@@ -47,11 +54,19 @@ export class HultaforsService {
       if (doesProductExist) {
         throw new Error('Product already exists');
       }
-      const sizes: Size[] = JSON.parse(JSON.stringify(product.sizes));
+
       const productEntity = await this.productRepository.create();
       productEntity.articleName = product.articleName;
       productEntity.articleNumber = product.articleNumber;
-      productEntity.sizes = sizes; // dont know if this works yet
+
+      const sizes: Size[] = [];
+      for (const size of product.sizes) {
+        const newSize = await this.sizeRepository.create();
+        newSize.size = size.size;
+        newSize.status = size.status;
+        newSize.product = productEntity;
+      }
+      productEntity.sizes = sizes; // dont know if this works how I want
       await this.productRepository.save(productEntity);
       return JSON.parse(JSON.stringify(productEntity));
     } catch (e) {
@@ -63,6 +78,11 @@ export class HultaforsService {
     }
   }
 
+  /**
+   * edits a product
+   * @param articleName
+   * @param product
+   */
   async editProduct(
     articleName: string,
     product: HultaforsModel,
@@ -93,6 +113,10 @@ export class HultaforsService {
     }
   }
 
+  /**
+   * deletes a product
+   * @param articleName
+   */
   async deleteProduct(articleName: string): Promise<boolean> {
     try {
       const productToDelete = await this.productRepository.findOne({
@@ -117,6 +141,10 @@ export class HultaforsService {
     }
   }
 
+  /**
+   * creates a size
+   * @param size
+   */
   async createSize(size: SizeModel): Promise<SizeModel> {
     try {
       const doesExist = await this.sizeRepository.findOne({
@@ -140,6 +168,11 @@ export class HultaforsService {
     }
   }
 
+  /**
+   * edits a size based of their id
+   * @param sizeID
+   * @param size
+   */
   async editSize(sizeID: number, size: SizeModel): Promise<SizeModel> {
     try {
       const sizeToUpdate = await this.sizeRepository.findOne({
@@ -165,6 +198,10 @@ export class HultaforsService {
     }
   }
 
+  /**
+   * deletes a size
+   * @param size
+   */
   async deleteSize(size: SizeModel): Promise<boolean> {
     try {
       const sizeToDelete = await this.sizeRepository.findOne({

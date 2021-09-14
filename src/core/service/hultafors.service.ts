@@ -55,17 +55,18 @@ export class HultaforsService {
         throw new Error('Product already exists');
       }
 
-      const productEntity = await this.productRepository.create();
-      productEntity.articleName = product.articleName;
-      productEntity.articleNumber = product.articleNumber;
-
       const sizes: Size[] = [];
       for (const size of product.sizes) {
         const newSize = await this.sizeRepository.create();
         newSize.size = size.size;
         newSize.status = size.status;
-        newSize.product = productEntity;
+        await this.sizeRepository.save(newSize);
+        sizes.push(newSize);
       }
+
+      const productEntity = await this.productRepository.create();
+      productEntity.articleName = product.articleName;
+      productEntity.articleNumber = product.articleNumber;
       productEntity.sizes = sizes; // dont know if this works how I want
       await this.productRepository.save(productEntity);
       return JSON.parse(JSON.stringify(productEntity));
@@ -98,6 +99,10 @@ export class HultaforsService {
       }
 
       await this.productRepository.update({ id: productToEdit.id }, product);
+      for (const size of product.sizes) {
+        const s = await this.editSize(size.size, product.articleName, size);
+        console.log(s);
+      }
 
       const changedProduct = await this.productRepository.findOne({
         where: { articleName: product.articleName },
@@ -170,13 +175,23 @@ export class HultaforsService {
 
   /**
    * edits a size based of their id
-   * @param sizeID
+   * @param sizeNumber
+   * @param productName
    * @param size
    */
-  async editSize(sizeID: number, size: SizeModel): Promise<SizeModel> {
+  async editSize(
+    sizeNumber: number,
+    productName: string,
+    size: SizeModel,
+  ): Promise<SizeModel> {
     try {
       const sizeToUpdate = await this.sizeRepository.findOne({
-        where: { id: sizeID },
+        where: {
+          size: sizeNumber,
+          product: this.productRepository.findOne({
+            where: { articleName: productName },
+          }),
+        },
       });
 
       if (!sizeToUpdate) {

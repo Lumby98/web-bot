@@ -8,16 +8,19 @@ import {
   Post,
 } from '@nestjs/common';
 import { NeskridScraperService } from '../../core/service/neskrid-scraper.service';
-import { ProductDTO } from '../dto/product/product.dto';
+import { NeskridDto } from '../dto/product/neskrid.dto';
 import { jwtAuthenticationGuard } from '../guard/jwt-authentication.guard';
 import { ScrapeDto } from '../dto/scrape/scrape.dto';
 import { HultaforsScraperService } from '../../core/service/hultafors-scraper.service';
+import { HultaforsService } from '../../core/service/hultafors.service';
+import { HultaforsDto } from '../dto/product/hultafors.dto';
 
 @Controller('scraper')
 export class ScraperController {
   constructor(
     private readonly neskridScraperService: NeskridScraperService,
-    private readonly hultaForsService: HultaforsScraperService,
+    private readonly hultaForsScraperService: HultaforsScraperService,
+    private readonly hultaforsService: HultaforsService,
   ) {}
 
   /**
@@ -45,10 +48,11 @@ export class ScraperController {
           break;
         }
         case 'Hultafors': {
-          scrapeProducts = await this.hultaForsService.scrapeHultafors(
-            scraping.username,
-            scraping.password,
-          );
+          scrapeProducts = await this.hultaForsScraperService
+            .scrapeHultafors(scraping.username, scraping.password)
+            .catch((err) => {
+              throw err;
+            });
           return 'found Hultafors';
         }
         default: {
@@ -68,19 +72,44 @@ export class ScraperController {
     }
   }
 
-  // gets list of products
+  /**
+   * gets list of neskrid products
+   */
   @UseGuards(jwtAuthenticationGuard)
-  @Get()
-  async getAllProducts() {
+  @Get('neskrid')
+  async getAllNeskridProducts() {
     try {
       const products = await this.neskridScraperService.findAll();
-      const productsDto: ProductDTO[] = products.map((product) => ({
+      const productsDto: NeskridDto[] = products.map((product) => ({
         brand: product.brand,
         articleName: product.articleName,
         articleNo: product.articleNo,
         active: product.active,
       }));
       return productsDto;
+    } catch (err) {
+      throw new HttpException(err, err.statusCode);
+    }
+  }
+
+  /**
+   * gets list of hultafors products
+   */
+  @UseGuards(jwtAuthenticationGuard)
+  @Get('hultafors')
+  async getAllHultaforsProducts() {
+    try {
+      const products = await this.hultaforsService.findAllProducts();
+      const productsDtos: HultaforsDto[] = products.map((product) => ({
+        articleNumber: product.articleNumber,
+        articleName: product.articleName,
+        sizes: product.sizes.map((size) => ({
+          size: size.size,
+          status: size.status,
+        })),
+      }));
+
+      return productsDtos;
     } catch (err) {
       throw new HttpException(err, err.statusCode);
     }

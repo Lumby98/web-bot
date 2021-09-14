@@ -2,16 +2,20 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { HultaforsModel } from '../models/hultafors.model';
 import { Page } from 'puppeteer';
 import { SizeModel } from '../models/size.model';
+import { HultaforsService } from './hultafors.service';
 
 @Injectable()
 export class HultaforsScraperService {
   puppeteer = require('puppeteer');
 
+  constructor(private hultaforsService: HultaforsService) {}
+
+  /**
+   * scrapes Hultafors
+   * @param username
+   * @param password
+   */
   async scrapeHultafors(username: string, password: string): Promise<any[]> {
-    //test in place for checking connection between frontend and backend (delete later)
-    if (username == 'test' || password == 'test') {
-      return [];
-    }
     // Launch the browser
     const browser = await this.puppeteer.launch({ headless: false });
 
@@ -43,7 +47,7 @@ export class HultaforsScraperService {
         '#loginform > div > div.col-md-10.center-col > div.col-md-12.top30 > button',
       );
 
-      //waiting for login, if login failed will thorw exception 8 sec afterward
+      //waiting for login, if 8 seconds passes throw an error indicating login failed
       await page
         .waitForSelector('.hamburger', {
           timeout: 8000,
@@ -71,18 +75,21 @@ export class HultaforsScraperService {
       //selects shoes to only display shoes on the page
       await page.waitForTimeout(1000);
       await page.click(
-        '#searchboxform > div > div:nth-child(4) > div > div > div > div.btn-group.js-lvl-1 > button',
+        '#searchboxform > div > div:nth-child(4) > div > div > div >' +
+          ' div.btn-group.js-lvl-1 > button',
       );
 
       await page.waitForSelector(
-        '#searchboxform > div > div:nth-child(4) > div > div > div > div.btn-group.js-lvl-1.open > ul > li:nth-child(1) > a',
+        '#searchboxform > div > div:nth-child(4) > div > div > div >' +
+          ' div.btn-group.js-lvl-1.open > ul > li:nth-child(1) > a',
       );
       await page.click(
-        '#searchboxform > div > div:nth-child(4) > div > div > div > div.btn-group.js-lvl-1.open > ul > li:nth-child(1) > a',
+        '#searchboxform > div > div:nth-child(4) > div > div > div >' +
+          ' div.btn-group.js-lvl-1.open > ul > li:nth-child(1) > a',
       );
       await page.waitForSelector('.product-grid.reloadlist');
 
-      //finds the next button selector
+      //finds the next page button selector
       await page.waitForSelector(
         '.col-sm-12.product-nav-pagination.pagination.pagination-sm.pull-right .nextpage',
       );
@@ -92,7 +99,8 @@ export class HultaforsScraperService {
         morePages = true;
       }
       let links: string[] = [];
-      //gets the links to the different products
+
+      //gets the links to the different products on each page
       while (morePages) {
         await page.waitForSelector('.product');
         const l = await page.$$eval(
@@ -100,7 +108,6 @@ export class HultaforsScraperService {
           (allAs) => allAs.map((a) => a.href),
         );
         l.forEach((k) => {
-          console.log(k);
           links.push(k);
         });
         nextPage = await page.$('.nextpage');
@@ -120,9 +127,11 @@ export class HultaforsScraperService {
       // so here a Set is performed to make sure all values in links are unique
       const uniqueSet = new Set(links);
       links = [...uniqueSet];
-      console.log(links.length);
 
-      return await this.createListOfProducts(links, page);
+      //goes to each link and get the different products information
+      const products = await this.createListOfProducts(links, page);
+
+      return await this.addListToDatabase(products);
     } catch (err) {
       throw err;
     } finally {
@@ -165,20 +174,19 @@ export class HultaforsScraperService {
           { size: 53, productName: '', status: 0 },
         ];
 
-        console.log(sizes);
-        await page.goto(links[1]);
+        await page.goto(link);
+
         //gets article name and number
         await page.waitForSelector('#section_4920 > h1');
-        const articleName = await page.$eval(
+        const name = await page.$eval(
           '#section_4920 > h1',
           (h1) => h1.textContent,
         );
-        const articleNumber = await page.$eval(
+        const number = await page.$eval(
           '#section_4919 > p > strong',
           (strong) => strong.textContent,
         );
-        console.log(articleName + ' ' + articleNumber);
-        sizes.forEach((s) => (s.productName = articleName));
+        sizes.forEach((s) => (s.productName = name));
 
         //goes to sizes
         await page.waitForSelector(
@@ -193,6 +201,7 @@ export class HultaforsScraperService {
           '#section_4937 > ul > li.dropdown.hidden-lg.open > ul > li:nth-child(3) > a',
         );
 
+        //gets sizes
         await page.waitForSelector('.table.add-to-basket-matrix-table');
         const s = (
           await page.$$eval(
@@ -203,6 +212,7 @@ export class HultaforsScraperService {
 
         s.shift();
 
+        //gets the availability of each size
         const a = await page.$$eval(
           '#section_469 > div.js-add-to-basket-by-attribute-matrix > table > tbody > tr > td > div > input',
           (elements) => elements.map((e) => e.getAttribute('class')),
@@ -216,36 +226,62 @@ export class HultaforsScraperService {
           return map;
         };
 
-        console.log(sa(s, a));
-
+        //loops through the found sizes and sets their status
         for (const size of sa(s, a)) {
           const status = size[1];
           const statusSubstring = 'noQtyAvailable';
           const result = sizes.find((arraySize) => {
             return arraySize.size === size[0];
           });
-          console.log(result);
-          console.log(status);
           if (!status.includes(statusSubstring)) {
             //in stock
             result.status = 1;
           }
-          result.productName = articleName;
+          result.productName = name;
         }
-        console.log(sizes);
+
+        //creates product and adds it to the productList
         const product: HultaforsModel = {
-          articleName: articleName,
-          articleNumber: articleNumber,
+          articleName: name,
+          articleNumber: number,
           sizes: sizes,
         };
 
         productList.push(product);
+
         //await page.waitForTimeout(60000); //waits 1 min before going to the next product
       }
 
       return productList;
     } catch (err) {
       throw new Error('failed to get products');
+    }
+  }
+
+  private async addListToDatabase(
+    products: HultaforsModel[],
+  ): Promise<HultaforsModel[]> {
+    const completedList: HultaforsModel[] = [];
+    try {
+      const productsInDatabase = await this.hultaforsService.findAllProducts();
+
+      for (const product of products) {
+        console.log(product);
+        let p: HultaforsModel = productsInDatabase.find(
+          (x) =>
+            x.articleName === product.articleName &&
+            x.articleName === product.articleName,
+        );
+        if (p) {
+          p = await this.hultaforsService.editProduct(p.articleName, product);
+        } else {
+          p = await this.hultaforsService.createProduct(product);
+        }
+        completedList.push(p);
+      }
+      return completedList;
+    } catch (err) {
+      throw err;
     }
   }
 }

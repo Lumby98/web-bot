@@ -6,32 +6,52 @@ import {
   OnGatewayConnection,
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
-import { LoginDto } from '../dto/user/login.dto';
 import { NeskridScraperService } from '../../core/service/neskrid-scraper.service';
 import { Socket } from 'socket.io';
+import { ScrapeDto } from '../dto/scrape/scrape.dto';
+import { HttpException, HttpStatus } from '@nestjs/common';
+import { HultaforsScraperService } from '../../core/service/hultafors-scraper.service';
 
 @WebSocketGateway()
 export class ScrapeGateway implements OnGatewayConnection, OnGatewayDisconnect {
-  constructor(private neskridScraperService: NeskridScraperService) {}
+  constructor(
+    private neskridScraperService: NeskridScraperService,
+    private hultaforsScraperService: HultaforsScraperService,
+  ) {}
 
   @SubscribeMessage('startScrape')
   async handleScrape(
-    @MessageBody() login: LoginDto,
+    @MessageBody() dto: ScrapeDto,
     @ConnectedSocket() client: Socket,
   ): Promise<void> {
     try {
-      console.log("let's gooooooooooooooooooooo");
       //checks if there is a username and password
-      if (!login.username || !login.password) {
+      if (!dto.username || !dto.password || !dto.website) {
         client.error('missing login information');
       }
-      //starts scraping
-      const scrapeProducts = await this.neskridScraperService
-        .scrapNeskrid(login.username, login.password)
-        .catch((err) => {
-          throw err;
-        });
 
+      let scrapeProducts;
+      switch (dto.website) {
+        case 'Neskrid': {
+          scrapeProducts = await this.neskridScraperService
+            .scrapNeskrid(dto.username, dto.password)
+            .catch((err) => {
+              throw err;
+            });
+          break;
+        }
+        case 'Hultafors': {
+          scrapeProducts = await this.hultaforsScraperService
+            .scrapeHultafors(dto.username, dto.password)
+            .catch((err) => {
+              throw err;
+            });
+          break;
+        }
+        default: {
+          throw new Error('Website could not be found');
+        }
+      }
       //updates the list in the database using the returned list
       const list = await this.neskridScraperService.updateAfterScrape(
         scrapeProducts,

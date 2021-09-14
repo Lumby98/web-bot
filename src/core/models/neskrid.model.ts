@@ -1,4 +1,4 @@
-export interface ProductModel {
+export interface NeskridModel {
   brand: string;
   articleName: string;
   articleNo: string;

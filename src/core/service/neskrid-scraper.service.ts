@@ -1,5 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { ProductModel } from '../models/product.model';
+import { NeskridModel } from '../models/neskrid.model';
 import { InjectRepository } from '@nestjs/typeorm';
 import { NeskridProduct } from '../../infrastructure/entities/neskrid.product.entity';
 import { Repository } from 'typeorm';
@@ -18,7 +18,7 @@ export class NeskridScraperService {
    *  creates a new product in the database
    * @param productToCreate
    */
-  async create(productToCreate: ProductModel): Promise<ProductModel> {
+  async create(productToCreate: NeskridModel): Promise<NeskridModel> {
     try {
       //checks if the product already exists
       const check = await this.productRepository.findOne({
@@ -52,7 +52,7 @@ export class NeskridScraperService {
   /**
    * finds all the products in the database
    */
-  async findAll(): Promise<ProductModel[]> {
+  async findAll(): Promise<NeskridModel[]> {
     try {
       const productE: NeskridProduct[] = await this.productRepository.find();
       if (productE) {
@@ -73,7 +73,7 @@ export class NeskridScraperService {
    * @param articleName
    * @param brand
    */
-  async findOne(brand: string, articleName: string): Promise<ProductModel> {
+  async findOne(brand: string, articleName: string): Promise<NeskridModel> {
     try {
       const product: NeskridProduct = await this.productRepository.findOne({
         brand: brand,
@@ -97,7 +97,7 @@ export class NeskridScraperService {
    * updates a product
    * @param productToUpdate
    */
-  async update(productToUpdate: ProductModel): Promise<ProductModel> {
+  async update(productToUpdate: NeskridModel): Promise<NeskridModel> {
     try {
       const productTU: NeskridProduct = await this.productRepository.findOne({
         brand: productToUpdate.brand,
@@ -139,7 +139,7 @@ export class NeskridScraperService {
   public async scrapNeskrid(
     username: string,
     password: string,
-  ): Promise<ProductModel[]> {
+  ): Promise<NeskridModel[]> {
     //test in place for checking connection between frontend and backend (delete later)
     if (username == 'test' || password == 'test') {
       return [];
@@ -276,7 +276,7 @@ export class NeskridScraperService {
           }
           const splitter = articleNo.split(':');
           articleNo = splitter[1].trim();
-          const product: ProductModel = {
+          const product: NeskridModel = {
             brand: brand,
             articleName: articleName,
             articleNo: articleNo,
@@ -305,14 +305,14 @@ export class NeskridScraperService {
    * @param products = []
    */
   public async updateAfterScrape(
-    products: ProductModel[],
-  ): Promise<ProductModel[]> {
-    const completedList: ProductModel[] = [];
+    products: NeskridModel[],
+  ): Promise<NeskridModel[]> {
+    const completedList: NeskridModel[] = [];
     try {
       const productsInDatabase = await this.findAll();
 
       for (const product of products) {
-        let p: ProductModel;
+        let p: NeskridModel;
         p = productsInDatabase.find(
           (x) =>
             x.brand === product.brand && x.articleName === product.articleName,

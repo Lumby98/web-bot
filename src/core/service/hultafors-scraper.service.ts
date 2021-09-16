@@ -16,7 +16,7 @@ export class HultaforsScraperService {
    * @param password
    */
   async scrapeHultafors(username: string, password: string): Promise<any[]> {
-    // Launch the browser
+    // Launch the browser ( add { headless: false } to lanuch method, to watch puppeteer navigate)
     const browser = await this.puppeteer.launch({ headless: false });
 
     try {
@@ -153,25 +153,25 @@ export class HultaforsScraperService {
     try {
       for (const link of links) {
         const sizes: SizeModel[] = [
-          { size: 35, productName: '', status: 0 },
-          { size: 36, productName: '', status: 0 },
-          { size: 37, productName: '', status: 0 },
-          { size: 38, productName: '', status: 0 },
-          { size: 39, productName: '', status: 0 },
-          { size: 40, productName: '', status: 0 },
-          { size: 41, productName: '', status: 0 },
-          { size: 42, productName: '', status: 0 },
-          { size: 43, productName: '', status: 0 },
-          { size: 44, productName: '', status: 0 },
-          { size: 45, productName: '', status: 0 },
-          { size: 46, productName: '', status: 0 },
-          { size: 47, productName: '', status: 0 },
-          { size: 48, productName: '', status: 0 },
-          { size: 49, productName: '', status: 0 },
-          { size: 50, productName: '', status: 0 },
-          { size: 51, productName: '', status: 0 },
-          { size: 52, productName: '', status: 0 },
-          { size: 53, productName: '', status: 0 },
+          { size: 35, productName: '', status: 0, date: '' },
+          { size: 36, productName: '', status: 0, date: '' },
+          { size: 37, productName: '', status: 0, date: '' },
+          { size: 38, productName: '', status: 0, date: '' },
+          { size: 39, productName: '', status: 0, date: '' },
+          { size: 40, productName: '', status: 0, date: '' },
+          { size: 41, productName: '', status: 0, date: '' },
+          { size: 42, productName: '', status: 0, date: '' },
+          { size: 43, productName: '', status: 0, date: '' },
+          { size: 44, productName: '', status: 0, date: '' },
+          { size: 45, productName: '', status: 0, date: '' },
+          { size: 46, productName: '', status: 0, date: '' },
+          { size: 47, productName: '', status: 0, date: '' },
+          { size: 48, productName: '', status: 0, date: '' },
+          { size: 49, productName: '', status: 0, date: '' },
+          { size: 50, productName: '', status: 0, date: '' },
+          { size: 51, productName: '', status: 0, date: '' },
+          { size: 52, productName: '', status: 0, date: '' },
+          { size: 53, productName: '', status: 0, date: '' },
         ];
 
         await page.goto(link);
@@ -218,26 +218,51 @@ export class HultaforsScraperService {
           (elements) => elements.map((e) => e.getAttribute('class')),
         );
 
-        const sa = (size, active) => {
-          const map = new Map();
+        const d = await page.$$eval(
+          '#section_469 > div.js-add-to-basket-by-attribute-matrix > table >' +
+            ' tbody > tr > td > div.input-group.tooltip-item',
+          (elements) => elements.map((e) => e.getAttribute('title')),
+        );
+        console.log(d);
+
+        const sa = (size, active, date) => {
+          const arr = [];
           for (let i = 0; i < size.length; i++) {
-            map.set(size[i], active[i]);
+            const obj: any = {
+              size: size[i],
+              status: active[i],
+              date: date[i],
+            };
+            arr.push(obj);
           }
-          return map;
+          return arr;
         };
 
         //loops through the found sizes and sets their status
-        for (const size of sa(s, a)) {
-          const status = size[1];
+        for (const size of sa(s, a, d)) {
+          const status = size.status;
           const statusSubstring = 'noQtyAvailable';
+
           const result = sizes.find((arraySize) => {
-            return arraySize.size === size[0];
+            return arraySize.size === size.size;
           });
+
           if (!status.includes(statusSubstring)) {
             //in stock
             result.status = 1;
           }
           result.productName = name;
+
+          if (!size.date) {
+            result.date = null;
+          } else if (size.date.includes('Udgået')) {
+            result.date = 'out';
+          } else {
+            const dateSplitDate = size.date.split(':');
+            const date = dateSplitDate[1];
+            result.date = date.trim();
+            console.log(result);
+          }
         }
 
         //creates product and adds it to the productList

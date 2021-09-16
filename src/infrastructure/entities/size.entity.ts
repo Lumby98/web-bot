@@ -12,6 +12,9 @@ export class Size {
   @Column({ type: 'bit' })
   status: number;
 
+  @Column({ nullable: true })
+  date: string;
+
   @ManyToOne(
     () => HultaforsProduct,
     (hultaforsProduct) => hultaforsProduct.sizes,

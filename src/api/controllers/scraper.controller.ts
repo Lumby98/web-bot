@@ -106,6 +106,7 @@ export class ScraperController {
         sizes: product.sizes.map((size) => ({
           size: size.size,
           status: size.status,
+          date: size.date,
         })),
       }));
 

@@ -60,6 +60,7 @@ export class HultaforsService {
         const newSize = await this.sizeRepository.create();
         newSize.size = size.size;
         newSize.status = size.status;
+        newSize.date = size.date;
         await this.sizeRepository.save(newSize);
         sizes.push(newSize);
       }
@@ -163,6 +164,7 @@ export class HultaforsService {
       const newSize = await this.sizeRepository.create();
       newSize.size = size.size;
       newSize.status = size.status;
+      newSize.date = size.date;
       newSize.product = await this.productRepository.findOne({
         where: { articleName: size.productName },
       });

@@ -338,6 +338,16 @@ export class NeskridScraperService {
           }
         }
       }
+      const missing: NeskridModel[] = productsInDatabase.filter(
+        (x) => !completedList.includes(x),
+      );
+      if (missing) {
+        for (let x of missing) {
+          x.active = 0;
+          x = await this.update(x);
+          completedList.push(x);
+        }
+      }
 
       return completedList;
     } catch (err) {

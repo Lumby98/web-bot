@@ -17,7 +17,9 @@ export class HultaforsScraperService {
    */
   async scrapeHultafors(username: string, password: string): Promise<any[]> {
     // Launch the browser ( add { headless: false } to lanuch method, to watch puppeteer navigate)
-    const browser = await this.puppeteer.launch();
+    const browser = await this.puppeteer.launch({
+  		args: ['--no-sandbox', '--disable-setuid-sandbox'],
+	});
 
     try {
       // Creates a new instance of the page

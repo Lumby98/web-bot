@@ -25,7 +25,7 @@ export class AuthenticationController {
    * if the request has an jwt token attached to it
    * @param registrationData
    */
-  @UseGuards(jwtAuthenticationGuard)
+  //@UseGuards(jwtAuthenticationGuard)
   @Post('register')
   async register(@Body() registrationData: RegisterDto) {
     return this.authenticationService

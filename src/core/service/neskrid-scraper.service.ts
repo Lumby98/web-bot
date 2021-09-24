@@ -145,7 +145,9 @@ export class NeskridScraperService {
       return [];
     }
     // Launch the browser (use {headless: false} in the launch method, to see how puppeteer navigates)
-    const browser = await this.puppeteer.launch();
+    const browser = await this.puppeteer.launch({
+  		args: ['--no-sandbox', '--disable-setuid-sandbox'],
+	});
 
     try {
       // Creates a new instance of the page

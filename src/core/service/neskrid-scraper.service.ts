@@ -3,7 +3,6 @@ import { NeskridModel } from '../models/neskrid.model';
 import { InjectRepository } from '@nestjs/typeorm';
 import { NeskridProduct } from '../../infrastructure/entities/neskrid.product.entity';
 import { Repository } from 'typeorm';
-import { HultaforsModel } from '../models/hultafors.model';
 
 @Injectable()
 export class NeskridScraperService {
@@ -146,8 +145,8 @@ export class NeskridScraperService {
     }
     // Launch the browser (use {headless: false} in the launch method, to see how puppeteer navigates)
     const browser = await this.puppeteer.launch({
-  		args: ['--no-sandbox', '--disable-setuid-sandbox'],
-	});
+      /*args: ['--no-sandbox', '--disable-setuid-sandbox'],*/
+    });
 
     try {
       // Creates a new instance of the page
@@ -293,7 +292,7 @@ export class NeskridScraperService {
       await browser.close();
 
       // return the list of products
-      return products;
+      return await this.updateAfterScrape(products);
     } catch (err) {
       console.log(err.message);
       throw err;

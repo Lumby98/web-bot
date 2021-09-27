@@ -1,11 +1,11 @@
 import {
+  Body,
   Controller,
   Get,
   HttpException,
   HttpStatus,
-  UseGuards,
-  Body,
   Post,
+  UseGuards,
 } from '@nestjs/common';
 import { NeskridScraperService } from '../../core/service/neskrid-scraper.service';
 import { NeskridDto } from '../dto/product/neskrid.dto';
@@ -14,6 +14,8 @@ import { ScrapeDto } from '../dto/scrape/scrape.dto';
 import { HultaforsScraperService } from '../../core/service/hultafors-scraper.service';
 import { HultaforsService } from '../../core/service/hultafors.service';
 import { HultaforsDto } from '../dto/product/hultafors.dto';
+import { SiteService } from '../../core/service/site.service';
+import { SiteDto } from '../dto/site/site.dto';
 
 @Controller('scraper')
 export class ScraperController {
@@ -21,6 +23,7 @@ export class ScraperController {
     private readonly neskridScraperService: NeskridScraperService,
     private readonly hultaForsScraperService: HultaforsScraperService,
     private readonly hultaforsService: HultaforsService,
+    private readonly siteService: SiteService,
   ) {}
 
   /**
@@ -37,10 +40,10 @@ export class ScraperController {
           HttpStatus.NOT_FOUND,
         );
       }
-      let scrapeProducts;
+      let scrapedProducts;
       switch (scraping.website) {
         case 'Neskrid': {
-          scrapeProducts = await this.neskridScraperService
+          scrapedProducts = await this.neskridScraperService
             .scrapNeskrid(scraping.username, scraping.password)
             .catch((err) => {
               throw err;
@@ -48,12 +51,12 @@ export class ScraperController {
           break;
         }
         case 'Hultafors': {
-          scrapeProducts = await this.hultaForsScraperService
+          scrapedProducts = await this.hultaForsScraperService
             .scrapeHultafors(scraping.username, scraping.password)
             .catch((err) => {
               throw err;
             });
-          return 'found Hultafors';
+          break;
         }
         default: {
           throw new HttpException(
@@ -63,9 +66,11 @@ export class ScraperController {
         }
       }
 
-      //updates the list in the database using the returned list
-      await this.neskridScraperService.updateAfterScrape(scrapeProducts);
-      return { message: 'complete' };
+      //updates the lasted scraped for the given site
+      const sites = await this.siteService.updateSiteAfterScrape(
+        scraping.website,
+      );
+      return { message: 'complete', sites };
     } catch (err) {
       console.log(err);
       throw new HttpException(err, err.statusCode);
@@ -113,6 +118,17 @@ export class ScraperController {
       return productsDtos;
     } catch (err) {
       throw new HttpException(err, err.statusCode);
+    }
+  }
+
+  @UseGuards(jwtAuthenticationGuard)
+  @Get('sites')
+  async getSites(): Promise<SiteDto[]> {
+    try {
+      const sites = await this.siteService.findSites();
+      return JSON.parse(JSON.stringify(sites));
+    } catch (err) {
+      throw new HttpException(err, HttpStatus.NOT_FOUND);
     }
   }
 }

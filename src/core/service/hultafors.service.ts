@@ -68,7 +68,7 @@ export class HultaforsService {
       const productEntity = await this.productRepository.create();
       productEntity.articleName = product.articleName;
       productEntity.articleNumber = product.articleNumber;
-      productEntity.sizes = sizes; // dont know if this works how I want
+      productEntity.sizes = sizes;
       await this.productRepository.save(productEntity);
       return JSON.parse(JSON.stringify(productEntity));
     } catch (e) {

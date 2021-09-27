@@ -8,15 +8,20 @@ import { HultaforsScraperService } from '../../core/service/hultafors-scraper.se
 import { HultaforsProduct } from '../../infrastructure/entities/hultafors.product.entity';
 import { Size } from '../../infrastructure/entities/size.entity';
 import { HultaforsService } from '../../core/service/hultafors.service';
+import { SiteService } from '../../core/service/site.service';
+import { Site } from '../../infrastructure/entities/site.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([NeskridProduct, HultaforsProduct, Size])],
+  imports: [
+    TypeOrmModule.forFeature([NeskridProduct, HultaforsProduct, Size, Site]),
+  ],
   controllers: [ScraperController],
   providers: [
     NeskridScraperService,
     ScrapeGateway,
     HultaforsScraperService,
     HultaforsService,
+    SiteService,
   ],
 })
 export class ScraperModule {}

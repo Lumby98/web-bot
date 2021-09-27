@@ -9,14 +9,16 @@ import {
 import { NeskridScraperService } from '../../core/service/neskrid-scraper.service';
 import { Socket } from 'socket.io';
 import { ScrapeDto } from '../dto/scrape/scrape.dto';
-import { HttpException, HttpStatus } from '@nestjs/common';
 import { HultaforsScraperService } from '../../core/service/hultafors-scraper.service';
+import { SiteService } from '../../core/service/site.service';
+import { ReturnStrapeDto } from '../dto/scrape/return-strape.dto';
 
 @WebSocketGateway()
 export class ScrapeGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     private neskridScraperService: NeskridScraperService,
     private hultaforsScraperService: HultaforsScraperService,
+    private siteService: SiteService,
   ) {}
 
   @SubscribeMessage('startScrape')
@@ -58,7 +60,10 @@ export class ScrapeGateway implements OnGatewayConnection, OnGatewayDisconnect {
       );
 
       if (list) {
-        client.emit('completedScrape', 'complete');
+        //updates the lasted scraped for the given site
+        const s = await this.siteService.updateSiteAfterScrape(dto.website);
+        const r: ReturnStrapeDto = { message: 'complete', sites: s };
+        client.emit('completedScrape', r);
       }
     } catch (err) {
       console.log(err);

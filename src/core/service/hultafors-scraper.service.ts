@@ -281,7 +281,8 @@ export class HultaforsScraperService {
 
       return productList;
     } catch (err) {
-      throw new Error('failed to get products');
+      throw err;
+      //throw new Error('failed to get products');
     }
   }
 

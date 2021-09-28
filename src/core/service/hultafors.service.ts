@@ -90,26 +90,30 @@ export class HultaforsService {
     product: HultaforsModel,
   ): Promise<HultaforsModel> {
     try {
+      //finds the product that needs to be update
       const productToEdit = await this.productRepository.findOne({
         where: { articleName: articleName },
         relations: ['sizes'],
       });
 
+      //if product cannot be found throw error
       if (!productToEdit) {
         throw new Error('Product does not exist');
       }
 
+      //update product and its sizes
       await this.productRepository.update({ id: productToEdit.id }, product);
       for (const size of product.sizes) {
-        const s = await this.editSize(size.size, product.articleName, size);
-        console.log(s);
+        await this.editSize(size.size, product.articleName, size);
       }
-
+      //finds the product to ensure it has been updated
+      console.log('after edit');
       const changedProduct = await this.productRepository.findOne({
         where: { articleName: product.articleName },
         relations: ['sizes'],
       });
 
+      //if product is found return it otherwise throw error
       if (changedProduct) {
         return JSON.parse(JSON.stringify(changedProduct));
       }

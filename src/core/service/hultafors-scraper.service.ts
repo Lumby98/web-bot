@@ -240,7 +240,8 @@ export class HultaforsScraperService {
           return arr;
         };
 
-        //loops through the found sizes and sets their status
+        //loops through the found sizes
+        //sets their status and back in stock date if it exists
         for (const size of sa(s, a, d)) {
           const status = size.status;
           const statusSubstring = 'noQtyAvailable';
@@ -256,7 +257,7 @@ export class HultaforsScraperService {
           result.productName = name;
 
           if (!size.date) {
-            result.date = null;
+            result.date = '';
           } else if (size.date.includes('Udgået')) {
             result.date = 'out';
           } else {

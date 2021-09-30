@@ -26,6 +26,11 @@ export class ScraperController {
     private readonly siteService: SiteService,
   ) {}
 
+  @Post('siteCreate')
+  async createSite(@Body() site: SiteDto) {
+    return await this.siteService.createSite(site);
+  }
+
   /**
    * starts the scraper
    * @param scraping

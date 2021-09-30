@@ -21,6 +21,7 @@ import { Site } from './entities/site.entity';
         database: configService.get('POSTGRES_DB'),
         entities: [NeskridProduct, User, HultaforsProduct, Size, Site],
         synchronize: true,
+        logging: true,
       }),
     }),
   ],

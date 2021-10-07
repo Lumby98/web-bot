@@ -16,7 +16,7 @@ export class UserService {
   ) {}
 
   /**
-   * create a new user in the database
+   * create a new user
    * @param createUserDto
    */
   async create(createUserDto: CreateUserDto): Promise<UserModel> {
@@ -33,7 +33,7 @@ export class UserService {
   }
 
   /**
-   * finds a user based on username
+   * find a user based on username
    * @param username
    */
   async getByUsername(username: string): Promise<UserModel> {
@@ -52,7 +52,7 @@ export class UserService {
   }
 
   /**
-   * finds all users
+   * find all users
    */
   async findAll(): Promise<UserModel[]> {
     try {
@@ -67,7 +67,7 @@ export class UserService {
   }
 
   /**
-   * finds user by id
+   * find user by id
    * @param id
    */
   async getById(id: number): Promise<UserModel> {
@@ -86,15 +86,27 @@ export class UserService {
   }
 
   /**
-   * updates user
+   * update user
    * @param username
    * @param editUser
    */
   async update(username: string, editUser: EditUserDto): Promise<UserModel> {
     try {
+      console.log(username);
       const userTU: User = await this.userRepository.findOne({
         username: username,
       });
+      const sameEmail: User = await this.userRepository.findOne({
+        username: editUser.username,
+      });
+      if (sameEmail) {
+        if (sameEmail.username != username) {
+          throw new HttpException(
+            'username is already taken',
+            HttpStatus.BAD_REQUEST,
+          );
+        }
+      }
       let hashedPassword: string;
       if (userTU) {
         if (editUser.password == undefined) {
@@ -128,7 +140,7 @@ export class UserService {
   }
 
   /**
-   * removes user from database
+   * remove user
    * @param username
    */
   async remove(username: string) {

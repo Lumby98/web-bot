@@ -10,6 +10,7 @@ import { Size } from '../../infrastructure/entities/size.entity';
 import { HultaforsService } from '../../core/service/hultafors.service';
 import { SiteService } from '../../core/service/site.service';
 import { Site } from '../../infrastructure/entities/site.entity';
+import { NeskridService } from "../../core/service/neskrid.service";
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { Site } from '../../infrastructure/entities/site.entity';
   controllers: [ScraperController],
   providers: [
     NeskridScraperService,
+    NeskridService,
     ScrapeGateway,
     HultaforsScraperService,
     HultaforsService,

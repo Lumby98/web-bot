@@ -21,18 +21,24 @@ export class ScrapeGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private siteService: SiteService,
   ) {}
 
+  /**
+   * start the scraper
+   * @param dto
+   * @param client
+   */
   @SubscribeMessage('startScrape')
   async handleScrape(
     @MessageBody() dto: ScrapeDto,
     @ConnectedSocket() client: Socket,
   ): Promise<void> {
     try {
-      //checks if there is a username and password
+      //checks if there is a username, password and website
       if (!dto.username || !dto.password || !dto.website) {
         client.error('missing login information');
       }
 
       let scrapeProducts;
+      //switch determining which site to scrape
       switch (dto.website) {
         case 'Neskrid': {
           scrapeProducts = await this.neskridScraperService
@@ -54,19 +60,14 @@ export class ScrapeGateway implements OnGatewayConnection, OnGatewayDisconnect {
           throw new Error('Website could not be found');
         }
       }
-      //updates the list in the database using the returned list
-      const list = await this.neskridScraperService.updateAfterScrape(
-        scrapeProducts,
-      );
 
-      if (list) {
+      if (scrapeProducts) {
         //updates the lasted scraped for the given site
         const s = await this.siteService.updateSiteAfterScrape(dto.website);
         const r: ReturnStrapeDto = { message: 'complete', sites: s };
         client.emit('completedScrape', r);
       }
     } catch (err) {
-      console.log(err);
       client.error(err.message);
     }
   }

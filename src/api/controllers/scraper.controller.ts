@@ -16,6 +16,7 @@ import { HultaforsService } from '../../core/service/hultafors.service';
 import { HultaforsDto } from '../dto/product/hultafors.dto';
 import { SiteService } from '../../core/service/site.service';
 import { SiteDto } from '../dto/site/site.dto';
+import { NeskridService } from '../../core/service/neskrid.service';
 
 @Controller('scraper')
 export class ScraperController {
@@ -24,8 +25,13 @@ export class ScraperController {
     private readonly hultaForsScraperService: HultaforsScraperService,
     private readonly hultaforsService: HultaforsService,
     private readonly siteService: SiteService,
+    private readonly neskridService: NeskridService,
   ) {}
 
+  /**
+   * creates a site
+   * @param site
+   */
   @Post('siteCreate')
   async createSite(@Body() site: SiteDto) {
     return await this.siteService.createSite(site);
@@ -39,6 +45,7 @@ export class ScraperController {
   @UseGuards(jwtAuthenticationGuard)
   async scrape(@Body() scraping: ScrapeDto) {
     try {
+      //checks if username or password is blank if true throw error
       if (!scraping.username || !scraping.password) {
         throw new HttpException(
           'incomplete login information',
@@ -46,6 +53,7 @@ export class ScraperController {
         );
       }
       let scrapedProducts;
+      //switch case determining which site should be scrapped
       switch (scraping.website) {
         case 'Neskrid': {
           scrapedProducts = await this.neskridScraperService
@@ -71,10 +79,11 @@ export class ScraperController {
         }
       }
 
-      //updates the lasted scraped for the given site
+      //updates the lastedScraped for the given site
       const sites = await this.siteService.updateSiteAfterScrape(
         scraping.website,
       );
+      //returns a message and the updated site
       return { message: 'complete', sites };
     } catch (err) {
       console.log(err);
@@ -89,14 +98,22 @@ export class ScraperController {
   @Get('neskrid')
   async getAllNeskridProducts() {
     try {
-      const products = await this.neskridScraperService.findAll();
-      const productsDto: NeskridDto[] = products.map((product) => ({
+      const products = await this.neskridService.findAll();
+      let productDtos: NeskridDto[] = products.map((product) => ({
         brand: product.brand,
         articleName: product.articleName,
         articleNo: product.articleNo,
         active: product.active,
       }));
-      return productsDto;
+      //sorts the list brand and article name
+      productDtos = productDtos.sort((a, b) => {
+        if (a.brand === b.brand) {
+          return a.articleName < b.articleName ? -1 : 1;
+        } else {
+          return a.brand < b.brand ? -1 : 1;
+        }
+      });
+      return productDtos;
     } catch (err) {
       throw new HttpException(err, err.statusCode);
     }
@@ -110,7 +127,7 @@ export class ScraperController {
   async getAllHultaforsProducts() {
     try {
       const products = await this.hultaforsService.findAllProducts();
-      const productsDtos: HultaforsDto[] = products.map((product) => ({
+      let productDtos: HultaforsDto[] = products.map((product) => ({
         articleNumber: product.articleNumber,
         articleName: product.articleName,
         sizes: product.sizes.map((size) => ({
@@ -119,13 +136,23 @@ export class ScraperController {
           date: size.date,
         })),
       }));
-
-      return productsDtos;
+      //sorts list by article name and number
+      productDtos = productDtos.sort((a, b) => {
+        if (a.articleName === b.articleName) {
+          return a.articleNumber < b.articleNumber ? -1 : 1;
+        } else {
+          return a.articleName < b.articleName ? -1 : 1;
+        }
+      });
+      return productDtos;
     } catch (err) {
       throw new HttpException(err, err.statusCode);
     }
   }
 
+  /**
+   * gets all sites
+   */
   @UseGuards(jwtAuthenticationGuard)
   @Get('sites')
   async getSites(): Promise<SiteDto[]> {

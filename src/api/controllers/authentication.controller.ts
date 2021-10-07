@@ -16,6 +16,10 @@ import { Response } from 'express';
 import { jwtAuthenticationGuard } from '../guard/jwt-authentication.guard';
 import { UserDto } from '../dto/user/user.dto';
 
+/**
+ * authentication is made by following the following guide from wanago.io
+ * https://wanago.io/2020/05/25/api-nestjs-authenticating-users-bcrypt-passport-jwt-cookies/
+ */
 @Controller('authentication')
 export class AuthenticationController {
   constructor(private readonly authenticationService: AuthenticationService) {}
@@ -25,7 +29,7 @@ export class AuthenticationController {
    * if the request has an jwt token attached to it
    * @param registrationData
    */
-  //@UseGuards(jwtAuthenticationGuard)
+  @UseGuards(jwtAuthenticationGuard)
   @Post('register')
   async register(@Body() registrationData: RegisterDto) {
     return this.authenticationService

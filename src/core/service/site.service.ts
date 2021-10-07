@@ -12,16 +12,27 @@ export class SiteService {
     private siteRepository: Repository<Site>,
   ) {}
 
+  /**
+   * get all sites
+   */
   async findSites(): Promise<SiteDto[]> {
     const sites = await this.siteRepository.find();
     return JSON.parse(JSON.stringify(sites));
   }
 
+  /**
+   * find one site
+   * @param siteName
+   */
   async findOneSite(siteName: string): Promise<SiteModel> {
     const site = this.siteRepository.findOne({ name: siteName });
     return JSON.parse(JSON.stringify(site));
   }
 
+  /**
+   * create site
+   * @param newSite
+   */
   async createSite(newSite: SiteModel): Promise<SiteModel> {
     const check = await this.siteRepository.findOne({ name: newSite.name });
     if (check) {
@@ -33,13 +44,17 @@ export class SiteService {
     return JSON.parse(JSON.stringify(siteEntity));
   }
 
+  /**
+   * update site
+   * @param site
+   */
   async updateSite(site: SiteDto): Promise<SiteModel> {
     const siteToUpdate = await this.siteRepository.findOne({ name: site.name });
     if (!siteToUpdate) {
       throw new Error('Site does not exist');
     }
 
-    await this.siteRepository.update(siteToUpdate.name, site);
+    await this.siteRepository.save({ name: siteToUpdate.name, ...site });
     const uSite = await this.siteRepository.findOne({
       name: siteToUpdate.name,
     });
@@ -50,6 +65,10 @@ export class SiteService {
     return JSON.parse(JSON.stringify(uSite));
   }
 
+  /**
+   * remove a site
+   * @param siteName
+   */
   async removeSite(siteName: string) {
     const siteRemove = await this.siteRepository.findOne({ name: siteName });
     if (!siteRemove) {
@@ -60,6 +79,10 @@ export class SiteService {
     return JSON.parse(JSON.stringify(removed));
   }
 
+  /**
+   * update site and return list of all sites
+   * @param siteName
+   */
   async updateSiteAfterScrape(siteName: string): Promise<SiteDto[]> {
     const check = await this.siteRepository.findOne(siteName);
     if (!check) {

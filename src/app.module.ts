@@ -6,6 +6,7 @@ import { UserModule } from './api/modules/user.module';
 import * as Joi from '@hapi/joi';
 import { AuthenticationModule } from './api/modules/authentication.module';
 import { InsoleModule } from './api/modules/insole.module';
+import { NeskridService } from './core/service/neskrid.service';
 
 @Module({
   imports: [

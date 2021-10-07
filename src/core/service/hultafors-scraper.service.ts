@@ -16,8 +16,9 @@ export class HultaforsScraperService {
    * @param password
    */
   async scrapeHultafors(username: string, password: string): Promise<any[]> {
-    // Launch the browser ( add { headless: false } to lanuch method, to watch puppeteer navigate)
+    // Launch the browser ( add 'headless: false' to launch method, to watch puppeteer navigate)
     const browser = await this.puppeteer.launch({
+      headless: false,
       /*args: ['--no-sandbox', '--disable-setuid-sandbox'],*/
     });
 
@@ -29,6 +30,7 @@ export class HultaforsScraperService {
       await page
         .goto(
           'https://partnerportal.hultaforsgroup.dk/user/login?ReturnUrl=%2f',
+          { waitUntil: 'load' },
         )
         .catch(() => {
           throw new HttpException(
@@ -37,19 +39,9 @@ export class HultaforsScraperService {
           );
         });
 
-      // login to site
-      await page.waitForSelector('#User_UserName').catch(() => {
-        throw new HttpException('could not reach login', HttpStatus.NOT_FOUND);
-      });
-      await page.type('#User_UserName', username);
-      await page.type('#User_Password', password).catch(() => {
-        throw new HttpException('could not reach login', HttpStatus.NOT_FOUND);
-      });
-      await page.click(
-        '#loginform > div > div.col-md-10.center-col > div.col-md-12.top30 > button',
-      );
+      await this.handleLogin(page, username, password);
 
-      //waiting for login, if 8 seconds passes throw an error indicating login failed
+      //waiting for page after login to load, if 8 seconds passes throw an error indicating login failed
       await page
         .waitForSelector('.hamburger', {
           timeout: 8000,
@@ -61,34 +53,7 @@ export class HultaforsScraperService {
           );
         });
 
-      //opens sidebar and clicks on product
-      await page.click('.hamburger');
-      await page.waitForSelector('.toggle-item.mainmenuproducts');
-      await page.click('.toggle-item.mainmenuproducts');
-
-      //selects emma safety footwear
-      await page.waitForSelector(
-        '#searchboxform > div > div:nth-child(3) > div > div > div:nth-child(3) > a',
-      );
-      await page.click(
-        '#searchboxform > div > div:nth-child(3) > div > div > div:nth-child(3) > a',
-      );
-
-      //selects shoes to only display shoes on the page
-      await page.waitForTimeout(1000);
-      await page.click(
-        '#searchboxform > div > div:nth-child(4) > div > div > div >' +
-          ' div.btn-group.js-lvl-1 > button',
-      );
-
-      await page.waitForSelector(
-        '#searchboxform > div > div:nth-child(4) > div > div > div >' +
-          ' div.btn-group.js-lvl-1.open > ul > li:nth-child(1) > a',
-      );
-      await page.click(
-        '#searchboxform > div > div:nth-child(4) > div > div > div >' +
-          ' div.btn-group.js-lvl-1.open > ul > li:nth-child(1) > a',
-      );
+      await this.handleNavigationToProducts(page);
       await page.waitForSelector('.product-grid.reloadlist');
 
       //finds the next page button selector
@@ -100,19 +65,23 @@ export class HultaforsScraperService {
       if (nextPage) {
         morePages = true;
       }
-      let links: string[] = [];
 
-      //gets the links to the different products on each page
+      //get the links to the different products on each page
+      let links: string[] = [];
       while (morePages) {
         await page.waitForSelector('.product');
+        //links on current page
         const l = await page.$$eval(
           '.pull-right a.js-product-detail',
           (allAs) => allAs.map((a) => a.href),
         );
+        //pushes links to page to the main link list
         l.forEach((k) => {
           links.push(k);
         });
+        //checks if there are more pages to get links from
         nextPage = await page.$('.nextpage');
+        //if there is another page go to it
         if (nextPage) {
           await page.waitForSelector(
             '#productlist > div:nth-child(4) > div > div > ul > li.nextpage > a',
@@ -125,14 +94,15 @@ export class HultaforsScraperService {
           morePages = false;
         }
       }
-      //for some reason duplicates the first page,
-      // so here a Set is performed to make sure all values in links are unique
+
+      //makes sure there are no duplicate links
       const uniqueSet = new Set(links);
       links = [...uniqueSet];
 
-      //goes to each link and get the different products information
+      //creates a list of all the products based on the links
       const products = await this.createListOfProducts(links, page);
 
+      //add the products to the database and returns the list
       return await this.addListToDatabase(products);
     } catch (err) {
       throw err;
@@ -154,6 +124,7 @@ export class HultaforsScraperService {
     const productList: HultaforsModel[] = [];
     try {
       for (const link of links) {
+        //list of the size range the hultafors can provide
         const sizes: SizeModel[] = [
           { size: 35, productName: '', status: 0, date: '' },
           { size: 36, productName: '', status: 0, date: '' },
@@ -188,9 +159,10 @@ export class HultaforsScraperService {
           '#section_4919 > p > strong',
           (strong) => strong.textContent,
         );
+        //add article name to the different sizes
         sizes.forEach((s) => (s.productName = name));
 
-        //goes to sizes
+        //goes to size overview on the page
         await page.waitForSelector(
           '#section_4937 > ul > li.dropdown.hidden-lg > a',
         );
@@ -203,8 +175,9 @@ export class HultaforsScraperService {
           '#section_4937 > ul > li.dropdown.hidden-lg.open > ul > li:nth-child(3) > a',
         );
 
-        //gets sizes
+        //get the sizes on page
         await page.waitForSelector('.table.add-to-basket-matrix-table');
+        //size number
         const s = (
           await page.$$eval(
             '.table.add-to-basket-matrix-table tbody > tr > th',
@@ -220,6 +193,7 @@ export class HultaforsScraperService {
           (elements) => elements.map((e) => e.getAttribute('class')),
         );
 
+        //gets string which contains back in stock date
         const d = await page.$$eval(
           '#section_469 > div.js-add-to-basket-by-attribute-matrix > table >' +
             ' tbody > tr > td > div.input-group.tooltip-item',
@@ -227,6 +201,7 @@ export class HultaforsScraperService {
         );
         console.log(d);
 
+        //maps size, stock status and date to an object
         const sa = (size, active, date) => {
           const arr = [];
           for (let i = 0; i < size.length; i++) {
@@ -241,26 +216,30 @@ export class HultaforsScraperService {
         };
 
         //loops through the found sizes
-        //sets their status and back in stock date if it exists
         for (const size of sa(s, a, d)) {
           const status = size.status;
           const statusSubstring = 'noQtyAvailable';
 
+          //finds the size from the main size array
           const result = sizes.find((arraySize) => {
             return arraySize.size === size.size;
           });
 
+          //checks if the given size is in stock
           if (!status.includes(statusSubstring)) {
-            //in stock
             result.status = 1;
           }
           result.productName = name;
 
+          //set back in stock date on the size
           if (!size.date) {
+            //in stock
             result.date = '';
           } else if (size.date.includes('Udgået')) {
+            //not available anymore
             result.date = 'out';
           } else {
+            //out of stock
             const dateSplitDate = size.date.split(':');
             const date = dateSplitDate[1];
             result.date = date.trim();
@@ -268,7 +247,7 @@ export class HultaforsScraperService {
           }
         }
 
-        //creates product and adds it to the productList
+        //creates product and add it to the productList
         const product: HultaforsModel = {
           articleName: name,
           articleNumber: number,
@@ -282,11 +261,11 @@ export class HultaforsScraperService {
 
       return productList;
     } catch (err) {
-      throw err;
-      //throw new Error('failed to get products');
+      throw new Error('failed to get products');
     }
   }
 
+  //add given list of products to the database
   private async addListToDatabase(
     products: HultaforsModel[],
   ): Promise<HultaforsModel[]> {
@@ -294,13 +273,16 @@ export class HultaforsScraperService {
     try {
       const productsInDatabase = await this.hultaforsService.findAllProducts();
 
+      //loop through given list
       for (const product of products) {
         console.log(product);
+        //checks if product already exist
         let p: HultaforsModel = productsInDatabase.find(
           (x) =>
             x.articleName === product.articleName &&
             x.articleName === product.articleName,
         );
+        //if product exists update it else create a new one
         if (p) {
           p = await this.hultaforsService.editProduct(p.articleName, product);
         } else {
@@ -311,6 +293,59 @@ export class HultaforsScraperService {
       return completedList;
     } catch (err) {
       throw err;
+    }
+  }
+
+  private async handleLogin(page: Page, username: string, password: string) {
+    try {
+      // login to site
+      await page.waitForSelector('#User_UserName').catch(() => {
+        throw new HttpException('could not reach login', HttpStatus.NOT_FOUND);
+      });
+      await page.type('#User_UserName', username);
+      await page.type('#User_Password', password).catch(() => {
+        throw new HttpException('could not reach login', HttpStatus.NOT_FOUND);
+      });
+      await page.click(
+        '#loginform > div > div.col-md-10.center-col > div.col-md-12.top30 > button',
+      );
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  private async handleNavigationToProducts(page: Page) {
+    try {
+      //opens sidebar and navigate to product
+      await page.click('.hamburger');
+      await page.waitForSelector('.toggle-item.mainmenuproducts');
+      await page.click('.toggle-item.mainmenuproducts');
+
+      //selects emma safety footwear
+      await page.waitForSelector(
+        '#searchboxform > div > div:nth-child(3) > div > div > div:nth-child(3) > a',
+      );
+      await page.click(
+        '#searchboxform > div > div:nth-child(3) > div > div > div:nth-child(3) > a',
+      );
+
+      //selects shoes to only be displayed on the page
+      await page.waitForTimeout(1000);
+      await page.click(
+        '#searchboxform > div > div:nth-child(4) > div > div > div >' +
+          ' div.btn-group.js-lvl-1 > button',
+      );
+
+      await page.waitForSelector(
+        '#searchboxform > div > div:nth-child(4) > div > div > div >' +
+          ' div.btn-group.js-lvl-1.open > ul > li:nth-child(1) > a',
+      );
+      await page.click(
+        '#searchboxform > div > div:nth-child(4) > div > div > div >' +
+          ' div.btn-group.js-lvl-1.open > ul > li:nth-child(1) > a',
+      );
+    } catch (err) {
+      throw new HttpException('failed to find products', HttpStatus.NOT_FOUND);
     }
   }
 }

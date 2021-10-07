@@ -9,8 +9,6 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { UserService } from '../../core/service/user.service';
-import { CreateUserDto } from '../dto/user/create-user.dto';
-import { UpdateUserDto } from '../dto/user/update-user.dto';
 import { jwtAuthenticationGuard } from '../guard/jwt-authentication.guard';
 import { UserDto } from '../dto/user/user.dto';
 import { EditUserDto } from '../dto/user/edit-user.dot';
@@ -36,13 +34,14 @@ export class UserController {
   }
 
   /**
-   * finds a user based on there username
-   * @param username
+   * finds a user based on there id
+   * @param id
    */
   @UseGuards(jwtAuthenticationGuard)
-  @Get(':username')
-  findOne(@Param('username') username: string) {
-    return this.userService.getByUsername(username);
+  @Get(':id')
+  async findOne(@Param('id') id: number): Promise<UserDto> {
+    const u = await this.userService.getById(id);
+    return JSON.parse(JSON.stringify(u));
   }
 
   /**

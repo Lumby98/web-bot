@@ -45,16 +45,23 @@ export class HultaforsService {
     }
   }
 
+  /**
+   * creates a product
+   * @param product
+   */
   async createProduct(product: HultaforsModel): Promise<HultaforsModel> {
     try {
+      //checks if the product already exists
       const doesProductExist = await this.productRepository.findOne({
         where: { articleName: product.articleName },
       });
 
+      //throw error if product exists
       if (doesProductExist) {
         throw new Error('Product already exists');
       }
 
+      //creates the size for the product
       const sizes: Size[] = [];
       for (const size of product.sizes) {
         const newSize = await this.sizeRepository.create();
@@ -65,6 +72,7 @@ export class HultaforsService {
         sizes.push(newSize);
       }
 
+      //creates the product along with the relation to the created sizes
       const productEntity = await this.productRepository.create();
       productEntity.articleName = product.articleName;
       productEntity.articleNumber = product.articleNumber;

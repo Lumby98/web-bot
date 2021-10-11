@@ -30,8 +30,10 @@ export class SiteService {
    */
   async findOneSite(siteName: string): Promise<SiteModel> {
     try {
-      const site = this.siteRepository.findOne({ name: siteName });
-      return JSON.parse(JSON.stringify(site));
+      const site = await this.siteRepository.findOne({ name: siteName });
+      if (site) {
+        return JSON.parse(JSON.stringify(site));
+      }
     } catch (err) {
       throw new Error('could not find site');
     }
@@ -105,7 +107,13 @@ export class SiteService {
       }
 
       const removed = await this.siteRepository.remove(siteRemove);
-      return JSON.parse(JSON.stringify(removed));
+
+      const deletedSite = await this.siteRepository.findOne({ name: siteName });
+      if (!deletedSite) {
+        return JSON.parse(JSON.stringify(removed));
+      } else {
+        throw new Error();
+      }
     } catch (err) {
       if (err.message == 'site does not exist') {
         throw err;
@@ -121,7 +129,7 @@ export class SiteService {
    */
   async updateSiteAfterScrape(siteName: string): Promise<SiteDto[]> {
     try {
-      const check = await this.siteRepository.findOne(siteName);
+      const check = await this.findOneSite(siteName);
       if (!check) {
         await this.createSite({
           name: siteName,

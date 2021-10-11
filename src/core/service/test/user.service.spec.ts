@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserService } from '../user.service';
-import { DeleteResult, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { User } from '../../../infrastructure/entities/user.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { UpdateResult } from 'typeorm';
@@ -36,6 +36,9 @@ describe('UserService', () => {
         password: 'test',
         admin: 1,
       };
+      jest.spyOn(repo, 'findOne').mockImplementationOnce(() => {
+        return undefined;
+      });
       jest.spyOn(repo, 'create').mockImplementationOnce(() => {
         return testUser;
       });
@@ -61,6 +64,7 @@ describe('UserService', () => {
       }).rejects.toThrow();
     });
   });
+
   describe('getByUsername', () => {
     it('should get a user by their username', async () => {
       const testUser: User = {
@@ -109,7 +113,7 @@ describe('UserService', () => {
 
   describe('update', () => {
     it('should update a user', async () => {
-      const testUserUpdate: User = {
+      const testUserToUpdate: User = {
         id: 1,
         username: 'test',
         password: 'hello',
@@ -121,12 +125,12 @@ describe('UserService', () => {
         password: 'test',
         admin: 1,
       };
-      jest.spyOn(repo, 'findOne').mockResolvedValueOnce(testUserUpdate);
+      jest.spyOn(repo, 'findOne').mockResolvedValueOnce(testUserToUpdate);
       jest.spyOn(repo, 'update').mockImplementationOnce(async () => {
         return new UpdateResult();
       });
-      testUserUpdate.password = 'test';
-      testUserUpdate.admin = 1;
+      testUserToUpdate.password = 'test';
+      testUserToUpdate.admin = 1;
       jest.spyOn(repo, 'findOne').mockResolvedValueOnce(testUser);
       expect(await service.update(testUser.username, testUser)).toEqual(
         testUser,

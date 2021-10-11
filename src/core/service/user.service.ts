@@ -144,6 +144,8 @@ export class UserService {
         });
         if (!deletedUser) {
           return true;
+        } else {
+          throw new Error();
         }
       }
       throw new Error('could not find user to delete');

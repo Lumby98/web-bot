@@ -28,7 +28,7 @@ export class UserService {
       await this.userRepository.save(newUser);
       return JSON.parse(JSON.stringify(newUser));
     } catch (err) {
-      throw new HttpException('could not create user', HttpStatus.BAD_REQUEST);
+      throw new Error('could not create user');
     }
   }
 
@@ -42,10 +42,7 @@ export class UserService {
       if (user) {
         return JSON.parse(JSON.stringify(user));
       }
-      throw new HttpException(
-        'User with this username does not exist',
-        HttpStatus.NOT_FOUND,
-      );
+      throw new Error('User with this username does not exist');
     } catch (err) {
       throw err;
     }
@@ -60,7 +57,7 @@ export class UserService {
       if (users) {
         return JSON.parse(JSON.stringify(users));
       }
-      throw new HttpException('Could not retrive users', HttpStatus.NOT_FOUND);
+      throw new Error('Could not retrive users');
     } catch (err) {
       throw err;
     }
@@ -76,10 +73,7 @@ export class UserService {
       if (user) {
         return JSON.parse(JSON.stringify(user));
       }
-      throw new HttpException(
-        'User with this id does not exist',
-        HttpStatus.NOT_FOUND,
-      );
+      throw new Error('User with this id does not exist');
     } catch (err) {
       throw err;
     }
@@ -101,10 +95,7 @@ export class UserService {
       });
       if (sameEmail) {
         if (sameEmail.username != username) {
-          throw new HttpException(
-            'username is already taken',
-            HttpStatus.BAD_REQUEST,
-          );
+          throw new Error('username is already taken');
         }
       }
       let hashedPassword: string;
@@ -130,10 +121,7 @@ export class UserService {
           return JSON.parse(JSON.stringify(updatedUser));
         }
       }
-      throw new HttpException(
-        'The user was not updated',
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new Error('The user was not updated');
     } catch (err) {
       throw err;
     }
@@ -158,10 +146,7 @@ export class UserService {
           return true;
         }
       }
-      throw new HttpException(
-        'could not find user to delete',
-        HttpStatus.NOT_FOUND,
-      );
+      throw new Error('could not find user to delete');
     } catch (err) {
       throw err;
     }

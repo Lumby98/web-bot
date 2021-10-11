@@ -3,14 +3,14 @@ import { NeskridScraperService } from '../../core/service/neskrid-scraper.servic
 import { ScraperController } from '../controllers/scraper.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { NeskridProduct } from '../../infrastructure/entities/neskrid.product.entity';
-import { ScrapeGateway } from '../gateway/scrapeGateway';
+import { ScrapeGateway } from '../gateway/scrape.gateway';
 import { HultaforsScraperService } from '../../core/service/hultafors-scraper.service';
 import { HultaforsProduct } from '../../infrastructure/entities/hultafors.product.entity';
 import { Size } from '../../infrastructure/entities/size.entity';
 import { HultaforsService } from '../../core/service/hultafors.service';
 import { SiteService } from '../../core/service/site.service';
 import { Site } from '../../infrastructure/entities/site.entity';
-import { NeskridService } from "../../core/service/neskrid.service";
+import { NeskridService } from '../../core/service/neskrid.service';
 
 @Module({
   imports: [

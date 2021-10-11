@@ -80,7 +80,7 @@ export class HultaforsService {
       await this.productRepository.save(productEntity);
       return JSON.parse(JSON.stringify(productEntity));
     } catch (e) {
-      if (e.message) {
+      if (e.message == 'Product already exists') {
         throw e;
       } else {
         throw new Error('could not create product');
@@ -131,7 +131,11 @@ export class HultaforsService {
       }
       throw new Error('Failed to update product');
     } catch (e) {
-      throw e;
+      if (e.message == 'Product does not exist') {
+        throw e;
+      } else {
+        throw new Error('Failed to update Product');
+      }
     }
   }
 
@@ -159,7 +163,11 @@ export class HultaforsService {
       }
       return true;
     } catch (e) {
-      throw e;
+      if (e.message == 'Could not find product to delete') {
+        throw e;
+      } else {
+        throw new Error('failed to delete product');
+      }
     }
   }
 
@@ -187,7 +195,11 @@ export class HultaforsService {
       await this.sizeRepository.save(newSize);
       return JSON.parse(JSON.stringify(newSize));
     } catch (e) {
-      throw e;
+      if (e.message == 'Size already exist') {
+        throw e;
+      } else {
+        throw new Error('failed to create size');
+      }
     }
   }
 
@@ -232,7 +244,11 @@ export class HultaforsService {
       }
       throw new Error('could not update size');
     } catch (e) {
-      throw e;
+      if (e.message == 'Could not find size to edit') {
+        throw e;
+      } else {
+        throw new Error('failed to update size');
+      }
     }
   }
 
@@ -260,7 +276,11 @@ export class HultaforsService {
       }
       return true;
     } catch (e) {
-      throw e;
+      if (e.message == 'Could not find size to delete') {
+        throw e;
+      } else {
+        throw new Error('Could not delete product');
+      }
     }
   }
 }

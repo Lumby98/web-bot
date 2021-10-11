@@ -1,8 +1,5 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { NeskridModel } from '../models/neskrid.model';
-import { InjectRepository } from '@nestjs/typeorm';
-import { NeskridProduct } from '../../infrastructure/entities/neskrid.product.entity';
-import { Repository } from 'typeorm';
 import { NeskridService } from './neskrid.service';
 import { Page } from 'puppeteer';
 
@@ -33,10 +30,7 @@ export class NeskridScraperService {
       await page
         .goto('https://www.neskrid.com/', { waitUntil: 'load' })
         .catch(() => {
-          throw new HttpException(
-            'could not reach Neskrid',
-            HttpStatus.GATEWAY_TIMEOUT,
-          );
+          throw new Error('could not reach Neskrid');
         });
 
       //set language on page
@@ -49,10 +43,7 @@ export class NeskridScraperService {
           '#modallanguages > div > div > div.modal-body.text-center > ul > li:nth-child(1) > a',
         )
         .catch(() => {
-          throw new HttpException(
-            'could not find selector for language selection',
-            HttpStatus.GATEWAY_TIMEOUT,
-          );
+          throw new Error('could not find selector for language selection');
         });
 
       await this.handleLogin(page, username, password);
@@ -83,7 +74,6 @@ export class NeskridScraperService {
       // return the list of products
       return await this.updateAfterScrape(products);
     } catch (err) {
-      console.log(err.message);
       throw err;
     } finally {
       await browser.close();
@@ -143,107 +133,112 @@ export class NeskridScraperService {
   }
 
   private async handleLogin(page: Page, username: string, password: string) {
-    //navigate to login
-    await page.waitForSelector('.last a').catch(() => {
-      throw new HttpException(
-        'could not find selector for login button',
-        HttpStatus.GATEWAY_TIMEOUT,
-      );
-    });
-    await page.click('.last a');
+    try {
+      //navigate to login
+      await page.waitForSelector('.last a').catch(() => {
+        throw new Error('could not find login button');
+      });
+      await page.click('.last a');
 
-    //login
-    await page.waitForSelector('#gebruikerscode').catch(() => {
-      throw new HttpException(
-        'could not find selector for input field for username',
-        HttpStatus.GATEWAY_TIMEOUT,
-      );
-    });
-    //login input
-    await page.type('#gebruikerscode', username);
-    await page.type('#gebruikerspass', password).catch(() => {
-      throw new HttpException(
-        'could not find selector for input field for password',
-        HttpStatus.GATEWAY_TIMEOUT,
-      );
-    });
+      //login
+      await page.waitForSelector('#gebruikerscode').catch(() => {
+        throw new Error('could not find selector for input field for username');
+      });
+      //login input
+      await page.type('#gebruikerscode', username);
+      await page.type('#gebruikerspass', password).catch(() => {
+        throw new Error('could not find selector for input field for password');
+      });
 
-    await page.click('.login-form button').catch(() => {
-      throw new HttpException(
-        'could not find selector for login button',
-        HttpStatus.GATEWAY_TIMEOUT,
-      );
-    });
-    await page.waitForTimeout(2000);
+      await page.click('.login-form button').catch(() => {
+        throw new Error('could not find login button');
+      });
+      await page.waitForTimeout(2000);
+    } catch (err) {
+      throw err;
+    }
   }
 
   private async handleNavigationToProducts(page: Page) {
-    //navigate to scraping content
-    await page
-      .waitForSelector(
-        '.ms-hero-bg-royal',
-        { timeout: 8000 }, //waits a maximum of 8 seconds after pressing login
-      )
-      .catch(() => {
-        //if there is a timeout, it is assumed that the username or password is incorrect
-        throw new HttpException(
-          'failed to login username or password might be incorrect',
-          HttpStatus.GATEWAY_TIMEOUT,
-        );
-      });
+    try {
+      //navigate to scraping content
+      await page
+        .waitForSelector(
+          '.ms-hero-bg-royal',
+          { timeout: 8000 }, //waits a maximum of 8 seconds after pressing login
+        )
+        .catch(() => {
+          //if there is a timeout, it is assumed that the username or password is incorrect
+          throw new Error(
+            'failed to login username or password might be incorrect',
+          );
+        });
 
-    await page.click(
-      '.card.card-yellow.animated.fadeInUp.animation-delay-7 .ms-hero-bg-royal',
-    );
-    await page.waitForSelector('.searchable-select-holder', {
-      timeout: 5000,
-    });
-    await page.click('.searchable-select-holder');
+      await page.click(
+        '.card.card-yellow.animated.fadeInUp.animation-delay-7 .ms-hero-bg-royal',
+      );
+      await page.waitForSelector('.searchable-select-holder', {
+        timeout: 5000,
+      });
+      await page.click('.searchable-select-holder');
+    } catch (err) {
+      if (
+        err.message == 'failed to login username or password might be incorrect'
+      ) {
+        throw err;
+      } else {
+        throw new Error('failed at login');
+      }
+    }
   }
 
   private async getProductsFromPage(
     page: Page,
     brand: string,
   ): Promise<NeskridModel> {
-    //opens dropdown menu
-    await page.waitForSelector('.searchable-select-holder');
-    await page.click('.searchable-select-holder');
-    await page.waitForTimeout(500);
+    try {
+      //opens dropdown menu
+      await page.waitForSelector('.searchable-select-holder');
+      await page.click('.searchable-select-holder');
+      await page.waitForTimeout(500);
 
-    //search for the current brand and selects it
-    await page.type('.searchable-select-input', brand);
-    await page.keyboard.press('Enter');
+      //search for the current brand and selects it
+      await page.type('.searchable-select-input', brand);
+      await page.keyboard.press('Enter');
 
-    //gets the article names for the current brand
-    await page.waitForSelector('.input-container');
-    const articles = await page.$$('.input-container');
+      //gets the article names for the current brand
+      await page.waitForSelector('.input-container');
+      const articles = await page.$$('.input-container');
 
-    //gets the article number for the current brand
-    for (const article of articles) {
-      const articleName = await article.$eval(
-        '.color-primary',
-        (el) => el.textContent,
-      );
-      let articleNo;
-      articleNo = await article
-        .$eval('small', (el) => el.textContent)
-        .catch(() => {
+      //gets the article number for the current brand
+      for (const article of articles) {
+        const articleName = await article.$eval(
+          '.color-primary',
+          (el) => el.textContent,
+        );
+        let articleNo;
+        articleNo = await article
+          .$eval('small', (el) => el.textContent)
+          .catch(() => {
+            articleNo = 'h:no article number';
+          });
+        if (articleNo == undefined) {
           articleNo = 'h:no article number';
-        });
-      if (articleNo == undefined) {
-        articleNo = 'h:no article number';
+        }
+        //splits the articleNo string to only get the article number
+        const splitter = articleNo.split(':');
+        articleNo = splitter[1].trim();
+        const product: NeskridModel = {
+          brand: brand,
+          articleName: articleName,
+          articleNo: articleNo,
+          active: 1,
+        };
+        console.log(product);
+        return product;
       }
-      //splits the articleNo string to only get the article number
-      const splitter = articleNo.split(':');
-      articleNo = splitter[1].trim();
-      const product: NeskridModel = {
-        brand: brand,
-        articleName: articleName,
-        articleNo: articleNo,
-        active: 1,
-      };
-      console.log(product);
-      return product;
+    } catch (err) {
+      throw new Error('failed to get products');
     }
   }
 }

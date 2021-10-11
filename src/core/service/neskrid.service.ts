@@ -24,7 +24,7 @@ export class NeskridService {
       });
 
       if (check) {
-        throw new HttpException('product already exists', HttpStatus.FOUND);
+        throw new Error('product already exists');
       }
       //makes sure the the active variable is either 1 or 0 defaults to 1
       if (productToCreate.active > 1 || productToCreate.active < 0) {
@@ -54,10 +54,7 @@ export class NeskridService {
         return JSON.parse(JSON.stringify(productE));
       }
     } catch (err) {
-      throw new HttpException(
-        'could not find any products',
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new Error('could not find any products');
     }
   }
 
@@ -76,10 +73,7 @@ export class NeskridService {
       if (product) {
         return JSON.parse(JSON.stringify(product));
       } else {
-        throw new HttpException(
-          'could not find the product',
-          HttpStatus.BAD_REQUEST,
-        );
+        throw new Error('could not find the product');
       }
     } catch (err) {
       throw err;
@@ -106,16 +100,10 @@ export class NeskridService {
         if (updatedProduct) {
           return JSON.parse(JSON.stringify(updatedProduct));
         } else {
-          throw new HttpException(
-            'This product was not updated',
-            HttpStatus.BAD_REQUEST,
-          );
+          throw new Error('This product was not updated');
         }
       } else {
-        throw new HttpException(
-          'this product does not exist',
-          HttpStatus.BAD_REQUEST,
-        );
+        throw new Error('this product does not exist');
       }
     } catch (err) {
       throw err;

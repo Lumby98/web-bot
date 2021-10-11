@@ -33,10 +33,7 @@ export class HultaforsScraperService {
           { waitUntil: 'load' },
         )
         .catch(() => {
-          throw new HttpException(
-            'could not reach Hultafors',
-            HttpStatus.GATEWAY_TIMEOUT,
-          );
+          throw new Error('could not reach Hultafors');
         });
 
       await this.handleLogin(page, username, password);
@@ -47,9 +44,8 @@ export class HultaforsScraperService {
           timeout: 8000,
         })
         .catch(() => {
-          throw new HttpException(
+          throw new Error(
             'failed to login username and/or password is incorrect',
-            HttpStatus.GATEWAY_TIMEOUT,
           );
         });
 
@@ -292,7 +288,7 @@ export class HultaforsScraperService {
       }
       return completedList;
     } catch (err) {
-      throw err;
+      throw new Error('failed to save products');
     }
   }
 
@@ -300,11 +296,11 @@ export class HultaforsScraperService {
     try {
       // login to site
       await page.waitForSelector('#User_UserName').catch(() => {
-        throw new HttpException('could not reach login', HttpStatus.NOT_FOUND);
+        throw new Error('could not reach login');
       });
       await page.type('#User_UserName', username);
       await page.type('#User_Password', password).catch(() => {
-        throw new HttpException('could not reach login', HttpStatus.NOT_FOUND);
+        throw new Error('could not reach login');
       });
       await page.click(
         '#loginform > div > div.col-md-10.center-col > div.col-md-12.top30 > button',
@@ -345,7 +341,7 @@ export class HultaforsScraperService {
           ' div.btn-group.js-lvl-1.open > ul > li:nth-child(1) > a',
       );
     } catch (err) {
-      throw new HttpException('failed to find products', HttpStatus.NOT_FOUND);
+      throw new Error('failed to find products');
     }
   }
 }

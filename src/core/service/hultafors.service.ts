@@ -99,9 +99,8 @@ export class HultaforsService {
   ): Promise<HultaforsModel> {
     try {
       //finds the product that needs to be update
-      console.log('first find');
       const productToEdit = await this.productRepository.findOne({
-        where: { articleName: product.articleName },
+        where: { articleName: articleName },
         relations: ['sizes'],
       });
 
@@ -111,7 +110,6 @@ export class HultaforsService {
       }
 
       //update product and its sizes
-      console.log('update');
       productToEdit.articleName = product.articleName;
       productToEdit.articleNumber = product.articleNumber;
       await this.productRepository.save(productToEdit);
@@ -119,9 +117,8 @@ export class HultaforsService {
         await this.editSize(size.size, product.articleName, size);
       }
       //finds the product to ensure it has been updated
-      console.log('second find');
       const changedProduct = await this.productRepository.findOne({
-        where: { articleName: product.articleName },
+        where: { articleName: productToEdit.articleName },
         relations: ['sizes'],
       });
 

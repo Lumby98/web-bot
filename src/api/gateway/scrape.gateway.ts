@@ -12,6 +12,8 @@ import { ScrapeDto } from '../dto/scrape/scrape.dto';
 import { HultaforsScraperService } from '../../core/service/hultafors-scraper.service';
 import { SiteService } from '../../core/service/site.service';
 import { ReturnStrapeDto } from '../dto/scrape/return-strape.dto';
+import { UseGuards } from '@nestjs/common';
+import { jwtAuthenticationGuard } from '../guard/jwt-authentication.guard';
 
 @WebSocketGateway()
 export class ScrapeGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -27,6 +29,7 @@ export class ScrapeGateway implements OnGatewayConnection, OnGatewayDisconnect {
    * @param client
    */
   @SubscribeMessage('startScrape')
+  @UseGuards(jwtAuthenticationGuard)
   async handleScrape(
     @MessageBody() dto: ScrapeDto,
     @ConnectedSocket() client: Socket,

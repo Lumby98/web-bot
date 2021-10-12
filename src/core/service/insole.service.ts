@@ -3,7 +3,6 @@ import { InsoleFromSheetDto } from '../../api/dto/insole-upload/insole-from-shee
 import { Page } from 'puppeteer';
 import { InsoleModel } from '../models/insole.model';
 import { RegisterInsoleDto } from '../../api/dto/insole-upload/register-insole.dto';
-import { timeout } from 'rxjs/operators';
 
 @Injectable()
 export class InsoleService {
@@ -298,8 +297,9 @@ export class InsoleService {
       //completed by
       await page.type('#id_iFrm_PstFld-2256941-', 'Ortowear');
 
-      //clicks send button - disabled for now
+      //clicks send button and waits for 5 seconds - disabled for now
       //await page.click('#js_tail2256943 > div > input.frm_BtnSubmit');
+      //await page.waitForTimeout(5000);
 
       await page.waitForTimeout(10000);
     } catch (err) {
@@ -307,6 +307,11 @@ export class InsoleService {
     }
   }
 
+  /**
+   * chooses the language on ortowear
+   * @param page
+   * @private
+   */
   private static async choseLanguage(page: Page) {
     try {
       await page.waitForTimeout(5000);

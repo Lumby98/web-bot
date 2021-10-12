@@ -17,7 +17,7 @@ import { jwtAuthenticationGuard } from '../guard/jwt-authentication.guard';
 import { UserDto } from '../dto/user/user.dto';
 
 /**
- * authentication is made by following the following guide from wanago.io
+ * authentication is made with help from the following guide from wanago.io
  * https://wanago.io/2020/05/25/api-nestjs-authenticating-users-bcrypt-passport-jwt-cookies/
  */
 @Controller('authentication')

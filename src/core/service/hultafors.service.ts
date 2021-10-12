@@ -118,7 +118,7 @@ export class HultaforsService {
       }
       //finds the product to ensure it has been updated
       const changedProduct = await this.productRepository.findOne({
-        where: { articleName: productToEdit.articleName },
+        where: { articleName: product.articleName },
         relations: ['sizes'],
       });
 
@@ -212,7 +212,6 @@ export class HultaforsService {
     size: SizeModel,
   ): Promise<SizeModel> {
     try {
-      console.log('size find');
       const sizeToUpdate = await this.sizeRepository.findOne({
         where: {
           size: sizeNumber,
@@ -225,14 +224,12 @@ export class HultaforsService {
       if (!sizeToUpdate) {
         throw new Error('Could not find size to edit');
       }
-      console.log('size update');
       await this.sizeRepository.save({
         id: sizeToUpdate.id,
         ...size,
       });
 
-      console.log('second size find');
-      const isUpdated = this.sizeRepository.findOne({
+      const isUpdated = await this.sizeRepository.findOne({
         where: { id: sizeToUpdate.id },
       });
 

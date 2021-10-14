@@ -24,7 +24,7 @@ export class InsoleService {
       //goes to ortowears page to get data of the given insoles
       //for testing replace 'order' with 'beta'
       await page
-        .goto('https://beta.ortowear.com/', { waitUntil: 'networkidle2' })
+        .goto('https://order.ortowear.com/', { waitUntil: 'networkidle2' })
         .catch(() => {
           throw new Error('could not reach Ortowear');
         });
@@ -94,7 +94,7 @@ export class InsoleService {
 
         //goes back and prepares itself for the next insole
         await page.goto(
-          'https://beta.ortowear.com/administration/ordersAdmin/',
+          'https://order.ortowear.com/administration/ordersAdmin/',
           { waitUntil: 'networkidle2' },
         );
         await page.waitForTimeout(2000);
@@ -178,7 +178,7 @@ export class InsoleService {
   private static async navigateToOrders(page: Page) {
     try {
       //goes to page with orders
-      await page.goto('https://beta.ortowear.com/administration/ordersAdmin', {
+      await page.goto('https://order.ortowear.com/administration/ordersAdmin', {
         waitUntil: 'networkidle2',
       });
 

@@ -29,7 +29,6 @@ export class ScrapeGateway implements OnGatewayConnection, OnGatewayDisconnect {
    * @param client
    */
   @SubscribeMessage('startScrape')
-  @UseGuards(jwtAuthenticationGuard)
   async handleScrape(
     @MessageBody() dto: ScrapeDto,
     @ConnectedSocket() client: Socket,

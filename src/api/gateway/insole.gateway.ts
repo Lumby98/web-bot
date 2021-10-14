@@ -30,7 +30,6 @@ export class InsoleGateway implements OnGatewayConnection, OnGatewayDisconnect {
    * @param client
    */
   @SubscribeMessage('startInsoleRegistration')
-  @UseGuards(jwtAuthenticationGuard)
   async handleScrape(
     @MessageBody() dto: RegisterInsoleDto,
     @ConnectedSocket() client: Socket,

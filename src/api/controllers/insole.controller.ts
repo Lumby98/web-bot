@@ -9,6 +9,7 @@ import {
 import { InsoleService } from '../../core/service/insole.service';
 import { RegisterInsoleDto } from '../dto/insole-upload/register-insole.dto';
 import { jwtAuthenticationGuard } from '../guard/jwt-authentication.guard';
+
 @Controller('insole')
 export class InsoleController {
   constructor(private readonly insoleService: InsoleService) {}

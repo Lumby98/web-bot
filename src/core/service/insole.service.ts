@@ -61,12 +61,20 @@ export class InsoleService {
 
       //loops through all the given insoles and gets the necessary data
       for (const insole of insoleDto.insoles) {
+        await page.click('#datatable_searchfield', {
+          clickCount: 3,
+          delay: 100,
+        });
+        await page.keyboard.press('Backspace');
         //finds the insole in the list
         const check = await InsoleService.findInsole(page, insole);
         //if findInsole returns a value, means the insole was not found
         //the loop will then go to the next insole
-        if (check) {
-          await page.click('#datatable_searchfield', { clickCount: 3 });
+        if (check == 'could not find') {
+          await page.click('#datatable_searchfield', {
+            clickCount: 3,
+            delay: 100,
+          });
           await page.keyboard.press('Backspace');
           couldNotFind.push(insole);
           console.log(couldNotFind);
@@ -79,7 +87,7 @@ export class InsoleService {
         await page.waitForTimeout(5000);
 
         //gets the data for it
-        const i = await InsoleService.getData(page, insole);
+        const i = await InsoleService.getData(page, insole, check);
 
         //adds it to list of complete insoles
         data.push(i);
@@ -87,6 +95,7 @@ export class InsoleService {
         //goes back and prepares itself for the next insole
         await page.goto(
           'https://beta.ortowear.com/administration/ordersAdmin/',
+          { waitUntil: 'networkidle2' },
         );
         await page.waitForTimeout(2000);
         await page.waitForSelector('orders-table_processing', { hidden: true });
@@ -101,20 +110,29 @@ export class InsoleService {
           //goes to site
           await page.goto(
             'https://www.emmasafetyfootwear.com/orthopaedic/registration-emma-ortho-cover-en',
-            { waitUntil: 'load' },
+            { waitUntil: 'networkidle2' },
           );
 
           //register the given insole
           //sends the index of the given insole to know what insole failed to register
-          await InsoleService.fillForm(page, i, data.indexOf(i));
+          const check = await InsoleService.fillForm(page, i);
+          //if the insole is returned an error occurred and the insole was not created
+          console.log(check);
+          if (check) {
+            couldNotFind.push({
+              orderNumber: i.orderNumber,
+              registrationCode: i.registrationCode,
+            });
+          }
         }
       }
 
       //creation of completion message shown to the user
       let returnString = 'complete';
       //if any insoles where not created add the order number of the insole to the message
-      if (couldNotFind) {
-        returnString += ', but could not find insoles with order number: ';
+      console.log(couldNotFind.length + ' arr');
+      if (couldNotFind.length > 0) {
+        returnString += ', but failed to register insoles with order number: ';
         for (const failed of couldNotFind) {
           returnString += failed.orderNumber + ', ';
         }
@@ -161,7 +179,7 @@ export class InsoleService {
     try {
       //goes to page with orders
       await page.goto('https://beta.ortowear.com/administration/ordersAdmin', {
-        waitUntil: 'load',
+        waitUntil: 'networkidle2',
       });
 
       //wait for the page to finish loading
@@ -181,9 +199,10 @@ export class InsoleService {
     try {
       //searches for the insole by order number
       const searchText: string = insole.orderNumber.toString();
-      await page.type('#datatable_searchfield', searchText);
+      await page.type('#datatable_searchfield', searchText.trim());
 
       //wait for page to find the insole
+      await page.waitForTimeout(2000);
       await page.waitForSelector('#orders-table_processing', { hidden: false });
       await page.waitForSelector('#orders-table_processing', { hidden: true });
 
@@ -199,11 +218,22 @@ export class InsoleService {
         target == 'No matching records found'
       ) {
         console.log(target);
-        return target;
+        return 'could not find';
       }
+      const type = await page.$eval(
+        '#orders-table > tbody > tr > td:nth-child(1)',
+        (el) => el.textContent,
+      );
+      console.log(type);
+      await page.waitForSelector('#orders-table > tbody > tr');
       await page.click('#orders-table > tbody > tr');
       await page.click('#orders-table > tbody > tr');
       await page.click('#topBtns > div > div > button.btn.btn-sm.btn-warning');
+      if (type.includes('INS')) {
+        return 'INS';
+      } else {
+        return 'STS';
+      }
     } catch (err) {
       throw new Error('failed to find order');
     }
@@ -213,33 +243,66 @@ export class InsoleService {
    * gets the data of an Insole
    * @param page
    * @param insole
+   * @param type
    * @private
    */
   private static async getData(
     page: Page,
     insole: InsoleFromSheetDto,
+    type: string,
   ): Promise<InsoleModel> {
     try {
-      //gets the size of the insole
-      const size = await page.$eval(
-        'body > div.wrapper > div.content-wrapper > section.content > div:nth-child(3) >' +
-          ' div > div > div > div.box-body > form > div:nth-child(3) > div:nth-child(1) > div > div > table >' +
-          ' tbody > tr:nth-child(2) > td:nth-child(2) > p',
-        (p) => p.textContent,
-      );
+      let size;
+      let model;
+      switch (type) {
+        case 'STS': {
+          //gets the size of the insole
+          console.log('before size');
+          size = await page.$eval(
+            'body > div.wrapper > div.content-wrapper > section.content > div.row > div > div > div >' +
+              ' div.box-body > form > div:nth-child(3) > div:nth-child(1) > div > div > table > tbody > tr:nth-child(2)' +
+              ' > td:nth-child(2) > p',
+            (p) => p.textContent,
+          );
+          console.log(size);
 
-      //gets the model of shoe the insole is for
-      const modelWithName = await page.$eval(
-        'body > div.wrapper > div.content-wrapper > section.content > div:nth-child(3) > div > div >' +
-          ' div > div.box-body > form > div:nth-child(3) > div:nth-child(2) > div > div:nth-child(1) > table > tbody >' +
-          ' tr:nth-child(1) > td:nth-child(2) > p',
-        (p) => p.textContent,
-      );
+          //gets the model of shoe the insole is for
+          const modelTemp = await page.$eval(
+            'body > div.wrapper > div.content-wrapper > section.content > div.row > div > div > div > div.box-body' +
+              ' > form > div:nth-child(3) > div:nth-child(2) > div > div:nth-child(1) > table > tbody > tr:nth-child(1)' +
+              ' > td:nth-child(2) > p',
+            (p) => p.textContent,
+          );
+          console.log(modelTemp);
 
-      //splites the model string to only get the article number
-      const spliter = modelWithName.split(' ');
-      const model = spliter[0];
+          //splites the model string to only get the article number
+          const splitter = modelTemp.split(' ');
+          model = splitter[0];
+          break;
+        }
+        case 'INS': {
+          // gets the size of order
+          const s = await page.$eval(
+            'body > div.wrapper > div.content-wrapper > section.content > div.row > div > div > div > div.box-body >' +
+              ' form > div:nth-child(3) > div > div > div:nth-child(2) > div > div > table > tbody > tr:nth-child(6) > td:nth-child(2)',
+            (el) => el.textContent,
+          );
+          //splits the string in cases where a region is also given i.e 42 EU
+          const splitterSize = s.split(' ');
+          size = splitterSize[0];
 
+          model = await page.$eval(
+            'body > div.wrapper > div.content-wrapper > section.content > div.row > div >' +
+              ' div > div > div.box-body > form > div:nth-child(3) > div > div > div:nth-child(2) > div > div > table > tbody >' +
+              ' tr:nth-child(2) > td:nth-child(2)',
+            (el) => el.textContent,
+          );
+          break;
+        }
+        default: {
+          throw new Error('failed to define order type');
+        }
+      }
       //retun a InsoleModel
       return {
         orderNumber: insole.orderNumber,
@@ -248,7 +311,11 @@ export class InsoleService {
         model: model,
       };
     } catch (err) {
-      throw new Error('failed to get order information');
+      if (err.message == 'failed to define order type') {
+        throw err;
+      }
+      throw err;
+      //throw new Error('failed to get order information');
     }
   }
 
@@ -256,14 +323,9 @@ export class InsoleService {
    * fills form on emma's website
    * @param page
    * @param insole
-   * @param number -- this number is to keep track of what insole is failed to register
    * @private
    */
-  private static async fillForm(
-    page: Page,
-    insole: InsoleModel,
-    number: number,
-  ) {
+  private static async fillForm(page: Page, insole: InsoleModel) {
     try {
       //company name field
       await page.type('#id_iFrm_PstFld-2256929-', 'Ortowear', { delay: 200 });
@@ -280,9 +342,8 @@ export class InsoleService {
       //registrasion code
       await page.type(
         '#id_iFrm_PstFld-2256937-',
-        insole.registrationCode.toString(),
+        insole.registrationCode.toString().trim(),
       );
-
       //checkbox
       await page.waitForSelector(
         '#id_iFrm_PstFld-2256939-Ik_heb_de_gepersonaliseerde_inlegzool_vervaardigd_conform_de_geleverde_werkinstructie\\._Dit_is_de_voorwaarde_voor_behoud_van_de_normen__EN-ISO-20345\\:2011_en_EN_ISO_20347\\:2012_welke_in_overeenstemming_zijn_met_de_bepalingen_in_de_richtlijn_89_686_EEC_96_58__EC_en__uitsluitend_geldig_in_combinatie_met_reeds_gecertificeerd_EMMA_Safety_Footwear_producten\\.-',
@@ -298,12 +359,10 @@ export class InsoleService {
       await page.type('#id_iFrm_PstFld-2256941-', 'Ortowear');
 
       //clicks send button and waits for 5 seconds - disabled for now
-      //await page.click('#js_tail2256943 > div > input.frm_BtnSubmit');
-      //await page.waitForTimeout(5000);
-
-      await page.waitForTimeout(10000);
+      await page.click('#js_tail2256943 > div > input.frm_BtnSubmit');
+      await page.waitForTimeout(5000);
     } catch (err) {
-      throw new Error('failed to register insole number: ' + number++);
+      return insole;
     }
   }
 

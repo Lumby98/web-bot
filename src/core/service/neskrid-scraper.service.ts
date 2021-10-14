@@ -8,6 +8,7 @@ export class NeskridScraperService {
   puppeteer = require('puppeteer');
 
   constructor(private neskridService: NeskridService) {}
+
   /**
    * scraps Neskrid and writes to a file
    * @param username

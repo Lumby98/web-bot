@@ -66,7 +66,7 @@ export class NeskridScraperService {
       // get the different products
       const products = [];
       for (const brand of brandNames) {
-        products.push(await this.getProductsFromPage(page, brand));
+        products.push(...(await this.getProductsFromPage(page, brand)));
       }
 
       //close the browser
@@ -196,7 +196,7 @@ export class NeskridScraperService {
   private async getProductsFromPage(
     page: Page,
     brand: string,
-  ): Promise<NeskridModel> {
+  ): Promise<NeskridModel[]> {
     try {
       //opens dropdown menu
       await page.waitForSelector('.searchable-select-holder');
@@ -210,6 +210,8 @@ export class NeskridScraperService {
       //gets the article names for the current brand
       await page.waitForSelector('.input-container');
       const articles = await page.$$('.input-container');
+
+      const products: NeskridModel[] = [];
 
       //gets the article number for the current brand
       for (const article of articles) {
@@ -236,8 +238,9 @@ export class NeskridScraperService {
           active: 1,
         };
         console.log(product);
-        return product;
+        products.push(product);
       }
+      return products;
     } catch (err) {
       throw new Error('failed to get products');
     }

@@ -7,9 +7,10 @@ import { Repository } from 'typeorm';
 import { UserModel } from '../models/user.model';
 import { EditUserDto } from '../../api/dto/user/edit-user.dot';
 import * as bcrypt from 'bcrypt';
+import { UserInterface } from '../interfaces/user.interface';
 
 @Injectable()
-export class UserService {
+export class UserService implements UserInterface {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,

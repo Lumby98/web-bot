@@ -4,9 +4,10 @@ import { Repository } from 'typeorm';
 import { Site } from '../../infrastructure/entities/site.entity';
 import { SiteModel } from '../models/site.model';
 import { SiteDto } from '../../api/dto/site/site.dto';
+import { SiteInterface } from '../interfaces/site.interface';
 
 @Injectable()
-export class SiteService {
+export class SiteService implements SiteInterface {
   constructor(
     @InjectRepository(Site)
     private siteRepository: Repository<Site>,

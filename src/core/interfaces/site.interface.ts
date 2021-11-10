@@ -1,6 +1,7 @@
-import { SiteDto } from '../../api/dto/site/site.dto';
+import { SiteDto } from '../../ui.api/dto/site/site.dto';
 import { SiteModel } from '../models/site.model';
 
+export const siteInterfaceProvider = 'siteInterfaceProvider';
 export interface SiteInterface {
   findSites(): Promise<SiteDto[]>;
 

@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NeskridScraperService } from '../neskrid-scraper.service';
+import { NeskridScraperService } from '../service/neskrid-scraper.service';
 
 describe('ScraperService', () => {
   let service: NeskridScraperService;

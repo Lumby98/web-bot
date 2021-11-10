@@ -6,21 +6,31 @@ import {
   OnGatewayConnection,
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
-import { NeskridScraperService } from '../../core/service/neskrid-scraper.service';
 import { Socket } from 'socket.io';
 import { ScrapeDto } from '../dto/scrape/scrape.dto';
-import { HultaforsScraperService } from '../../core/service/hultafors-scraper.service';
-import { SiteService } from '../../core/service/site.service';
 import { ReturnStrapeDto } from '../dto/scrape/return-strape.dto';
-import { UseGuards } from '@nestjs/common';
-import { jwtAuthenticationGuard } from '../guard/jwt-authentication.guard';
+import { Inject, UseGuards } from '@nestjs/common';
+import {
+  NeskridScraperInterface,
+  neskridScraperInterfaceProvider,
+} from '../../core/interfaces/neskrid-scraper.interface';
+import {
+  HultaforsScraperInterface,
+  hultaforsScraperInterfaceProvider,
+} from '../../core/interfaces/hultafors-scraper.interface';
+import {
+  SiteInterface,
+  siteInterfaceProvider,
+} from '../../core/interfaces/site.interface';
 
 @WebSocketGateway()
 export class ScrapeGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
-    private neskridScraperService: NeskridScraperService,
-    private hultaforsScraperService: HultaforsScraperService,
-    private siteService: SiteService,
+    @Inject(neskridScraperInterfaceProvider)
+    private neskridScraperService: NeskridScraperInterface,
+    @Inject(hultaforsScraperInterfaceProvider)
+    private hultaforsScraperService: HultaforsScraperInterface,
+    @Inject(siteInterfaceProvider) private siteService: SiteInterface,
   ) {}
 
   /**

@@ -11,6 +11,11 @@ import { HultaforsService } from '../../core/service/hultafors.service';
 import { SiteService } from '../../core/service/site.service';
 import { Site } from '../../infrastructure/entities/site.entity';
 import { NeskridService } from '../../core/service/neskrid.service';
+import { neskridInterfaceProvider } from '../../core/interfaces/neskrid.interface';
+import { neskridScraperInterfaceProvider } from '../../core/interfaces/neskrid-scraper.interface';
+import { hultaforsScraperInterfaceProvider } from '../../core/interfaces/hultafors-scraper.interface';
+import { hultaforsInterfaceProvider } from '../../core/interfaces/hultafors.interface';
+import { siteInterfaceProvider } from '../../core/interfaces/site.interface';
 
 @Module({
   imports: [
@@ -18,12 +23,18 @@ import { NeskridService } from '../../core/service/neskrid.service';
   ],
   controllers: [ScraperController],
   providers: [
-    NeskridScraperService,
-    NeskridService,
+    {
+      provide: neskridScraperInterfaceProvider,
+      useClass: NeskridScraperService,
+    },
+    { provide: neskridInterfaceProvider, useClass: NeskridService },
     ScrapeGateway,
-    HultaforsScraperService,
-    HultaforsService,
-    SiteService,
+    {
+      provide: hultaforsScraperInterfaceProvider,
+      useClass: HultaforsScraperService,
+    },
+    { provide: hultaforsInterfaceProvider, useClass: HultaforsService },
+    { provide: siteInterfaceProvider, useClass: SiteService },
   ],
 })
 export class ScraperModule {}

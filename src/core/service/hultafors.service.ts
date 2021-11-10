@@ -5,9 +5,10 @@ import { Repository } from 'typeorm';
 import { Size } from '../../infrastructure/entities/size.entity';
 import { HultaforsModel } from '../models/hultafors.model';
 import { SizeModel } from '../models/size.model';
+import { HultaforsInterface } from '../interfaces/hultafors.interface';
 
 @Injectable()
-export class HultaforsService {
+export class HultaforsService implements HultaforsInterface {
   constructor(
     @InjectRepository(HultaforsProduct)
     private productRepository: Repository<HultaforsProduct>,

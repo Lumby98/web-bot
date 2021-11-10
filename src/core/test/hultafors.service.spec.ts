@@ -1,10 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { HultaforsService } from '../hultafors.service';
+import { HultaforsService } from '../service/hultafors.service';
 import { Repository } from 'typeorm';
-import { HultaforsProduct } from '../../../infrastructure/entities/hultafors.product.entity';
-import { Size } from '../../../infrastructure/entities/size.entity';
+import { HultaforsProduct } from '../../infrastructure/entities/hultafors.product.entity';
+import { Size } from '../../infrastructure/entities/size.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { SizeModel } from '../../models/size.model';
+import { SizeModel } from '../models/size.model';
 
 describe('HultaforsService', () => {
   let service: HultaforsService;

@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { HultaforsScraperService } from '../hultafors-scraper.service';
+import { HultaforsScraperService } from '../service/hultafors-scraper.service';
 
 describe('HultaforsServiceService', () => {
   let service: HultaforsScraperService;

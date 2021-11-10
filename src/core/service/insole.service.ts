@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { InsoleFromSheetDto } from '../../api/dto/insole-upload/insole-from-sheet.dto';
+import { InsoleFromSheetDto } from '../../ui.api/dto/insole-upload/insole-from-sheet.dto';
 import { Page } from 'puppeteer';
 import { InsoleModel } from '../models/insole.model';
-import { RegisterInsoleDto } from '../../api/dto/insole-upload/register-insole.dto';
+import { RegisterInsoleDto } from '../../ui.api/dto/insole-upload/register-insole.dto';
+import { InsoleInterface } from '../interfaces/insole.interface';
 
 @Injectable()
-export class InsoleService {
+export class InsoleService implements InsoleInterface {
   puppeteer = require('puppeteer');
 
   /**

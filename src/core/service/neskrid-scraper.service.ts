@@ -1,13 +1,19 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { NeskridModel } from '../models/neskrid.model';
-import { NeskridService } from './neskrid.service';
 import { Page } from 'puppeteer';
+import { NeskridScraperInterface } from '../interfaces/neskrid-scraper.interface';
+import {
+  NeskridInterface,
+  neskridInterfaceProvider,
+} from '../interfaces/neskrid.interface';
 
 @Injectable()
-export class NeskridScraperService {
+export class NeskridScraperService implements NeskridScraperInterface {
   puppeteer = require('puppeteer');
 
-  constructor(private neskridService: NeskridService) {}
+  constructor(
+    @Inject(neskridInterfaceProvider) private neskridService: NeskridInterface,
+  ) {}
 
   /**
    * scraps Neskrid and writes to a file

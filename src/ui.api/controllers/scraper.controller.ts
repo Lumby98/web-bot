@@ -4,28 +4,48 @@ import {
   Get,
   HttpException,
   HttpStatus,
+  Inject,
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { NeskridScraperService } from '../../core/service/neskrid-scraper.service';
 import { NeskridDto } from '../dto/product/neskrid.dto';
 import { jwtAuthenticationGuard } from '../guard/jwt-authentication.guard';
 import { ScrapeDto } from '../dto/scrape/scrape.dto';
-import { HultaforsScraperService } from '../../core/service/hultafors-scraper.service';
-import { HultaforsService } from '../../core/service/hultafors.service';
 import { HultaforsDto } from '../dto/product/hultafors.dto';
-import { SiteService } from '../../core/service/site.service';
 import { SiteDto } from '../dto/site/site.dto';
-import { NeskridService } from '../../core/service/neskrid.service';
+import {
+  NeskridScraperInterface,
+  neskridScraperInterfaceProvider,
+} from '../../core/interfaces/neskrid-scraper.interface';
+import {
+  HultaforsScraperInterface,
+  hultaforsScraperInterfaceProvider,
+} from '../../core/interfaces/hultafors-scraper.interface';
+import {
+  HultaforsInterface,
+  hultaforsInterfaceProvider,
+} from '../../core/interfaces/hultafors.interface';
+import {
+  SiteInterface,
+  siteInterfaceProvider,
+} from '../../core/interfaces/site.interface';
+import {
+  NeskridInterface,
+  neskridInterfaceProvider,
+} from '../../core/interfaces/neskrid.interface';
 
 @Controller('scraper')
 export class ScraperController {
   constructor(
-    private readonly neskridScraperService: NeskridScraperService,
-    private readonly hultaForsScraperService: HultaforsScraperService,
-    private readonly hultaforsService: HultaforsService,
-    private readonly siteService: SiteService,
-    private readonly neskridService: NeskridService,
+    @Inject(neskridScraperInterfaceProvider)
+    private readonly neskridScraperService: NeskridScraperInterface,
+    @Inject(hultaforsScraperInterfaceProvider)
+    private readonly hultaForsScraperService: HultaforsScraperInterface,
+    @Inject(hultaforsInterfaceProvider)
+    private readonly hultaforsService: HultaforsInterface,
+    @Inject(siteInterfaceProvider) private readonly siteService: SiteInterface,
+    @Inject(neskridInterfaceProvider)
+    private readonly neskridService: NeskridInterface,
   ) {}
 
   /**

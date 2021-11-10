@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Site } from '../../infrastructure/entities/site.entity';
 import { SiteModel } from '../models/site.model';
-import { SiteDto } from '../../api/dto/site/site.dto';
+import { SiteDto } from '../../ui.api/dto/site/site.dto';
 import { SiteInterface } from '../interfaces/site.interface';
 
 @Injectable()

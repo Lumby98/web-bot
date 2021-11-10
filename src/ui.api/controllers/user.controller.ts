@@ -6,16 +6,22 @@ import {
   Param,
   Delete,
   UseGuards,
+  Inject,
 } from '@nestjs/common';
-import { UserService } from '../../core/service/user.service';
 import { jwtAuthenticationGuard } from '../guard/jwt-authentication.guard';
 import { UserDto } from '../dto/user/user.dto';
 import { EditUserDto } from '../dto/user/edit-user.dot';
+import {
+  UserInterface,
+  userInterfaceProvider,
+} from '../../core/interfaces/user.interface';
 
 @UseGuards(jwtAuthenticationGuard)
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    @Inject(userInterfaceProvider) private readonly userService: UserInterface,
+  ) {}
 
   /**
    * gets all users

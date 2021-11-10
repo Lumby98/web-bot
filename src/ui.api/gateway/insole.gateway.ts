@@ -8,13 +8,17 @@ import {
 } from '@nestjs/websockets';
 import { Socket } from 'socket.io';
 import { RegisterInsoleDto } from '../dto/insole-upload/register-insole.dto';
-import { InsoleService } from '../../core/service/insole.service';
-import { UseGuards } from '@nestjs/common';
-import { jwtAuthenticationGuard } from '../guard/jwt-authentication.guard';
+import { Inject } from '@nestjs/common';
+import {
+  InsoleInterface,
+  insoleInterfaceProvider,
+} from '../../core/interfaces/insole.interface';
 
 @WebSocketGateway()
 export class InsoleGateway implements OnGatewayConnection, OnGatewayDisconnect {
-  constructor(private insoleService: InsoleService) {}
+  constructor(
+    @Inject(insoleInterfaceProvider) private insoleService: InsoleInterface,
+  ) {}
 
   handleConnection(client: any, ...args: any[]): any {
     console.log('client connected ' + client.id);

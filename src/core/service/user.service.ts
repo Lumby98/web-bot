@@ -1,11 +1,11 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { CreateUserDto } from '../../api/dto/user/create-user.dto';
-import { UpdateUserDto } from '../../api/dto/user/update-user.dto';
+import { CreateUserDto } from '../../ui.api/dto/user/create-user.dto';
+import { UpdateUserDto } from '../../ui.api/dto/user/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '../../infrastructure/entities/user.entity';
 import { Repository } from 'typeorm';
 import { UserModel } from '../models/user.model';
-import { EditUserDto } from '../../api/dto/user/edit-user.dot';
+import { EditUserDto } from '../../ui.api/dto/user/edit-user.dot';
 import * as bcrypt from 'bcrypt';
 import { UserInterface } from '../interfaces/user.interface';
 

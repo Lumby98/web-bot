@@ -3,18 +3,22 @@ import {
   Controller,
   Get,
   HttpCode,
+  Inject,
   Post,
   Req,
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { AuthenticationService } from '../../core/service/authentication.service';
 import { RegisterDto } from '../dto/authentication/register.dto';
 import { LocalAuthenticationGuard } from '../guard/localAuthentication.guard';
-import { RequestWithUser } from '../../authentication/interface/requestWithUser.interface';
+import { RequestWithUser } from '../../core/authentication/interface/requestWithUser.interface';
 import { Response } from 'express';
 import { jwtAuthenticationGuard } from '../guard/jwt-authentication.guard';
 import { UserDto } from '../dto/user/user.dto';
+import {
+  AuthenticationInterface,
+  authenticationInterfaceProvider,
+} from '../../core/interfaces/authentication.interface';
 
 /**
  * authentication is made with help from the following guide from wanago.io
@@ -22,7 +26,10 @@ import { UserDto } from '../dto/user/user.dto';
  */
 @Controller('authentication')
 export class AuthenticationController {
-  constructor(private readonly authenticationService: AuthenticationService) {}
+  constructor(
+    @Inject(authenticationInterfaceProvider)
+    private readonly authenticationService: AuthenticationInterface,
+  ) {}
 
   /**
    * calls the authentication service to create a user,

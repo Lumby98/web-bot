@@ -1,12 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { DatabaseModule } from './infrastructure/database.module';
-import { ScraperModule } from './api/modules/scraper.module';
-import { UserModule } from './api/modules/user.module';
+import { ScraperModule } from './ui.api/modules/scraper.module';
+import { UserModule } from './ui.api/modules/user.module';
 import * as Joi from '@hapi/joi';
-import { AuthenticationModule } from './api/modules/authentication.module';
-import { InsoleModule } from './api/modules/insole.module';
-import { NeskridService } from './core/service/neskrid.service';
+import { AuthenticationModule } from './ui.api/modules/authentication.module';
+import { InsoleModule } from './ui.api/modules/insole.module';
 
 @Module({
   imports: [

@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NeskridService } from '../neskrid.service';
-import { NeskridProduct } from '../../../infrastructure/entities/neskrid.product.entity';
+import { NeskridService } from '../service/neskrid.service';
+import { NeskridProduct } from '../../infrastructure/entities/neskrid.product.entity';
 import { Repository, UpdateResult } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 

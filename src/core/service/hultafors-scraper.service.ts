@@ -1,14 +1,25 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { HultaforsModel } from '../models/hultafors.model';
 import { Page } from 'puppeteer';
 import { SizeModel } from '../models/size.model';
 import { HultaforsService } from './hultafors.service';
+import {
+  HultaforsScraperInterface,
+  hultaforsScraperInterfaceProvider,
+} from '../interfaces/hultafors-scraper.interface';
+import {
+  HultaforsInterface,
+  hultaforsInterfaceProvider,
+} from '../interfaces/hultafors.interface';
 
 @Injectable()
-export class HultaforsScraperService {
+export class HultaforsScraperService implements HultaforsScraperInterface {
   puppeteer = require('puppeteer');
 
-  constructor(private hultaforsService: HultaforsService) {}
+  constructor(
+    @Inject(hultaforsInterfaceProvider)
+    private hultaforsService: HultaforsInterface,
+  ) {}
 
   /**
    * scrapes Hultafors

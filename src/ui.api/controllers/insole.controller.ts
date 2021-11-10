@@ -5,14 +5,21 @@ import {
   HttpException,
   HttpStatus,
   UseGuards,
+  Inject,
 } from '@nestjs/common';
-import { InsoleService } from '../../core/service/insole.service';
 import { RegisterInsoleDto } from '../dto/insole-upload/register-insole.dto';
 import { jwtAuthenticationGuard } from '../guard/jwt-authentication.guard';
+import {
+  InsoleInterface,
+  insoleInterfaceProvider,
+} from '../../core/interfaces/insole.interface';
 
 @Controller('insole')
 export class InsoleController {
-  constructor(private readonly insoleService: InsoleService) {}
+  constructor(
+    @Inject(insoleInterfaceProvider)
+    private readonly insoleService: InsoleInterface,
+  ) {}
 
   /**
    * starts insole registration

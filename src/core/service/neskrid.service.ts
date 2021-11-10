@@ -3,9 +3,10 @@ import { NeskridModel } from '../models/neskrid.model';
 import { NeskridProduct } from '../../infrastructure/entities/neskrid.product.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { NeskridInterface } from '../interfaces/neskrid.interface';
 
 @Injectable()
-export class NeskridService {
+export class NeskridService implements NeskridInterface {
   constructor(
     @InjectRepository(NeskridProduct)
     private productRepository: Repository<NeskridProduct>,

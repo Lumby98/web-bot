@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { NeskridModel } from '../models/neskrid.model';
 import { NeskridProduct } from '../../infrastructure/entities/neskrid.product.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Connection, Repository } from 'typeorm';
 import { NeskridInterface } from '../interfaces/neskrid.interface';
 
 @Injectable()
@@ -10,6 +10,7 @@ export class NeskridService implements NeskridInterface {
   constructor(
     @InjectRepository(NeskridProduct)
     private productRepository: Repository<NeskridProduct>,
+    private connection: Connection,
   ) {}
 
   /**
@@ -39,6 +40,47 @@ export class NeskridService implements NeskridInterface {
       product.active = productToCreate.active;
       product = await this.productRepository.save(product);
       return JSON.parse(JSON.stringify(product));
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  /**
+   * creates a number of products in the database at the same time using a transaction.
+   * @param productsToCreate
+   */
+  async createAll(productsToCreate: NeskridModel[]): Promise<NeskridModel[]> {
+    const productList = [];
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      for (const productToCreate of productsToCreate) {
+        //checks if the product already exists
+
+        const check = await queryRunner.manager.findOne(NeskridProduct, {
+          brand: productToCreate.brand,
+          articleName: productToCreate.articleName,
+        });
+
+        if (check) {
+          throw new Error('product already exists');
+        }
+        //makes sure the the active variable is either 1 or 0 defaults to 1
+        if (productToCreate.active > 1 || productToCreate.active < 0) {
+          productToCreate.active = 1;
+        }
+        //creates and returns the product
+        let product: NeskridProduct = await queryRunner.manager.create(
+          NeskridProduct,
+        );
+        product.brand = productToCreate.brand;
+        product.articleName = productToCreate.articleName;
+        product.articleNo = productToCreate.articleNo;
+        product.active = productToCreate.active;
+        product = await queryRunner.manager.save(product);
+        return JSON.parse(JSON.stringify(product));
+      }
     } catch (err) {
       throw err;
     }

@@ -98,6 +98,8 @@ export class NeskridScraperService implements NeskridScraperInterface {
     try {
       const productsInDatabase = await this.neskridService.findAll();
 
+      const updateProductList = [];
+      const createProductList = [];
       for (const product of products) {
         let p: NeskridModel;
         //checks if the product already exists
@@ -111,12 +113,7 @@ export class NeskridScraperService implements NeskridScraperInterface {
           p = await this.neskridService.update(p);
           completedList.push(p);
         } else {
-          p = await this.neskridService
-            .create(product)
-            .catch(() => (p = undefined));
-          if (p) {
-            completedList.push(p);
-          }
+          createProductList.push(product);
         }
       }
       //loop through the initial list of products from the database
@@ -133,6 +130,9 @@ export class NeskridScraperService implements NeskridScraperInterface {
           completedList.push(product);
         }
       }
+      completedList.push(
+        ...(await this.neskridService.createAll(createProductList)),
+      );
       return completedList;
     } catch (err) {
       throw err;

@@ -33,6 +33,8 @@ import {
   NeskridInterface,
   neskridInterfaceProvider,
 } from '../../core/interfaces/neskrid.interface';
+import { NeskridProduct } from '../../infrastructure/entities/neskrid.product.entity';
+import { NeskridModel } from '../../core/models/neskrid.model';
 
 @Controller('scraper')
 export class ScraperController {
@@ -61,8 +63,8 @@ export class ScraperController {
    * starts the scraper
    * @param scraping
    */
-  @Post('scrape')
   @UseGuards(jwtAuthenticationGuard)
+  @Post('scrape')
   async scrape(@Body() scraping: ScrapeDto) {
     try {
       //checks if username or password is blank if true throw error
@@ -105,6 +107,33 @@ export class ScraperController {
       );
       //returns a message and the updated site
       return { message: 'complete', sites };
+    } catch (err) {
+      console.log(err);
+      throw new HttpException(err, err.statusCode);
+    }
+  }
+
+  @UseGuards(jwtAuthenticationGuard)
+  @Post('createAll')
+  async createAll(@Body() neskridModels: NeskridModel[]) {
+    try {
+      const products = await this.neskridService.createAll(neskridModels);
+
+      let productDtos: NeskridDto[] = products.map((product) => ({
+        brand: product.brand,
+        articleName: product.articleName,
+        articleNo: product.articleNo,
+        active: product.active,
+      }));
+      //sorts the list brand and article name
+      productDtos = productDtos.sort((a, b) => {
+        if (a.brand === b.brand) {
+          return a.articleName < b.articleName ? -1 : 1;
+        } else {
+          return a.brand < b.brand ? -1 : 1;
+        }
+      });
+      return productDtos;
     } catch (err) {
       console.log(err);
       throw new HttpException(err, err.statusCode);

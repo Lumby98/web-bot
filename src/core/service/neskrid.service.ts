@@ -55,6 +55,7 @@ export class NeskridService implements NeskridInterface {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
+      const productsToSave = [];
       for (const productToCreate of productsToCreate) {
         //checks if the product already exists
 
@@ -71,18 +72,23 @@ export class NeskridService implements NeskridInterface {
           productToCreate.active = 1;
         }
         //creates and returns the product
-        let product: NeskridProduct = await queryRunner.manager.create(
+        const product: NeskridProduct = await queryRunner.manager.create(
           NeskridProduct,
         );
         product.brand = productToCreate.brand;
         product.articleName = productToCreate.articleName;
         product.articleNo = productToCreate.articleNo;
         product.active = productToCreate.active;
-        product = await queryRunner.manager.save(product);
-        return JSON.parse(JSON.stringify(product));
+        productsToSave.push(product);
       }
+      const savedProducts = await queryRunner.manager.save(productsToSave);
+      await queryRunner.commitTransaction();
+      return JSON.parse(JSON.stringify(savedProducts));
     } catch (err) {
+      await queryRunner.rollbackTransaction();
       throw err;
+    } finally {
+      await queryRunner.release();
     }
   }
 

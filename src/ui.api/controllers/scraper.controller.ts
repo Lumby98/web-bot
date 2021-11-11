@@ -175,6 +175,7 @@ export class ScraperController {
   @Get('hultafors')
   async getAllHultaforsProducts() {
     try {
+      //dick
       const products = await this.hultaforsService.findAllProducts();
       let productDtos: HultaforsDto[] = products.map((product) => ({
         articleNumber: product.articleNumber,

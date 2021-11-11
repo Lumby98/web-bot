@@ -100,6 +100,7 @@ export class NeskridScraperService implements NeskridScraperInterface {
 
       const updateProductList = [];
       const createProductList = [];
+      const missingProductList = [];
       for (const product of products) {
         let p: NeskridModel;
         //checks if the product already exists
@@ -110,15 +111,23 @@ export class NeskridScraperService implements NeskridScraperInterface {
         //if it exist set active to 1
         if (p) {
           p.active = 1;
-          p = await this.neskridService.update(p);
-          completedList.push(p);
+          updateProductList.push(p);
         } else {
           createProductList.push(product);
         }
       }
+
+      completedList.push(
+        ...(await this.neskridService.createAll(createProductList)),
+      );
+
+      completedList.push(
+        ...(await this.neskridService.updateAll(updateProductList)),
+      );
+
       //loop through the initial list of products from the database
       // looking for missing products from the given list
-      for (let product of productsInDatabase) {
+      for (const product of productsInDatabase) {
         const missing = completedList.find(
           (x) =>
             x.brand === product.brand && x.articleName === product.articleName,
@@ -126,13 +135,14 @@ export class NeskridScraperService implements NeskridScraperInterface {
 
         if (!missing) {
           product.active = 0;
-          product = await this.neskridService.update(product);
-          completedList.push(product);
+          missingProductList.push(product);
         }
       }
+
       completedList.push(
-        ...(await this.neskridService.createAll(createProductList)),
+        ...(await this.neskridService.updateAll(missingProductList)),
       );
+
       return completedList;
     } catch (err) {
       throw err;

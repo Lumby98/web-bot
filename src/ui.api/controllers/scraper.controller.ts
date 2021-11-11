@@ -5,7 +5,7 @@ import {
   HttpException,
   HttpStatus,
   Inject,
-  Post,
+  Post, Put,
   UseGuards,
 } from '@nestjs/common';
 import { NeskridDto } from '../dto/product/neskrid.dto';
@@ -118,6 +118,33 @@ export class ScraperController {
   async createAll(@Body() neskridModels: NeskridModel[]) {
     try {
       const products = await this.neskridService.createAll(neskridModels);
+
+      let productDtos: NeskridDto[] = products.map((product) => ({
+        brand: product.brand,
+        articleName: product.articleName,
+        articleNo: product.articleNo,
+        active: product.active,
+      }));
+      //sorts the list brand and article name
+      productDtos = productDtos.sort((a, b) => {
+        if (a.brand === b.brand) {
+          return a.articleName < b.articleName ? -1 : 1;
+        } else {
+          return a.brand < b.brand ? -1 : 1;
+        }
+      });
+      return productDtos;
+    } catch (err) {
+      console.log(err);
+      throw new HttpException(err, err.statusCode);
+    }
+  }
+
+  @UseGuards(jwtAuthenticationGuard)
+  @Put('updateAll')
+  async updateAll(@Body() neskridModels: NeskridModel[]) {
+    try {
+      const products = await this.neskridService.updateAll(neskridModels);
 
       let productDtos: NeskridDto[] = products.map((product) => ({
         brand: product.brand,

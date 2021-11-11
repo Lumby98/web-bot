@@ -50,7 +50,6 @@ export class NeskridService implements NeskridInterface {
    * @param productsToCreate
    */
   async createAll(productsToCreate: NeskridModel[]): Promise<NeskridModel[]> {
-    const productList = [];
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -156,6 +155,52 @@ export class NeskridService implements NeskridInterface {
       }
     } catch (err) {
       throw err;
+    }
+  }
+
+  /**
+   * updates a number of products in the database at the same time using a transaction.
+   * @param productsToUpdate
+   */
+  async updateAll(productsToUpdate: NeskridModel[]): Promise<NeskridModel[]> {
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const productsToSave = [];
+      for (const productToUpdate of productsToUpdate) {
+        //find the object to update
+        const productTU: NeskridProduct = await queryRunner.manager.findOne(
+          NeskridProduct,
+          {
+            brand: productToUpdate.brand,
+            articleName: productToUpdate.articleName,
+          },
+        );
+        if (productTU) {
+          productTU.brand = productToUpdate.brand;
+          productTU.articleName = productToUpdate.articleName;
+          productTU.articleNo = productToUpdate.articleNo;
+          productTU.active = productToUpdate.active;
+          productsToSave.push(productTU);
+        } else {
+          throw new Error('this product does not exist');
+        }
+      }
+
+      const savedProducts = await queryRunner.manager.save(productsToSave);
+      await queryRunner.commitTransaction();
+
+      if (savedProducts) {
+        return JSON.parse(JSON.stringify(savedProducts));
+      } else {
+        throw new Error('This product was not updated');
+      }
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
     }
   }
 }

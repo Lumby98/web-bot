@@ -7,7 +7,6 @@ import { getConnectionToken, getRepositoryToken } from '@nestjs/typeorm';
 describe('NeskridService', () => {
   let service: NeskridService;
   let repo: Repository<NeskridProduct>;
-  let connection;
   const mockConnection = () => ({
     createQueryRunner: jest.fn(),
   });

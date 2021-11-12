@@ -1,12 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NeskridService } from '../service/neskrid.service';
 import { NeskridProduct } from '../../infrastructure/entities/neskrid.product.entity';
-import { Repository, UpdateResult } from 'typeorm';
-import { getRepositoryToken } from '@nestjs/typeorm';
+import { Connection, Repository, UpdateResult } from 'typeorm';
+import { getConnectionToken, getRepositoryToken } from '@nestjs/typeorm';
 
 describe('NeskridService', () => {
   let service: NeskridService;
   let repo: Repository<NeskridProduct>;
+  let connection;
+  const mockConnection = () => ({
+    createQueryRunner: jest.fn(),
+  });
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -15,6 +19,10 @@ describe('NeskridService', () => {
         {
           provide: getRepositoryToken(NeskridProduct),
           useClass: Repository,
+        },
+        {
+          provide: Connection,
+          useFactory: mockConnection,
         },
       ],
     }).compile();

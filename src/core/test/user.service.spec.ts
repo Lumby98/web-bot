@@ -126,6 +126,53 @@ describe('UserService', () => {
         admin: 1,
       };
       jest.spyOn(repo, 'findOne').mockResolvedValueOnce(testUserToUpdate);
+      jest.spyOn(repo, 'findOne').mockResolvedValueOnce(testUserToUpdate);
+      jest.spyOn(repo, 'update').mockImplementationOnce(async () => {
+        return new UpdateResult();
+      });
+      testUserToUpdate.password = 'test';
+      testUserToUpdate.admin = 1;
+      jest.spyOn(repo, 'findOne').mockResolvedValueOnce(testUser);
+      expect(await service.update(testUser.username, testUser)).toEqual(
+        testUser,
+      );
+    });
+
+    it('should throw error if username is already taken', () => {
+      const testUserToUpdate: User = {
+        id: 1,
+        username: 'test',
+        password: 'hello',
+        admin: 0,
+      };
+      const otherUser: User = {
+        id: 1,
+        username: 'test12',
+        password: 'test',
+        admin: 1,
+      };
+      jest.spyOn(repo, 'findOne').mockResolvedValueOnce(testUserToUpdate);
+      jest.spyOn(repo, 'findOne').mockResolvedValueOnce(otherUser);
+      expect(
+        async () => await service.update(testUserToUpdate.username, otherUser),
+      ).rejects.toThrow();
+    });
+
+    it('should update a user with new username', async () => {
+      const testUserToUpdate: User = {
+        id: 1,
+        username: 'test',
+        password: 'hello',
+        admin: 0,
+      };
+      const testUser: User = {
+        id: 1,
+        username: 'test21',
+        password: 'test',
+        admin: 1,
+      };
+      jest.spyOn(repo, 'findOne').mockResolvedValueOnce(testUserToUpdate);
+      jest.spyOn(repo, 'findOne').mockResolvedValueOnce(undefined);
       jest.spyOn(repo, 'update').mockImplementationOnce(async () => {
         return new UpdateResult();
       });

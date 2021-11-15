@@ -16,9 +16,11 @@ import { neskridScraperInterfaceProvider } from '../../core/interfaces/neskrid-s
 import { hultaforsScraperInterfaceProvider } from '../../core/interfaces/hultafors-scraper.interface';
 import { hultaforsInterfaceProvider } from '../../core/interfaces/hultafors.interface';
 import { siteInterfaceProvider } from '../../core/interfaces/site.interface';
+import { Puppeteer } from 'puppeteer';
 
 @Module({
   imports: [
+    Puppeteer,
     TypeOrmModule.forFeature([NeskridProduct, HultaforsProduct, Size, Site]),
   ],
   controllers: [ScraperController],

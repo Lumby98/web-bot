@@ -9,5 +9,5 @@ export interface STSOrderModel extends OrderModel {
   model: string;
   sole: string;
   toeCap: string;
-  insole: OrderInsoleModel;
+  insole?: OrderInsoleModel;
 }

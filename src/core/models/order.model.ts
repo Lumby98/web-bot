@@ -1,8 +1,6 @@
 export interface OrderModel {
-  id: number;
+  id?: number;
   orderNr: string;
   customerName: string;
   deliveryAddress: string;
-  date: string;
-  orderStatus: string;
 }

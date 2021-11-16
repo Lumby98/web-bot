@@ -27,7 +27,7 @@ describe('OrderService', () => {
     }).compile();
 
     orderService = module.get<OrderService>(OrderService);
-    orderPuppeteerService = module.get<OrderPuppeteerInterface>(
+    orderPuppeteerService = module.get<OrderPuppeteerService>(
       OrderPuppeteerService,
     );
   });
@@ -44,8 +44,23 @@ describe('OrderService', () => {
         '16237136/PO4402074455',
       ];
 
-      const testSTSOrders: STSOrderModel[] = [{model: ''}];
-      jest.spyOn(orderPuppeteerService, 'findData').mockResolvedValueOnce();
+      const testSTSOrders: STSOrderModel[] = [
+        {
+          model: 'Beaver DUO',
+          orderNr: '36394-2',
+          customerName: 'Ortowear',
+          deliveryAddress: 'Mukkerten 21 6715 Esbjerg N Ribe, Denmark',
+          sizeL: '49',
+          sizeR: '49',
+          widthL: 'Neskrid 66-12',
+          widthR: 'Neskrid 66-12',
+          sole: 'N167 Duo Black',
+          toeCap: 'Composite',
+        },
+      ];
+      jest
+        .spyOn(orderPuppeteerService, 'findData')
+        .mockResolvedValueOnce(testSTSOrders);
     });
   });
 });

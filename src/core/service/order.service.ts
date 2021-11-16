@@ -21,4 +21,16 @@ export class OrderService implements OrderInterface {
   async handleOrders(orderNumbers: string[]): Promise<OrderModel[]> {
     return Promise.resolve(undefined);
   }
+
+  async usePuppeteer() {
+    await this.orderPuppeteer.start(false, 'http://192.168.1.2/');
+  }
+
+  async action(number: string) {
+    await this.orderPuppeteer.doScroll(number);
+  }
+
+  async stopPuppeteer() {
+    await this.orderPuppeteer.stop();
+  }
 }

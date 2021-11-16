@@ -6,8 +6,7 @@ import { UserModule } from './ui.api/modules/user.module';
 import * as Joi from '@hapi/joi';
 import { AuthenticationModule } from './ui.api/modules/authentication.module';
 import { InsoleModule } from './ui.api/modules/insole.module';
-import { OrderService } from './core/service/order.service';
-import { OrderPuppeteerService } from './core/service/order-puppeteer.service';
+import { OrderModule } from './ui.api/modules/order.module';
 
 @Module({
   imports: [
@@ -28,6 +27,7 @@ import { OrderPuppeteerService } from './core/service/order-puppeteer.service';
     UserModule,
     AuthenticationModule,
     InsoleModule,
+    OrderModule,
   ],
   controllers: [],
   providers: [],

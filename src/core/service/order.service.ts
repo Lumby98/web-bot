@@ -13,7 +13,12 @@ export class OrderService implements OrderInterface {
     private readonly orderPuppeteer: OrderPuppeteerInterface,
   ) {}
 
-  handleOrders(orderNumbers: string[]): Promise<OrderModel> {
+  /**
+   * Takes a list of order-numbers and then calls the appropriate puppeteer methods,
+   * in order to retrive and return a complete list og order object with all the correct data.
+   * @param orderNumbers
+   */
+  async handleOrders(orderNumbers: string[]): Promise<OrderModel[]> {
     return Promise.resolve(undefined);
   }
 }

@@ -20,7 +20,6 @@ import { Puppeteer } from 'puppeteer';
 
 @Module({
   imports: [
-    Puppeteer,
     TypeOrmModule.forFeature([NeskridProduct, HultaforsProduct, Size, Site]),
   ],
   controllers: [ScraperController],

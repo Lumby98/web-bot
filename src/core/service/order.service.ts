@@ -25,36 +25,6 @@ export class OrderService implements OrderInterface {
   }
 
   /**
-   * gets order type for the different order numbers given
-   * @param orderNumbers
-   */
-  async getOrderType(orderNumbers: string): Promise<string> {
-    return Promise.resolve(undefined);
-  }
-
-  /**
-   * get order information for an STS order
-   * @param ordernumber
-   */
-  async handleSTSOrder(ordernumber: string): Promise<STSOrderModel> {
-    return Promise.resolve(undefined);
-  }
-
-  /**
-   * check if an order has an insole
-   */
-  async checkForInsole(): Promise<boolean> {
-    return Promise.resolve(undefined);
-  }
-
-  /**
-   * gets data for an insole
-   */
-  async createInsole(): Promise<OrderInsoleModel> {
-    return Promise.resolve(undefined);
-  }
-
-  /**
    * gets puppeteer up and running
    * @param url
    */
@@ -67,5 +37,49 @@ export class OrderService implements OrderInterface {
    */
   async stopPuppeteer() {
     await this.orderPuppeteer.stop();
+  }
+
+  /**
+   *
+   * @param username
+   * @param password
+   * @private
+   */
+  private async handleOrtowearNavigation(username: string, password: string) {
+    return Promise.resolve(undefined);
+  }
+
+  /**
+   * gets order type for the different order numbers given
+   * @param orderNumbers
+   * @private
+   */
+  private async getOrderType(orderNumbers: string): Promise<string> {
+    return Promise.resolve(undefined);
+  }
+
+  /**
+   * get order information for an STS order
+   * @param orderNumber
+   * @private
+   */
+  private async handleSTSOrder(orderNumber: string): Promise<STSOrderModel> {
+    return Promise.resolve(undefined);
+  }
+
+  /**
+   * check if an order has an insole
+   * @private
+   */
+  private async checkForInsole(): Promise<boolean> {
+    return Promise.resolve(undefined);
+  }
+
+  /**
+   * gets data for an insole
+   * @private
+   */
+  private async createInsole(): Promise<OrderInsoleModel> {
+    return Promise.resolve(undefined);
   }
 }

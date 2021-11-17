@@ -11,14 +11,17 @@ import { OrderPuppeteerService } from '../service/order-puppeteer.service';
 import { OrderModel } from '../models/order.model';
 import { STSOrderModel } from '../models/sts-order.model';
 
+jest.mock('src/core/service/order-puppeteer.service.ts');
+
 describe('OrderService', () => {
   let orderService: OrderService;
-  let orderPuppeteerService: OrderPuppeteerService;
+  let orderPuppeteerService: OrderPuppeteerInterface;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         OrderService,
+        OrderPuppeteerService,
         {
           provide: orderPuppeteerInterfaceProvider,
           useClass: OrderPuppeteerService,
@@ -30,37 +33,24 @@ describe('OrderService', () => {
     orderPuppeteerService = module.get<OrderPuppeteerService>(
       OrderPuppeteerService,
     );
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
     expect(orderService).toBeDefined();
   });
 
-  describe('handleOrders', () => {
-    it('should return a list of orders', async () => {
-      const testOrderNumbers: string[] = [
-        '10604250',
-        'BA 166478',
-        '16237136/PO4402074455',
-      ];
+  describe('startPuppeteer', () => {
+    const validURL = 'https://www.google.com/';
 
-      const testSTSOrders: STSOrderModel[] = [
-        {
-          model: 'Beaver DUO',
-          orderNr: '36394-2',
-          customerName: 'Ortowear',
-          deliveryAddress: 'Mukkerten 21 6715 Esbjerg N Ribe, Denmark',
-          sizeL: '49',
-          sizeR: '49',
-          widthL: 'Neskrid 66-12',
-          widthR: 'Neskrid 66-12',
-          sole: 'N167 Duo Black',
-          toeCap: 'Composite',
-        },
-      ];
-      jest
-        .spyOn(orderPuppeteerService, 'findData')
-        .mockResolvedValueOnce(testSTSOrders);
+    describe('when startPuppeteer is called', () => {
+      beforeEach(async () => {
+        await orderService.startPuppeteer(validURL);
+      });
+
+      it('then it should call the order-puppeteer.service start method', async () => {
+        expect(orderPuppeteerService.start).toBeCalledWith(false, validURL);
+      });
     });
   });
 });

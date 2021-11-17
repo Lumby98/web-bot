@@ -1,4 +1,4 @@
-import { Controller, Get, Inject, Param } from "@nestjs/common";
+import { Controller, Get, Inject, Param } from '@nestjs/common';
 import {
   OrderInterface,
   orderInterfaceProvider,
@@ -13,13 +13,7 @@ export class OrderController {
 
   @Get('start')
   async startPuppeteer() {
-    await this.orderService.usePuppeteer();
-  }
-
-  @Get('action/:selector')
-  async do(@Param('selector') selector: string) {
-    console.log(selector);
-    await this.orderService.action(selector);
+    await this.orderService.startPuppeteer('https://pptr.dev/');
   }
 
   @Get('stop')

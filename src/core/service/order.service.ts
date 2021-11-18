@@ -17,7 +17,7 @@ export class OrderService implements OrderInterface {
 
   /**
    * Takes a list of order-numbers and then calls the appropriate puppeteer methods,
-   * in order to retrive and return a complete list og order object with all the correct data.
+   * in order to retrieve and return a complete list og order object with all the correct data.
    * @param orderNumbers
    */
   async handleOrders(orderNumbers: string[]): Promise<any[]> {
@@ -40,13 +40,13 @@ export class OrderService implements OrderInterface {
   }
 
   /**
-   *
+   * navigates to Ortorwear and goes to the order list
    * @param username
    * @param password
    * @private
    */
-  private async handleOrtowearNavigation(username: string, password: string) {
-    return Promise.resolve(undefined);
+  async handleOrtowearNavigation(username: string, password: string) {
+    await this.orderPuppeteer.loginOrtowear(username, password);
   }
 
   /**
@@ -54,7 +54,7 @@ export class OrderService implements OrderInterface {
    * @param orderNumbers
    * @private
    */
-  private async getOrderType(orderNumbers: string): Promise<string> {
+  async getOrderType(orderNumbers: string): Promise<string> {
     return Promise.resolve(undefined);
   }
 
@@ -63,7 +63,7 @@ export class OrderService implements OrderInterface {
    * @param orderNumber
    * @private
    */
-  private async handleSTSOrder(orderNumber: string): Promise<STSOrderModel> {
+  async handleSTSOrder(orderNumber: string): Promise<STSOrderModel> {
     return Promise.resolve(undefined);
   }
 
@@ -71,7 +71,7 @@ export class OrderService implements OrderInterface {
    * check if an order has an insole
    * @private
    */
-  private async checkForInsole(): Promise<boolean> {
+  async checkForInsole(): Promise<boolean> {
     return Promise.resolve(undefined);
   }
 
@@ -79,7 +79,7 @@ export class OrderService implements OrderInterface {
    * gets data for an insole
    * @private
    */
-  private async createInsole(): Promise<OrderInsoleModel> {
+  async createInsole(): Promise<OrderInsoleModel> {
     return Promise.resolve(undefined);
   }
 }

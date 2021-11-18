@@ -81,4 +81,8 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
   readType(orderNumber: string): Promise<string> {
     return Promise.resolve('');
   }
+
+  loginOrtowear(username: string, password: string) {
+    return Promise.resolve(undefined);
+  }
 }

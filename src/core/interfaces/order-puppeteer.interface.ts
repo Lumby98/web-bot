@@ -8,6 +8,7 @@ export interface OrderPuppeteerInterface {
   page;
   start(headless: boolean, url: string);
   navigateToURL(url: string);
+  loginOrtowear(username: string, password: string);
   stop();
   readType(orderNumber: string): Promise<string>;
   goToOrder(orderNumber: string);

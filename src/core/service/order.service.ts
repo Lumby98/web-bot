@@ -7,6 +7,7 @@ import {
 import { OrderModel } from '../models/order.model';
 import { STSOrderModel } from '../models/sts-order.model';
 import { OrderInsoleModel } from '../models/order-insole.model';
+import { OrderTypeEnum } from '../enums/type.enum';
 
 @Injectable()
 export class OrderService implements OrderInterface {
@@ -54,7 +55,7 @@ export class OrderService implements OrderInterface {
    * @param orderNumbers
    * @private
    */
-  async getOrderType(orderNumbers: string): Promise<string> {
+  async getOrderType(orderNumbers: string): Promise<OrderTypeEnum> {
     return Promise.resolve(undefined);
   }
 

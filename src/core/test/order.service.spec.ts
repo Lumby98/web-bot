@@ -10,6 +10,9 @@ import {
 import { OrderPuppeteerService } from '../service/order-puppeteer.service';
 import { OrderModel } from '../models/order.model';
 import { STSOrderModel } from '../models/sts-order.model';
+import { OrderTypeEnum } from '../enums/type.enum';
+import exp from 'constants';
+import { StsOrderStub } from './stubs/sts-order.stub';
 
 jest.mock('src/core/service/order-puppeteer.service.ts');
 
@@ -55,35 +58,21 @@ describe('OrderService', () => {
 
     describe('when startPuppeteer is called with an empty string', () => {
       const emptyURL = '';
-      beforeEach(async () => {
-        await orderService.startPuppeteer(emptyURL);
-      });
-
-      it('should not call the puppeter service start method', async () => {
-        expect(orderPuppeteerService.start).toBeCalledTimes(0);
-      });
 
       it('should throw an error with the right message', async () => {
-        await expect(orderService.startPuppeteer).rejects.toThrow(
-          'Invalid url, the given url is empty',
-        );
+        await expect(
+          async () => await orderService.startPuppeteer(emptyURL),
+        ).rejects.toThrow('Invalid url, the given url is empty');
       });
     });
 
     describe('when startPuppeteer is called with an invalid url', () => {
       const invalidURL = 'www.yahoo.com';
-      beforeEach(async () => {
-        await orderService.startPuppeteer(invalidURL);
-      });
-
-      it('should not call the puppeter service start method', async () => {
-        expect(orderPuppeteerService.start).toBeCalledTimes(0);
-      });
 
       it('should throw an error with the right message', async () => {
-        await expect(orderService.startPuppeteer).rejects.toThrow(
-          'Invalid url, the given url is invalid.',
-        );
+        await expect(
+          async () => await orderService.startPuppeteer(invalidURL),
+        ).rejects.toThrow('Invalid url, the given url is invalid.');
       });
     });
   });
@@ -121,65 +110,43 @@ describe('OrderService', () => {
 
     describe('when handleOrtowearNavigation is called with an empty username', () => {
       const emptyUsername = '';
-      beforeEach(async () => {
-        await orderService.handleOrtowearNavigation(
-          emptyUsername,
-          validPassword,
-        );
-      });
-
-      it('should not call the puppeter service loginOrtowear method ', async () => {
-        expect(orderPuppeteerService.loginOrtowear).toBeCalledTimes(0);
-      });
 
       it('should throw an error with the right message', async () => {
-        await expect(orderService.handleOrtowearNavigation).rejects.toThrow(
-          'Invalid username or password',
-        );
+        await expect(
+          async () => await orderService.handleOrtowearNavigation,
+        ).rejects.toThrow('Invalid username or password');
       });
     });
 
     describe('when handleOrtowearNavigation is called with an empty password', () => {
       const emptyPassword = '';
-      beforeEach(async () => {
-        await orderService.handleOrtowearNavigation(
-          validUsername,
-          emptyPassword,
-        );
-      });
 
-      it('should not call the puppeter service loginOrtowear method ', async () => {
-        expect(orderPuppeteerService.loginOrtowear).toBeCalledTimes(0);
-      });
-
-      it('should throw an error with the right message', async () => {
-        await expect(orderService.handleOrtowearNavigation).rejects.toThrow(
-          'Invalid username or password',
-        );
+      it('should throw an error with the right message', () => {
+        expect(
+          async () =>
+            await orderService.handleOrtowearNavigation(
+              validUsername,
+              emptyPassword,
+            ),
+        ).rejects.toThrow('Invalid username or password');
       });
     });
 
     describe('when handleOrtowearNavigation is called with an invalid username', () => {
       const invalidUsername = 'joe@123aspx.com';
-      beforeEach(async () => {
-        await orderService.handleOrtowearNavigation(
-          invalidUsername,
-          validPassword,
-        );
-      });
 
-      it('should not call the puppeter service loginOrtowear method ', async () => {
-        expect(orderPuppeteerService.loginOrtowear).toBeCalledTimes(0);
-      });
-
-      it('should throw an error with the right message', async () => {
-        await expect(orderService.handleOrtowearNavigation).rejects.toThrow(
-          'Invalid username or password',
-        );
+      it('should throw an error with the right message', () => {
+        expect(
+          async () =>
+            await orderService.handleOrtowearNavigation(
+              invalidUsername,
+              validPassword,
+            ),
+        ).rejects.toThrow('Invalid username or password');
       });
     });
 
-    describe('when handleOrtowearNavigation is called with and puppeteer throws an error', () => {
+    describe('when handleOrtowearNavigation is called and puppeteer fails login', () => {
       beforeEach(async () => {
         jest
           .spyOn(orderPuppeteerService, 'loginOrtowear')
@@ -188,14 +155,114 @@ describe('OrderService', () => {
           });
       });
 
-      it('should throw an error with the right message', async () => {
-        await expect(
+      it('should throw an error with the right message when username and password is correct, but something else happened', () => {
+        expect(
           async () =>
             await orderService.handleOrtowearNavigation(
               validUsername,
               validPassword,
             ),
-        ).rejects.toThrow('Failed to login, wrong username or password');
+        ).rejects.toThrow(
+          'Failed to login, wrong username or password (Ortowear)',
+        );
+      });
+    });
+
+    describe('when site is down', () => {
+      beforeEach(async () => {
+        jest
+          .spyOn(orderPuppeteerService, 'loginOrtowear')
+          .mockImplementationOnce(() => {
+            throw new Error('failed to reach website');
+          });
+      });
+
+      it('should throw error if site could not be reached', () => {
+        expect(async () => {
+          await orderService.handleOrtowearNavigation(
+            validUsername,
+            validPassword,
+          );
+        }).rejects.toThrow('failed to reach website');
+      });
+    });
+  });
+
+  describe('getOrderType', () => {
+    describe('when called with valid order number', () => {
+      const validOrderNumber = '155d215-1';
+      let expected;
+      beforeEach(async () => {
+        expected = await orderService.getOrderType(validOrderNumber);
+      });
+
+      it('should return STS', () => {
+        expect(expected).toEqual(OrderTypeEnum.STS);
+      });
+
+      it('should call readType', () => {
+        expect(orderPuppeteerService.readType).toBeCalledTimes(1);
+      });
+    });
+
+    describe('when called with invalid order number', () => {
+      it('should throw error if order number is blank', () => {
+        expect(async () => orderService.getOrderType('')).rejects.toThrow(
+          'order number is blank',
+        );
+      });
+    });
+
+    describe('when invalid type is returned', () => {
+      const validOrderNumber = '156dt64-1';
+      beforeEach(async () => {
+        jest
+          .spyOn(orderPuppeteerService, 'readType')
+          .mockResolvedValueOnce('MTF');
+      });
+      it('should throw error if types does not match enum', () => {
+        expect(
+          async () => await orderService.getOrderType(validOrderNumber),
+        ).rejects.toThrow('invalid order type');
+      });
+    });
+  });
+
+  describe('checkForInsole', () => {
+    describe('when there is an insole', () => {
+      let expected;
+      beforeEach(async () => {
+        expected = await orderService.checkForInsole();
+      });
+
+      it('should return true', () => {
+        expect(expected).toEqual(true);
+      });
+    });
+    describe('when there is no insole', () => {
+      let expected;
+      beforeEach(async () => {
+        jest
+          .spyOn(orderPuppeteerService, 'checkCover')
+          .mockResolvedValueOnce(false);
+        expected = await orderService.checkForInsole();
+      });
+
+      it('should return false', () => {
+        expect(expected).toEqual(false);
+      });
+    });
+  });
+
+  describe('handleSTSOrder', () => {
+    describe('when a sts order is returned', () => {
+      const orderNumber = 'dfxdvcxv';
+      let expected;
+      beforeEach(async () => {
+        expected = await orderService.handleSTSOrder(orderNumber);
+      });
+      it('should return an STS order', () => {
+        expect(expected).toEqual(StsOrderStub());
       });
     });
   });

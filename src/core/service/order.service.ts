@@ -5,8 +5,8 @@ import {
   orderPuppeteerInterfaceProvider,
 } from '../interfaces/order-puppeteer.interface';
 import { STSOrderModel } from '../models/sts-order.model';
-import { OrderInsoleModel } from '../models/order-insole.model';
 import { OrderTypeEnum } from '../enums/type.enum';
+import { LoginDto } from '../../ui.api/dto/user/login.dto';
 
 @Injectable()
 export class OrderService implements OrderInterface {
@@ -20,8 +20,38 @@ export class OrderService implements OrderInterface {
    * in order to retrieve and return a complete list og order object with all the correct data.
    * @param orderNumbers
    */
-  async handleOrders(orderNumbers: string[]): Promise<any[]> {
-    return Promise.resolve(undefined);
+  async handleOrders(orderNumbers: string[], login: LoginDto): Promise<any[]> {
+    const STSOrders: STSOrderModel[] = [];
+    const INSOrders: [] = [];
+    const OSAOrders: [] = [];
+    const SOSOrders: [] = [];
+    await this.startPuppeteer('https://google.com');
+    await this.handleOrtowearNavigation(login.username, login.password);
+    await this.goToURL('https://beta.ortowear.com/administration/ordersAdmin/');
+    for (const orderNumber of orderNumbers) {
+      const type = await this.getOrderType(orderNumber);
+      let order;
+      switch (type) {
+        case OrderTypeEnum.STS:
+          order = await this.handleSTSOrder(orderNumber);
+          order.insole = await this.checkForInsole();
+          STSOrders.push(order);
+          break;
+        case OrderTypeEnum.INSS:
+          //todo
+          break;
+        case OrderTypeEnum.OSA:
+          //todo
+          break;
+        case OrderTypeEnum.SOS:
+          //todo
+          break;
+        default:
+          throw new Error('could not determine order type');
+      }
+    }
+    await this.stopPuppeteer();
+    return [STSOrders, INSOrders, SOSOrders, OSAOrders];
   }
 
   /**
@@ -135,7 +165,42 @@ export class OrderService implements OrderInterface {
    * @private
    */
   async handleSTSOrder(orderNumber: string): Promise<STSOrderModel> {
-    return Promise.resolve(undefined);
+    if (orderNumber.length < 1) {
+      throw new Error('missing order number');
+    }
+
+    await this.orderPuppeteer.goToOrder(orderNumber);
+
+    const location = await this.orderPuppeteer.checkLocation('#edit_order');
+    if (!location) {
+      throw new Error('could not find order');
+    }
+
+    const order: STSOrderModel = await this.orderPuppeteer.readSTSOrder();
+    if (order) {
+      throw new Error('failed getting order information');
+    } else if (!order.toeCap || order.toeCap == '') {
+      throw new Error('failed getting toe cap');
+    } else if (order.orderNr != orderNumber) {
+      throw new Error('failed getting correct order');
+    } else if (!order.sole || order.sole == '') {
+      throw new Error('failed getting sole');
+    } else if (!order.widthR || order.widthR == '') {
+      throw new Error('failled getting width for right shoe');
+    } else if (!order.widthL || order.widthL == '') {
+      throw new Error('failed getting width for left shoe');
+    } else if (!order.sizeR || order.sizeR == '') {
+      throw new Error('failed getting size for right shoe');
+    } else if (!order.sizeL || order.sizeL == '') {
+      throw new Error('failed getting size for left shoe');
+    } else if (!order.model || order.model == '') {
+      throw new Error('failed getting model');
+    } else if (!order.deliveryAddress || order.deliveryAddress == '') {
+      throw new Error('failed getting delivery address');
+    } else if (!order.customerName || order.customerName == '') {
+      throw new Error('failed getting customer');
+    }
+    return order;
   }
 
   /**
@@ -143,15 +208,26 @@ export class OrderService implements OrderInterface {
    * @private
    */
   async checkForInsole(): Promise<boolean> {
-    return await this.orderPuppeteer.checkCover();
-  }
+    const location = await this.orderPuppeteer.checkLocation('#edit_order');
+    const insoleSelector =
+      'body > div.wrapper > div.content-wrapper > section.content > div.row > div > div > div > div.box-body > form > div:nth-child(4) > div > div > div.col-6.col-print-6 > table > tbody > tr:nth-child(2) > td:nth-child(2) > p';
+    if (!location) {
+      throw new Error('failed to check for insole');
+    }
+    const doesCoverExist = await this.orderPuppeteer.checkLocation(
+      insoleSelector,
+    );
 
-  /**
-   * gets data for an insole
-   * @private
-   */
-  async createInsole(): Promise<OrderInsoleModel> {
-    return Promise.resolve(undefined);
+    if (!doesCoverExist) {
+      return false;
+    }
+
+    const insole = await this.orderPuppeteer.readSelectorText(insoleSelector);
+
+    if (insole.includes('EMMA')) {
+      throw new Error('invalid order, EMMA order is not supported');
+    }
+    return true;
   }
 
   /**

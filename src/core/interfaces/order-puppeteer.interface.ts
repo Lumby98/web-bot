@@ -15,4 +15,7 @@ export interface OrderPuppeteerInterface {
   readSTSOrder(): Promise<STSOrderModel>;
   checkCover(): Promise<boolean>;
   readInsole(): Promise<OrderInsoleModel>;
+  checkLocation(selector: string): Promise<boolean>;
+  getCurrentURL(): Promise<string>;
+  readSelectorText(selector: string): Promise<string>;
 }

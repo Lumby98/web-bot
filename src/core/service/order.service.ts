@@ -4,7 +4,6 @@ import {
   OrderPuppeteerInterface,
   orderPuppeteerInterfaceProvider,
 } from '../interfaces/order-puppeteer.interface';
-import { OrderModel } from '../models/order.model';
 import { STSOrderModel } from '../models/sts-order.model';
 import { OrderInsoleModel } from '../models/order-insole.model';
 import { OrderTypeEnum } from '../enums/type.enum';
@@ -30,7 +29,23 @@ export class OrderService implements OrderInterface {
    * @param url
    */
   async startPuppeteer(url: string) {
+    if (url.length < 1) {
+      throw new Error('Invalid url, the given url is empty');
+    }
+
+    const urlRegex = new RegExp(
+      '(http|ftp|https):\\/\\/[\\w\\-_]+(\\.[\\w\\-_]+)+([\\w\\-\\.,@?^=%&amp;:/~\\+#]*[\\w\\-\\@?^=%&amp;/~\\+#])?',
+    );
+
+    if (!urlRegex.test(url)) {
+      throw new Error('Invalid url, the given url is invalid');
+    }
+
     await this.orderPuppeteer.start(false, url);
+    const currentURL = await this.orderPuppeteer.getCurrentURL();
+    if (currentURL != url) {
+      throw new Error('Navigation failed: went to the wrong URL');
+    }
   }
 
   /**
@@ -47,16 +62,71 @@ export class OrderService implements OrderInterface {
    * @private
    */
   async handleOrtowearNavigation(username: string, password: string) {
+    if (username.length < 1 || password.length < 1) {
+      throw new Error('Invalid username or password');
+    }
+
+    const emailRegex = new RegExp('^\\w+@[a-zA-Z_]+?\\.[a-zA-Z]{2,3}$');
+
+    if (!emailRegex.test(username)) {
+      throw new Error('Invalid username or password');
+    }
+
+    await this.goToURL('https://beta.ortowear.com/');
+
     await this.orderPuppeteer.loginOrtowear(username, password);
+
+    const myPageURL = 'https://beta.ortowear.com/my_page';
+    const currentURL = await this.orderPuppeteer.getCurrentURL();
+    if (myPageURL != currentURL) {
+      if (
+        await this.orderPuppeteer.checkLocation(
+          '#loginForm > div.form-group.has-error > span > strong',
+        )
+      ) {
+        throw new Error('Failed to login, but ortowear didnt display error');
+      } else {
+        const ortowearError = await this.getElementText(
+          '#loginForm > div.form-group.has-error > span > strong',
+        );
+        throw new Error(
+          'Failed to login, ortowear gave this error:' + ortowearError,
+        );
+      }
+    }
   }
 
   /**
    * gets order type for the different order numbers given
-   * @param orderNumbers
    * @private
+   * @param orderNumber
    */
-  async getOrderType(orderNumbers: string): Promise<OrderTypeEnum> {
-    return Promise.resolve(undefined);
+  async getOrderType(orderNumber: string): Promise<OrderTypeEnum> {
+    if (orderNumber.length < 1) {
+      throw new Error('order number is blank');
+    }
+
+    const orderType = await this.orderPuppeteer.readType(orderNumber);
+
+    switch (orderType) {
+      case 'STS':
+        return OrderTypeEnum.STS;
+
+      case 'INS-S':
+        return OrderTypeEnum.INSS;
+
+      case 'OSA':
+        return OrderTypeEnum.OSA;
+
+      case 'SOS':
+        return OrderTypeEnum.SOS;
+
+      case 'No matching records found':
+        throw new Error('could not find order');
+
+      default:
+        throw new Error('invalid order type');
+    }
   }
 
   /**
@@ -73,7 +143,7 @@ export class OrderService implements OrderInterface {
    * @private
    */
   async checkForInsole(): Promise<boolean> {
-    return Promise.resolve(undefined);
+    return await this.orderPuppeteer.checkCover();
   }
 
   /**
@@ -82,5 +152,44 @@ export class OrderService implements OrderInterface {
    */
   async createInsole(): Promise<OrderInsoleModel> {
     return Promise.resolve(undefined);
+  }
+
+  /**
+   * Tells puppeteer to navigate to a given URL.
+   * @param url
+   */
+  async goToURL(url: string) {
+    if (url.length < 1) {
+      throw new Error('Invalid url, the given url is empty');
+    }
+
+    const urlRegex = new RegExp(
+      '(http|ftp|https):\\/\\/[\\w\\-_]+(\\.[\\w\\-_]+)+([\\w\\-\\.,@?^=%&amp;:/~\\+#]*[\\w\\-\\@?^=%&amp;/~\\+#])?',
+    );
+
+    if (!urlRegex.test(url)) {
+      throw new Error('Invalid url, the given url is invalid');
+    }
+
+    await this.orderPuppeteer.navigateToURL(url);
+
+    const currentURL = await this.orderPuppeteer.getCurrentURL();
+    if (currentURL != url) {
+      throw new Error('Navigation failed: went to the wrong URL');
+    }
+  }
+
+  async getElementText(selector: string): Promise<string> {
+    const elementText = await this.orderPuppeteer.readSelectorText(selector);
+
+    if (!elementText) {
+      throw new Error('The text of the element is undefined');
+    }
+
+    if (elementText.length < 1) {
+      throw new Error('The text of the element is empty');
+    }
+
+    return elementText;
   }
 }

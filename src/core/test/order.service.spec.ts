@@ -72,7 +72,7 @@ describe('OrderService', () => {
       it('should throw an error with the right message', async () => {
         await expect(
           async () => await orderService.startPuppeteer(invalidURL),
-        ).rejects.toThrow('Invalid url, the given url is invalid.');
+        ).rejects.toThrow('Invalid url, the given url is invalid');
       });
     });
   });
@@ -151,7 +151,9 @@ describe('OrderService', () => {
         jest
           .spyOn(orderPuppeteerService, 'loginOrtowear')
           .mockImplementationOnce(() => {
-            throw new Error('Failed to login, wrong username or password');
+            throw new Error(
+              'Failed to login, wrong username or password (Ortowear)',
+            );
           });
       });
 

@@ -82,7 +82,36 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
     return Promise.resolve('');
   }
 
+  /**
+   * Navigates to ortowear
+   * and then logs in with the given username and password.
+   * @param username
+   * @param password
+   */
   loginOrtowear(username: string, password: string) {
     return Promise.resolve(undefined);
+  }
+
+  /**
+   * Checks if the element that the given selector points to exists.
+   * @param selector
+   */
+  checkLocation(selector: string): Promise<boolean> {
+    return Promise.resolve(false);
+  }
+
+  /**
+   * Gets the URL.
+   */
+  getCurrentURL(): Promise<string> {
+    return Promise.resolve('');
+  }
+
+  /**
+   * Finds the given selector on the page,
+   * then reads and returns its text content.
+   */
+  readSelectorText(selector: string): Promise<string> {
+    return Promise.resolve('');
   }
 }

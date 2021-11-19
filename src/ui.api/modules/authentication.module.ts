@@ -8,6 +8,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { jwtStrategy } from '../../core/strategy/jwt.strategy';
 import { authenticationInterfaceProvider } from '../../core/interfaces/authentication.interface';
+import { savedLoginServiceInterfaceProvider } from '../../core/interfaces/savedLoginService.interface';
+import { SavedLoginService } from '../../core/service/SavedLogin.service';
+import { SavedLoginController } from '../../saved-login/saved-login.controller';
 
 @Module({
   imports: [
@@ -32,7 +35,11 @@ import { authenticationInterfaceProvider } from '../../core/interfaces/authentic
     },
     LocalStrategy,
     jwtStrategy,
+    {
+      provide: savedLoginServiceInterfaceProvider,
+      useClass: SavedLoginService,
+    },
   ],
-  controllers: [AuthenticationController],
+  controllers: [AuthenticationController, SavedLoginController],
 })
 export class AuthenticationModule {}

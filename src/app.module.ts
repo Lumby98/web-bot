@@ -6,6 +6,7 @@ import { UserModule } from './ui.api/modules/user.module';
 import * as Joi from '@hapi/joi';
 import { AuthenticationModule } from './ui.api/modules/authentication.module';
 import { InsoleModule } from './ui.api/modules/insole.module';
+import { SavedLoginController } from './saved-login/saved-login.controller';
 
 @Module({
   imports: [

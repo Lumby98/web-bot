@@ -26,7 +26,7 @@ export class OrderService implements OrderInterface {
     const INSOrders: [] = [];
     const OSAOrders: [] = [];
     const SOSOrders: [] = [];
-    await this.startPuppeteer('https://google.com');
+    await this.startPuppeteer('https://www.google.com/');
     await this.handleOrtowearNavigation(login.username, login.password);
     await this.goToURL('https://beta.ortowear.com/administration/ordersAdmin/');
     for (const orderNumber of orderNumbers) {
@@ -50,6 +50,9 @@ export class OrderService implements OrderInterface {
         default:
           throw new Error('could not determine order type');
       }
+      await this.goToURL(
+        'https://beta.ortowear.com/administration/ordersAdmin/',
+      );
     }
     await this.stopPuppeteer();
     return [STSOrders, INSOrders, SOSOrders, OSAOrders];
@@ -75,7 +78,9 @@ export class OrderService implements OrderInterface {
     await this.orderPuppeteer.start(false, url);
     const currentURL = await this.orderPuppeteer.getCurrentURL();
     if (currentURL != url) {
-      throw new Error('Navigation failed: went to the wrong URL');
+      throw new Error(
+        'Navigation failed: went to the wrong URL: ' + currentURL + ' : ' + url,
+      );
     }
   }
 
@@ -93,7 +98,7 @@ export class OrderService implements OrderInterface {
    * @private
    */
   async handleOrtowearNavigation(username: string, password: string) {
-    if (username.length < 1 || password.length < 1) {
+    if (!username || !password) {
       throw new Error('Invalid username or password');
     }
 
@@ -106,6 +111,9 @@ export class OrderService implements OrderInterface {
     await this.goToURL('https://beta.ortowear.com/');
 
     await this.orderPuppeteer.loginOrtowear(username, password);
+    await this.orderPuppeteer.wait(
+      'div.home-main:nth-child(2) > div:nth-child(1)',
+    );
 
     const myPageURL = 'https://beta.ortowear.com/my_page';
     const currentURL = await this.orderPuppeteer.getCurrentURL();
@@ -113,6 +121,7 @@ export class OrderService implements OrderInterface {
       if (
         await this.orderPuppeteer.checkLocation(
           '#loginForm > div.form-group.has-error > span > strong',
+          false,
         )
       ) {
         throw new Error('Failed to login, but ortowear didnt display error');
@@ -171,14 +180,12 @@ export class OrderService implements OrderInterface {
     }
 
     await this.orderPuppeteer.goToOrder(orderNumber);
+    await this.orderPuppeteer.wait('#edit_order');
 
-    const location = await this.orderPuppeteer.checkLocation('#edit_order');
-    if (!location) {
-      throw new Error('could not find order');
-    }
-
-    const order: STSOrderModel = await this.orderPuppeteer.readSTSOrder();
-    if (order) {
+    const order: STSOrderModel = await this.orderPuppeteer.readSTSOrder(
+      orderNumber,
+    );
+    if (!order) {
       throw new Error('failed getting order information');
     } else if (!order.toeCap || order.toeCap == '') {
       throw new Error('failed getting toe cap');
@@ -209,7 +216,10 @@ export class OrderService implements OrderInterface {
    * @private
    */
   async checkForInsole(): Promise<boolean> {
-    const location = await this.orderPuppeteer.checkLocation('#edit_order');
+    const location = await this.orderPuppeteer.checkLocation(
+      '#edit_order',
+      false,
+    );
     const insoleSelector =
       'body > div.wrapper > div.content-wrapper > section.content > div.row > div > div > div > div.box-body > form > div:nth-child(4) > div > div > div.col-6.col-print-6 > table > tbody > tr:nth-child(2) > td:nth-child(2) > p';
     if (!location) {
@@ -217,6 +227,7 @@ export class OrderService implements OrderInterface {
     }
     const doesCoverExist = await this.orderPuppeteer.checkLocation(
       insoleSelector,
+      false,
     );
 
     if (!doesCoverExist) {

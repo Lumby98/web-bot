@@ -21,6 +21,7 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
     this.browser = await this.puppeteer.launch({ headless: headless });
     this.page = await this.browser.newPage();
     await this.page.goto(url);
+    await this.page.waitForTimeout(2000);
   }
 
   /**
@@ -98,8 +99,64 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
    * then creates an STSOrderModel
    * which it returns.
    */
-  async readSTSOrder(): Promise<STSOrderModel> {
-    return Promise.resolve(undefined);
+  async readSTSOrder(orderNumber: string): Promise<STSOrderModel> {
+    await this.checkLocation(
+      'body > div.wrapper > div.content-wrapper > section.content > div:nth-child(3) > div > div > div > div.box-body > form > div:nth-child(2) > div > div > div > table > tbody > tr:nth-child(5) > td:nth-child(2)',
+      false,
+    );
+    const pageOrdernumber = await this.readSelectorText(
+      'body > div.wrapper > div.content-wrapper > section.content > div:nth-child(3) > div > div > div > div.box-body > form > div:nth-child(2) > div > div > div > table > tbody > tr:nth-child(5) > td:nth-child(2)',
+    );
+    if (pageOrdernumber != orderNumber) {
+      throw new Error('order number does not match page');
+    }
+
+    let address;
+    address = await this.readSelectorText(
+      'body > div.wrapper > div.content-wrapper > section.content > div:nth-child(3) > div > div > div > div.box-body > form > div:nth-child(2) > div > div > div > table > tbody > tr:nth-child(2) > td:nth-child(2) > div:nth-child(1)',
+    );
+    address +=
+      ' ' +
+      (await this.readSelectorText(
+        'body > div.wrapper > div.content-wrapper > section.content > div:nth-child(3) > div > div > div > div.box-body > form > div:nth-child(2) > div > div > div > table > tbody > tr:nth-child(2) > td:nth-child(2) > div:nth-child(2)',
+      ));
+    address +=
+      ' ' +
+      (await this.readSelectorText(
+        'body > div.wrapper > div.content-wrapper > section.content > div:nth-child(3) > div > div > div > div.box-body > form > div:nth-child(2) > div > div > div > table > tbody > tr:nth-child(2) > td:nth-child(2) > div:nth-child(3)',
+      ));
+
+    console.log(address);
+    const order: STSOrderModel = {
+      orderNr: pageOrdernumber,
+      deliveryAddress: address,
+      customerName: await this.readSelectorText(
+        'body > div.wrapper > div.content-wrapper > section.content > div:nth-child(3) > div > div > div > div.box-body > form > div:nth-child(2) > div > div > div > table > tbody > tr:nth-child(1) > td:nth-child(2)',
+      ),
+      model: await this.readSelectorText(
+        'body > div.wrapper > div.content-wrapper > section.content > div:nth-child(3) > div > div > div > div.box-body > form > div:nth-child(3) > div:nth-child(2) > div > div:nth-child(1) > table > tbody > tr:nth-child(1) > td:nth-child(2) > p',
+      ),
+      sizeL: await this.readSelectorText(
+        'body > div.wrapper > div.content-wrapper > section.content > div:nth-child(3) > div > div > div > div.box-body > form > div:nth-child(3) > div:nth-child(1) > div > div > table > tbody > tr:nth-child(2) > td:nth-child(2) > p',
+      ),
+      sizeR: await this.readSelectorText(
+        'body > div.wrapper > div.content-wrapper > section.content > div:nth-child(3) > div > div > div > div.box-body > form > div:nth-child(3) > div:nth-child(1) > div > div > table > tbody > tr:nth-child(2) > td:nth-child(3) > p',
+      ),
+      widthL: await this.readSelectorText(
+        'body > div.wrapper > div.content-wrapper > section.content > div:nth-child(3) > div > div > div > div.box-body > form > div:nth-child(3) > div:nth-child(1) > div > div > table > tbody > tr:nth-child(1) > td:nth-child(2) > p',
+      ),
+      widthR: await this.readSelectorText(
+        'body > div.wrapper > div.content-wrapper > section.content > div:nth-child(3) > div > div > div > div.box-body > form > div:nth-child(3) > div:nth-child(1) > div > div > table > tbody > tr:nth-child(1) > td:nth-child(3) > p',
+      ),
+      sole: await this.readSelectorText(
+        'body > div.wrapper > div.content-wrapper > section.content > div:nth-child(3) > div > div > div > div.box-body > form > div:nth-child(3) > div:nth-child(2) > div > div:nth-child(1) > table > tbody > tr:nth-child(2) > td:nth-child(2) > p',
+      ),
+      toeCap: await this.readSelectorText(
+        'body > div.wrapper > div.content-wrapper > section.content > div:nth-child(3) > div > div > div > div.box-body > form > div:nth-child(3) > div:nth-child(2) > div > div:nth-child(1) > table > tbody > tr:nth-child(3) > td:nth-child(2) > p',
+      ),
+    };
+    console.log(order);
+    return order;
   }
 
   /**
@@ -171,9 +228,7 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
    * @param hidden
    */
   async checkLocation(selector: string, hidden: boolean): Promise<boolean> {
-    const element = await this.page.evaluate(selector, {
-      hidden: hidden,
-    });
+    const element = await this.page.$(selector);
 
     return !!element;
   }
@@ -191,5 +246,9 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
    */
   async readSelectorText(selector: string): Promise<string> {
     return await this.page.$eval(selector, (el) => el.textContent);
+  }
+
+  async wait(selector: string) {
+    await this.page.waitForSelector(selector);
   }
 }

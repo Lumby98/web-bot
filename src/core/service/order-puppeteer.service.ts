@@ -3,12 +3,13 @@ import { OrderPuppeteerInterface } from '../interfaces/order-puppeteer.interface
 import { OrderModel } from '../models/order.model';
 import { OrderInsoleModel } from '../models/order-insole.model';
 import { STSOrderModel } from '../models/sts-order.model';
+import { Browser, Page } from 'puppeteer';
 
 @Injectable()
 export class OrderPuppeteerService implements OrderPuppeteerInterface {
   puppeteer = require('puppeteer');
-  page;
-  browser;
+  page: Page;
+  browser: Browser;
 
   /**
    * Launches puppeteer in the selected browsing mode,
@@ -27,7 +28,7 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
    * clears the page instance.
    */
   async stop() {
-    this.browser.close();
+    await this.browser.close();
     this.page = undefined;
   }
 
@@ -36,25 +37,60 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
    * using the provided order-number.
    * @param orderNumber
    */
-  goToOrder(orderNumber: string) {
-    return Promise.resolve(undefined);
+  async goToOrder(orderNumber: string) {
+    //wait for page to be loaded
+    await this.page.waitForSelector('#orders-table_processing', {
+      hidden: true,
+    });
+
+    await this.page.click('#datatable_searchfield', {
+      clickCount: 3,
+      delay: 100,
+    });
+
+    await this.page.keyboard.press('Backspace');
+
+    await this.page.type('#datatable_searchfield', orderNumber);
+
+    //wait for page to find the order
+    await this.page.waitForTimeout(2000);
+    await this.page.waitForSelector('#orders-table_processing', {
+      hidden: false,
+    });
+    await this.page.waitForSelector('#orders-table_processing', {
+      hidden: true,
+    });
+
+    //select order and go to its info page
+    const target = await this.page.$eval(
+      '#orders-table > tbody > tr > td',
+      (el) => el.textContent,
+    );
+
+    //if an insole cannot be found return with a message to indicate the insole could not be found
+    if (
+      target == 'Ingen linjer matcher søgningen' ||
+      target == 'No matching records found'
+    ) {
+      throw new Error('Could not find order');
+    }
+
+    await this.page.waitForSelector('#orders-table > tbody > tr');
+    await this.page.click('#orders-table > tbody > tr');
+    await this.page.click('#orders-table > tbody > tr');
+    await this.page.click(
+      '#topBtns > div > div > button.btn.btn-sm.btn-warning',
+    );
   }
 
   /**
    * Navigates to the given URL.
    * @param url
    */
-  navigateToURL(url: string) {
-    return Promise.resolve(undefined);
-  }
-
-  /**
-   * Reads the insole data from the page
-   * then creates an orderInsoleModel
-   * which it then returns.
-   */
-  readInsole(): Promise<OrderInsoleModel> {
-    return Promise.resolve(undefined);
+  async navigateToURL(url: string) {
+    await this.page.goto(url, {
+      waitUntil: 'networkidle2',
+    });
   }
 
   /**
@@ -62,7 +98,7 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
    * then creates an STSOrderModel
    * which it returns.
    */
-  readSTSOrder(): Promise<STSOrderModel> {
+  async readSTSOrder(): Promise<STSOrderModel> {
     return Promise.resolve(undefined);
   }
 
@@ -70,8 +106,47 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
    * Reads the order type for the order with the given order-number.
    * @param orderNumber
    */
-  readType(orderNumber: string): Promise<string> {
-    return Promise.resolve('');
+  async readType(orderNumber: string): Promise<string> {
+    //wait for page to be loaded
+    await this.page.waitForSelector('#orders-table_processing', {
+      hidden: true,
+    });
+
+    await this.page.click('#datatable_searchfield', {
+      clickCount: 3,
+      delay: 100,
+    });
+
+    await this.page.keyboard.press('Backspace');
+
+    await this.page.type('#datatable_searchfield', orderNumber);
+
+    //wait for page to find the insole
+    await this.page.waitForTimeout(2000);
+    await this.page.waitForSelector('#orders-table_processing', {
+      hidden: false,
+    });
+    await this.page.waitForSelector('#orders-table_processing', {
+      hidden: true,
+    });
+
+    //select insole and go to its info page
+    const target = await this.page.$eval(
+      '#orders-table > tbody > tr > td',
+      (el) => el.textContent,
+    );
+
+    //if an insole cannot be found return with a message to indicate the insole could not be found
+    if (
+      target == 'Ingen linjer matcher søgningen' ||
+      target == 'No matching records found'
+    ) {
+      throw new Error('Could not find order');
+    }
+    return await this.page.$eval(
+      '#orders-table > tbody > tr > td:nth-child(1)',
+      (el) => el.textContent,
+    );
   }
 
   /**
@@ -80,30 +155,41 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
    * @param username
    * @param password
    */
-  loginOrtowear(username: string, password: string) {
-    return Promise.resolve(undefined);
+  async loginOrtowear(username: string, password: string) {
+    //inputs username and password
+    await this.page.type('#email', username);
+    await this.page.type('#password', password);
+
+    //clicks login button
+    await this.page.waitForSelector('#loginForm > input.btn.btn-ow');
+    await this.page.click('#loginForm > input.btn.btn-ow');
   }
 
   /**
    * Checks if the element that the given selector points to exists.
    * @param selector
+   * @param hidden
    */
-  checkLocation(selector: string): Promise<boolean> {
-    return Promise.resolve(false);
+  async checkLocation(selector: string, hidden: boolean): Promise<boolean> {
+    const element = await this.page.evaluate(selector, {
+      hidden: hidden,
+    });
+
+    return !!element;
   }
 
   /**
    * Gets the URL.
    */
-  getCurrentURL(): Promise<string> {
-    return Promise.resolve('');
+  getCurrentURL(): string {
+    return this.page.url();
   }
 
   /**
    * Finds the given selector on the page,
    * then reads and returns its text content.
    */
-  readSelectorText(selector: string): Promise<string> {
-    return Promise.resolve('');
+  async readSelectorText(selector: string): Promise<string> {
+    return await this.page.$eval(selector, (el) => el.textContent);
   }
 }

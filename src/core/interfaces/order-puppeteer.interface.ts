@@ -13,8 +13,7 @@ export interface OrderPuppeteerInterface {
   readType(orderNumber: string): Promise<string>;
   goToOrder(orderNumber: string);
   readSTSOrder(): Promise<STSOrderModel>;
-  readInsole(): Promise<OrderInsoleModel>;
-  checkLocation(selector: string): Promise<boolean>;
-  getCurrentURL(): Promise<string>;
+  checkLocation(selector: string, hidden: boolean): Promise<boolean>;
+  getCurrentURL(): string;
   readSelectorText(selector: string): Promise<string>;
 }

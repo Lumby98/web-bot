@@ -1,4 +1,5 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { LoginTypeEnum } from '../../core/enums/loginType.enum';
 
 @Entity()
 export class SavedLogin {
@@ -11,8 +12,13 @@ export class SavedLogin {
   @Column()
   public password: string;
 
-  @Column()
-  public loginType: string;
+  @Column({
+    type: 'enum',
+    enum: LoginTypeEnum,
+    default: LoginTypeEnum.ORTOWEAR,
+    unique: true,
+  })
+  public loginType: LoginTypeEnum;
 
   @Column()
   public salt: string;

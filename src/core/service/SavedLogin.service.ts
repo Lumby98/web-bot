@@ -9,18 +9,20 @@ import {
 } from '../interfaces/authentication.interface';
 import { InsertSavedLoginDto } from '../../ui.api/dto/savedLogin/insert-SavedLogin.dto';
 import { KeyModel } from '../models/key.model';
-import { createCipheriv, randomBytes, scrypt } from 'crypto';
+import { createCipheriv, createDecipheriv, randomBytes, scrypt } from 'crypto';
 import { promisify } from 'util';
 import { SavedLoginModel } from '../models/Savedlogin.model';
 import { savedLoginServiceInterface } from '../interfaces/savedLoginService.interface';
+import { SavedLoginDto } from '../../ui.api/dto/savedLogin/SavedLoginDto';
+import { LoginTypeEnum } from '../enums/loginType.enum';
 
 @Injectable()
-export class SavedLoginService implements savedLoginServiceInterface{
+export class SavedLoginService implements savedLoginServiceInterface {
   constructor(
-    @InjectRepository(SavedLogin)
-    private savedLoginRepository: Repository<SavedLogin>,
     @InjectRepository(Key)
     private KeyRepository: Repository<Key>,
+    @InjectRepository(SavedLogin)
+    private savedLoginRepository: Repository<SavedLogin>,
     @Inject(authenticationInterfaceProvider)
     private readonly authenticationService: AuthenticationInterface,
   ) {}
@@ -28,11 +30,30 @@ export class SavedLoginService implements savedLoginServiceInterface{
   async insertLogin(
     insertSavedLoginDto: InsertSavedLoginDto,
   ): Promise<SavedLoginModel> {
+    await this.verifyKey(insertSavedLoginDto.key);
+
+    console.log('logintype:' + insertSavedLoginDto.loginType);
+    const prevLogin = await this.savedLoginRepository.findOne({
+      loginType: insertSavedLoginDto.loginType,
+    });
+
+    console.log(prevLogin);
+    if (prevLogin) {
+      await this.savedLoginRepository.remove(prevLogin);
+    } else {
+      const encryptedLogin = await this.encryptLogin(insertSavedLoginDto);
+      const newLogin = await this.savedLoginRepository.create(encryptedLogin);
+      await this.savedLoginRepository.save(newLogin);
+      return JSON.parse(JSON.stringify(newLogin));
+    }
+  }
+
+  async verifyKey(key: string) {
     try {
       const hashedKey = await this.getKey();
       if (hashedKey) {
         await this.authenticationService.verifyPassword(
-          insertSavedLoginDto.key,
+          key,
           hashedKey.password,
         );
       }
@@ -42,15 +63,6 @@ export class SavedLoginService implements savedLoginServiceInterface{
         HttpStatus.BAD_REQUEST,
       );
     }
-    const prevLogin = await this.savedLoginRepository.find({
-      loginType: insertSavedLoginDto.loginType,
-    });
-    if (prevLogin) {
-      await this.savedLoginRepository.remove(prevLogin);
-    }
-    const encryptedLogin = await this.EncryptLogin(insertSavedLoginDto);
-    const newLogin = await this.savedLoginRepository.create(encryptedLogin);
-    return JSON.parse(JSON.stringify(newLogin));
   }
 
   async getKey(): Promise<KeyModel> {
@@ -65,10 +77,10 @@ export class SavedLoginService implements savedLoginServiceInterface{
     }
   }
 
-  async EncryptLogin(
+  async encryptLogin(
     insertSavedLoginDto: InsertSavedLoginDto,
   ): Promise<SavedLoginModel> {
-    const iv = randomBytes(16).toString('base64');
+    const iv = randomBytes(16);
 
     const salt = randomBytes(16).toString('base64');
 
@@ -78,43 +90,91 @@ export class SavedLoginService implements savedLoginServiceInterface{
       32,
     )) as Buffer;
 
-    const cipher = createCipheriv('aes-256-ctr', key, iv);
+    const cipherUsername = createCipheriv('aes-256-ctr', key, iv);
 
     const encryptedUsername = Buffer.concat([
-      cipher.update(insertSavedLoginDto.username),
-      cipher.final(),
+      cipherUsername.update(insertSavedLoginDto.username),
+      cipherUsername.final(),
     ]);
 
+    const cipherPassword = createCipheriv('aes-256-ctr', key, iv);
+
     const encryptedPassword = Buffer.concat([
-      cipher.update(insertSavedLoginDto.password),
-      cipher.final(),
+      cipherPassword.update(insertSavedLoginDto.password),
+      cipherPassword.final(),
     ]);
 
     return {
       id: 0,
       username: encryptedUsername.toString('base64'),
       password: encryptedPassword.toString('base64'),
-      iv: iv,
+      iv: iv.toString('base64'),
       loginType: insertSavedLoginDto.loginType,
       salt: salt,
     };
   }
 
-  async findAllLogins(keyModel: KeyModel): Promise<SavedLoginModel> {
+  async decryptLogin(
+    savedlogin: SavedLoginModel,
+    key: string,
+  ): Promise<SavedLoginDto> {
+    const hashedKey = (await promisify(scrypt)(
+      key,
+      savedlogin.salt,
+      32,
+    )) as Buffer;
+
+    const decipherUsername = createDecipheriv(
+      'aes-256-ctr',
+      hashedKey,
+      Buffer.from(savedlogin.iv, 'base64'),
+    );
+
+    const decryptedUsername = Buffer.concat([
+      decipherUsername.update(Buffer.from(savedlogin.username, 'base64')),
+      decipherUsername.final(),
+    ]);
+
+    const decipherPassword = createDecipheriv(
+      'aes-256-ctr',
+      hashedKey,
+      Buffer.from(savedlogin.iv, 'base64'),
+    );
+
+    const decryptedPassword = Buffer.concat([
+      decipherPassword.update(Buffer.from(savedlogin.password, 'base64')),
+      decipherPassword.final(),
+    ]);
+
+    return {
+      id: savedlogin.id,
+      username: decryptedUsername.toString(),
+      password: decryptedPassword.toString(),
+      loginType: savedlogin.loginType,
+    };
+  }
+
+  async getLogin(
+    loginType: LoginTypeEnum,
+    key: string,
+  ): Promise<SavedLoginDto> {
     try {
-      const hashedKey = await this.getKey();
-      if (hashedKey) {
-        await this.authenticationService.verifyPassword(
-          keyModel.password,
-          hashedKey.password,
-        );
+      const login = await this.savedLoginRepository.findOne({
+        loginType: loginType,
+      });
+
+      if (login) {
+        return await this.decryptLogin(login, key);
       }
+
+      throw new Error('Could not find login with this type');
     } catch (err) {
-      throw new HttpException(
-        'Wrong credentials provided',
-        HttpStatus.BAD_REQUEST,
-      );
+      throw err;
     }
+  }
+
+  /*async findAllLogins(key: string): Promise<SavedLoginModel> {
+    await this.VerifyKey(key);
     try {
       const logins = await this.savedLoginRepository.find();
       if (logins) {
@@ -124,5 +184,5 @@ export class SavedLoginService implements savedLoginServiceInterface{
     } catch (err) {
       throw err;
     }
-  }
+  }*/
 }

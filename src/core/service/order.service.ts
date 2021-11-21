@@ -19,6 +19,7 @@ export class OrderService implements OrderInterface {
    * Takes a list of order-numbers and then calls the appropriate puppeteer methods,
    * in order to retrieve and return a complete list og order object with all the correct data.
    * @param orderNumbers
+   * @param login
    */
   async handleOrders(orderNumbers: string[], login: LoginDto): Promise<any[]> {
     const STSOrders: STSOrderModel[] = [];

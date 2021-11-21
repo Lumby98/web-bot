@@ -32,14 +32,6 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
   }
 
   /**
-   * Checks wether the cover field exists on the page,
-   * then returns the corresponding boolean.
-   */
-  checkCover(): Promise<boolean> {
-    return Promise.resolve(false);
-  }
-
-  /**
    * Navigates to the orders page
    * using the provided order-number.
    * @param orderNumber

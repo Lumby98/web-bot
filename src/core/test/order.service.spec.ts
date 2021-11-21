@@ -245,7 +245,8 @@ describe('OrderService', () => {
       let expected;
       beforeEach(async () => {
         jest
-          .spyOn(orderPuppeteerService, 'checkCover')
+          .spyOn(orderPuppeteerService, 'checkLocation')
+          .mockResolvedValueOnce(true)
           .mockResolvedValueOnce(false);
         expected = await orderService.checkForInsole();
       });

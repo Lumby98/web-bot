@@ -6,7 +6,6 @@ export const OrderPuppeteerService = jest.fn().mockReturnValue({
   navigateToURL: jest.fn().mockResolvedValue(undefined),
   loginOrtowear: jest.fn().mockResolvedValue(undefined),
   readType: jest.fn().mockResolvedValue('STS'),
-  checkCover: jest.fn().mockResolvedValue(true),
   readSTSOrder: jest.fn().mockResolvedValue(StsOrderStub()),
   checkLocation: jest.fn().mockResolvedValue(true),
   getCurrentURL: jest.fn().mockResolvedValue('https://www.google.com/'),

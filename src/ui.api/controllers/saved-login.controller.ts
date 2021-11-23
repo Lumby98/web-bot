@@ -44,7 +44,7 @@ export class SavedLoginController {
 
     console.log(login);
 
-    return response.send(keyDto);
+    return response.send('verified');
   }
 
   //use this later

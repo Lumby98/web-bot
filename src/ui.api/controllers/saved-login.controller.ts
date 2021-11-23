@@ -35,7 +35,7 @@ export class SavedLoginController {
   }
   @HttpCode(200)
   @Post('verify')
-  async verify(@Body() keyDto: KeyDto, @Res() response: Response) {
+  async verify(@Body() keyDto: KeyDto) {
     await this.savedLoginService.verifyKey(keyDto.password);
     const login = await this.savedLoginService.getLogin(
       LoginTypeEnum.ORTOWEAR,
@@ -43,8 +43,6 @@ export class SavedLoginController {
     );
 
     console.log(login);
-
-    return response.send('verified');
   }
 
   //use this later

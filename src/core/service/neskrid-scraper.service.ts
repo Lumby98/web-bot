@@ -102,9 +102,9 @@ export class NeskridScraperService implements NeskridScraperInterface {
       const createProductList = [];
       const missingProductList = [];
       for (const product of products) {
-        let p: NeskridModel;
         //checks if the product already exists
-        p = productsInDatabase.find(
+        // eslint-disable-next-line prefer-const
+        const p = productsInDatabase.find(
           (x) =>
             x.brand === product.brand && x.articleName === product.articleName,
         );
@@ -192,7 +192,7 @@ export class NeskridScraperService implements NeskridScraperInterface {
         });
 
       await page.click(
-        '.card.card-yellow.animated.fadeInUp.animation-delay-7 .ms-hero-bg-royal',
+        'div.col-lg-3:nth-child(5) > section:nth-child(1) > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) > div:nth-child(1)',
       );
       await page.waitForSelector('.searchable-select-holder', {
         timeout: 5000,

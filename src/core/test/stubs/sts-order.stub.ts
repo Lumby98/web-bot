@@ -11,6 +11,7 @@ export const StsOrderStub = (): STSOrderModel => {
     widthR: 'Neskrid 66-8',
     sole: 'N173 DUO Grey/Black',
     toeCap: 'Composite',
-    deliveryAddress: 'Mukkerten 21\n' + '6715 Esbjerg N\n' + 'Ribe, Denmark',
+    deliveryAddress: 'Mukkerten 21 6715 Esbjerg N Ribe, Denmark',
+    EU: true,
   };
 };

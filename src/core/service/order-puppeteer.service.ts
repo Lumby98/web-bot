@@ -1,9 +1,8 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { OrderPuppeteerInterface } from '../interfaces/order-puppeteer.interface';
-import { OrderModel } from '../models/order.model';
-import { OrderInsoleModel } from '../models/order-insole.model';
 import { STSOrderModel } from '../models/sts-order.model';
 import { Browser, Page } from 'puppeteer';
+import { TargetAndSelector } from '../models/target-and-selector';
 
 @Injectable()
 export class OrderPuppeteerService implements OrderPuppeteerInterface {
@@ -18,8 +17,16 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
    * @param url
    */
   async start(headless: boolean, url: string) {
-    this.browser = await this.puppeteer.launch({ headless: headless });
+    this.browser = await this.puppeteer.launch({
+      headless: headless,
+      args: [`--window-size=1920,1080`],
+    });
     this.page = await this.browser.newPage();
+    await this.page.setViewport({
+      width: 1920,
+      height: 1080,
+    });
+
     await this.page.goto(url);
     await this.page.waitForTimeout(2000);
   }
@@ -62,23 +69,10 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
       hidden: true,
     });
 
-    //select order and go to its info page
-    const target = await this.page.$eval(
-      '#orders-table > tbody > tr > td',
-      (el) => el.textContent,
-    );
+    const targetAndSelector = await this.getTableTargetandSelector(orderNumber);
 
-    //if an insole cannot be found return with a message to indicate the insole could not be found
-    if (
-      target == 'Ingen linjer matcher søgningen' ||
-      target == 'No matching records found'
-    ) {
-      throw new Error('Could not find order');
-    }
-
-    await this.page.waitForSelector('#orders-table > tbody > tr');
-    await this.page.click('#orders-table > tbody > tr');
-    await this.page.click('#orders-table > tbody > tr');
+    await this.page.waitForSelector(targetAndSelector.selector);
+    await this.page.click(targetAndSelector.selector);
     await this.page.click(
       '#topBtns > div > div > button.btn.btn-sm.btn-warning',
     );
@@ -100,12 +94,17 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
    * which it returns.
    */
   async readSTSOrder(orderNumber: string): Promise<STSOrderModel> {
-    await this.checkLocation(
-      'body > div.wrapper > div.content-wrapper > section.content > div:nth-child(3) > div > div > div > div.box-body > form > div:nth-child(2) > div > div > div > table > tbody > tr:nth-child(5) > td:nth-child(2)',
+    const check = await this.checkLocation(
+      'body > div.wrapper > div.content-wrapper > section.content > div.row > div > div > div > div.box-body > form > div:nth-child(2) > div > div > div > table > tbody > tr:nth-child(5) > td:nth-child(2)',
       false,
     );
+
+    if (!check) {
+      throw new Error('Could not read order number');
+    }
+
     const pageOrdernumber = await this.readSelectorText(
-      'body > div.wrapper > div.content-wrapper > section.content > div:nth-child(3) > div > div > div > div.box-body > form > div:nth-child(2) > div > div > div > table > tbody > tr:nth-child(5) > td:nth-child(2)',
+      'body > div.wrapper > div.content-wrapper > section.content > div.row > div > div > div > div.box-body > form > div:nth-child(2) > div > div > div > table > tbody > tr:nth-child(5) > td:nth-child(2)',
     );
     if (pageOrdernumber != orderNumber) {
       throw new Error('order number does not match page');
@@ -113,49 +112,48 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
 
     let address;
     address = await this.readSelectorText(
-      'body > div.wrapper > div.content-wrapper > section.content > div:nth-child(3) > div > div > div > div.box-body > form > div:nth-child(2) > div > div > div > table > tbody > tr:nth-child(2) > td:nth-child(2) > div:nth-child(1)',
+      'body > div.wrapper > div.content-wrapper > section.content > div.row > div > div > div > div.box-body > form > div:nth-child(2) > div > div > div > table > tbody > tr:nth-child(2) > td:nth-child(2) > div:nth-child(1)',
     );
     address +=
       ' ' +
       (await this.readSelectorText(
-        'body > div.wrapper > div.content-wrapper > section.content > div:nth-child(3) > div > div > div > div.box-body > form > div:nth-child(2) > div > div > div > table > tbody > tr:nth-child(2) > td:nth-child(2) > div:nth-child(2)',
+        'body > div.wrapper > div.content-wrapper > section.content > div.row > div > div > div > div.box-body > form > div:nth-child(2) > div > div > div > table > tbody > tr:nth-child(2) > td:nth-child(2) > div:nth-child(2)',
       ));
     address +=
       ' ' +
       (await this.readSelectorText(
-        'body > div.wrapper > div.content-wrapper > section.content > div:nth-child(3) > div > div > div > div.box-body > form > div:nth-child(2) > div > div > div > table > tbody > tr:nth-child(2) > td:nth-child(2) > div:nth-child(3)',
+        'body > div.wrapper > div.content-wrapper > section.content > div.row > div > div > div > div.box-body > form > div:nth-child(2) > div > div > div > table > tbody > tr:nth-child(2) > td:nth-child(2) > div:nth-child(3)',
       ));
 
-    console.log(address);
     const order: STSOrderModel = {
       orderNr: pageOrdernumber,
       deliveryAddress: address,
       customerName: await this.readSelectorText(
-        'body > div.wrapper > div.content-wrapper > section.content > div:nth-child(3) > div > div > div > div.box-body > form > div:nth-child(2) > div > div > div > table > tbody > tr:nth-child(1) > td:nth-child(2)',
+        'body > div.wrapper > div.content-wrapper > section.content > div.row > div > div > div > div.box-body > form > div:nth-child(2) > div > div > div > table > tbody > tr:nth-child(1) > td:nth-child(2)',
       ),
       model: await this.readSelectorText(
-        'body > div.wrapper > div.content-wrapper > section.content > div:nth-child(3) > div > div > div > div.box-body > form > div:nth-child(3) > div:nth-child(2) > div > div:nth-child(1) > table > tbody > tr:nth-child(1) > td:nth-child(2) > p',
+        'body > div.wrapper > div.content-wrapper > section.content > div.row > div > div > div > div.box-body > form > div:nth-child(3) > div:nth-child(2) > div > div:nth-child(1) > table > tbody > tr:nth-child(1) > td:nth-child(2) > p',
       ),
       sizeL: await this.readSelectorText(
-        'body > div.wrapper > div.content-wrapper > section.content > div:nth-child(3) > div > div > div > div.box-body > form > div:nth-child(3) > div:nth-child(1) > div > div > table > tbody > tr:nth-child(2) > td:nth-child(2) > p',
+        'body > div.wrapper > div.content-wrapper > section.content > div.row > div > div > div > div.box-body > form > div:nth-child(3) > div:nth-child(1) > div > div > table > tbody > tr:nth-child(2) > td:nth-child(2) > p',
       ),
       sizeR: await this.readSelectorText(
-        'body > div.wrapper > div.content-wrapper > section.content > div:nth-child(3) > div > div > div > div.box-body > form > div:nth-child(3) > div:nth-child(1) > div > div > table > tbody > tr:nth-child(2) > td:nth-child(3) > p',
+        'body > div.wrapper > div.content-wrapper > section.content > div.row > div > div > div > div.box-body > form > div:nth-child(3) > div:nth-child(1) > div > div > table > tbody > tr:nth-child(2) > td:nth-child(3) > p',
       ),
       widthL: await this.readSelectorText(
-        'body > div.wrapper > div.content-wrapper > section.content > div:nth-child(3) > div > div > div > div.box-body > form > div:nth-child(3) > div:nth-child(1) > div > div > table > tbody > tr:nth-child(1) > td:nth-child(2) > p',
+        'body > div.wrapper > div.content-wrapper > section.content > div.row > div > div > div > div.box-body > form > div:nth-child(3) > div:nth-child(1) > div > div > table > tbody > tr:nth-child(1) > td:nth-child(2) > p',
       ),
       widthR: await this.readSelectorText(
-        'body > div.wrapper > div.content-wrapper > section.content > div:nth-child(3) > div > div > div > div.box-body > form > div:nth-child(3) > div:nth-child(1) > div > div > table > tbody > tr:nth-child(1) > td:nth-child(3) > p',
+        'body > div.wrapper > div.content-wrapper > section.content > div.row > div > div > div > div.box-body > form > div:nth-child(3) > div:nth-child(1) > div > div > table > tbody > tr:nth-child(1) > td:nth-child(3) > p',
       ),
       sole: await this.readSelectorText(
-        'body > div.wrapper > div.content-wrapper > section.content > div:nth-child(3) > div > div > div > div.box-body > form > div:nth-child(3) > div:nth-child(2) > div > div:nth-child(1) > table > tbody > tr:nth-child(2) > td:nth-child(2) > p',
+        'body > div.wrapper > div.content-wrapper > section.content > div.row > div > div > div > div.box-body > form > div:nth-child(3) > div:nth-child(2) > div > div:nth-child(1) > table > tbody > tr:nth-child(2) > td:nth-child(2) > p',
       ),
       toeCap: await this.readSelectorText(
-        'body > div.wrapper > div.content-wrapper > section.content > div:nth-child(3) > div > div > div > div.box-body > form > div:nth-child(3) > div:nth-child(2) > div > div:nth-child(1) > table > tbody > tr:nth-child(3) > td:nth-child(2) > p',
+        'body > div.wrapper > div.content-wrapper > section.content > div.row > div > div > div > div.box-body > form > div:nth-child(3) > div:nth-child(2) > div > div:nth-child(1) > table > tbody > tr:nth-child(3) > td:nth-child(2) > p',
       ),
+      EU: true,
     };
-    console.log(order);
     return order;
   }
 
@@ -187,23 +185,66 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
       hidden: true,
     });
 
+    const targetAndSelector = await this.getTableTargetandSelector(orderNumber);
+
+    return targetAndSelector.type;
+  }
+
+  async getTableTargetandSelector(
+    orderNumber: string,
+  ): Promise<TargetAndSelector> {
     //select insole and go to its info page
-    const target = await this.page.$eval(
+    const warning = await this.page.$eval(
       '#orders-table > tbody > tr > td',
       (el) => el.textContent,
     );
 
     //if an insole cannot be found return with a message to indicate the insole could not be found
     if (
-      target == 'Ingen linjer matcher søgningen' ||
-      target == 'No matching records found'
+      warning == 'Ingen linjer matcher søgningen' ||
+      warning == 'No matching records found'
     ) {
-      throw new Error('Could not find order');
+      throw new Error('Could not find order' + warning);
     }
-    return await this.page.$eval(
-      '#orders-table > tbody > tr > td:nth-child(1)',
-      (el) => el.textContent,
+
+    const data = await this.page.$$eval(
+      '#orders-table > tbody > tr > td:nth-child(6) > pre',
+      (tds) =>
+        tds.map((td) => {
+          return td.textContent;
+        }),
     );
+
+    let target;
+    let selector;
+    let type;
+    if (data.length > 1) {
+      for (let i = 0; i < data.length; i++) {
+        if (orderNumber.includes(data[i])) {
+          selector = `#orders-table > tbody > tr:nth-child(${
+            i + 1
+          }) > td:nth-child(6) > pre`;
+          target = await this.page.$eval(selector, (el) => el.textContent);
+          type = await this.page.$eval(
+            `#orders-table > tbody > tr:nth-child(${i + 1}) > td:nth-child(1)`,
+            (el) => el.textContent,
+          );
+        }
+      }
+    } else {
+      selector = `#orders-table > tbody > tr:nth-child(1) > td:nth-child(6) > pre`;
+      target = await this.page.$eval(selector, (el) => el.textContent);
+      type = await this.page.$eval(
+        `#orders-table > tbody > tr:nth-child(1) > td:nth-child(1)`,
+        (el) => el.textContent,
+      );
+    }
+
+    return {
+      target: target,
+      selector: selector,
+      type: type,
+    };
   }
 
   /**

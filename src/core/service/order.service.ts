@@ -1,12 +1,11 @@
 import { OrderInterface } from '../interfaces/order.interface';
 import { Inject, Injectable } from '@nestjs/common';
-import {
-  OrderPuppeteerInterface,
-  orderPuppeteerInterfaceProvider,
-} from '../interfaces/order-puppeteer.interface';
+import { OrderPuppeteerInterface, orderPuppeteerInterfaceProvider } from '../interfaces/order-puppeteer.interface';
 import { STSOrderModel } from '../models/sts-order.model';
 import { OrderTypeEnum } from '../enums/type.enum';
 import { LoginDto } from '../../ui.api/dto/user/login.dto';
+import { INSSOrderModel } from '../models/ins-s-order.model';
+import { OrderLists } from '../models/order-lists';
 
 @Injectable()
 export class OrderService implements OrderInterface {
@@ -21,9 +20,12 @@ export class OrderService implements OrderInterface {
    * @param orderNumbers
    * @param login
    */
-  async handleOrders(orderNumbers: string[], login: LoginDto): Promise<any[]> {
+  async handleOrders(
+    orderNumbers: string[],
+    login: LoginDto,
+  ): Promise<OrderLists> {
     const STSOrders: STSOrderModel[] = [];
-    const INSOrders: [] = [];
+    const INSOrders: INSSOrderModel[] = [];
     const OSAOrders: [] = [];
     const SOSOrders: [] = [];
     await this.startPuppeteer('https://www.google.com/');
@@ -39,7 +41,16 @@ export class OrderService implements OrderInterface {
           STSOrders.push(order);
           break;
         case OrderTypeEnum.INSS:
-          //todo
+          const INSS: INSSOrderModel = {
+            orderNr: '123123',
+            EU: true,
+            deliveryAddress: 'gruss strasse 60',
+            sizeL: '40',
+            sizeR: '42',
+            customerName: 'Klaus Riftbjerg',
+            model: 'Bunka',
+          };
+          INSOrders.push(INSS);
           break;
         case OrderTypeEnum.OSA:
           //todo
@@ -55,7 +66,10 @@ export class OrderService implements OrderInterface {
       );
     }
     await this.stopPuppeteer();
-    return [STSOrders, INSOrders, SOSOrders, OSAOrders];
+    return {
+      STSOrders: STSOrders,
+      INSOrders: INSOrders,
+    };
   }
 
   /**
@@ -147,7 +161,6 @@ export class OrderService implements OrderInterface {
     }
 
     const orderType = await this.orderPuppeteer.readType(orderNumber);
-
     switch (orderType) {
       case 'STS':
         return OrderTypeEnum.STS;
@@ -180,18 +193,19 @@ export class OrderService implements OrderInterface {
     }
 
     await this.orderPuppeteer.goToOrder(orderNumber);
-    if (
-      !(await this.orderPuppeteer.checkLocation(
-        'body > div.wrapper > div.content-wrapper > section.content > div:nth-child(3) > div > div > div > div.row > div.box-header.with-border.print-hide.col-6 > h3',
-        false,
-      ))
-    ) {
+    const check = await this.orderPuppeteer.checkLocation(
+      'body > div.wrapper > div.content-wrapper > section.content-header > h1',
+      false,
+    );
+
+    if (!check) {
       throw new Error('Could not find order page');
     }
 
-    if (!(await this.orderPuppeteer.checkLocation('#edit_order', false))) {
+    //Enable this in production.
+    /*if (!(await this.orderPuppeteer.checkLocation('#edit_order', false))) {
       throw new Error('This order is delivered so it cannot be allocated');
-    }
+    }*/
 
     const order: STSOrderModel = await this.orderPuppeteer.readSTSOrder(
       orderNumber,
@@ -219,6 +233,12 @@ export class OrderService implements OrderInterface {
     } else if (!order.customerName || order.customerName == '') {
       throw new Error('failed getting customer');
     }
+
+    const substring = 'Norway';
+    if (order.deliveryAddress.includes(substring)) {
+      order.EU = false;
+    }
+
     return order;
   }
 
@@ -227,15 +247,17 @@ export class OrderService implements OrderInterface {
    * @private
    */
   async checkForInsole(): Promise<boolean> {
-    const location = await this.orderPuppeteer.checkLocation(
+    //Uncomment in production
+    /* const location = await this.orderPuppeteer.checkLocation(
       '#edit_order',
       false,
-    );
+    );*/
+    /* if (!location) {
+     throw new Error('failed to check for insole');
+   }*/
     const insoleSelector =
       'body > div.wrapper > div.content-wrapper > section.content > div.row > div > div > div > div.box-body > form > div:nth-child(4) > div > div > div.col-6.col-print-6 > table > tbody > tr:nth-child(2) > td:nth-child(2) > p';
-    if (!location) {
-      throw new Error('failed to check for insole');
-    }
+
     const doesCoverExist = await this.orderPuppeteer.checkLocation(
       insoleSelector,
       false,

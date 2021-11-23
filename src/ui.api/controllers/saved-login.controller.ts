@@ -37,12 +37,6 @@ export class SavedLoginController {
   @Post('verify')
   async verify(@Body() keyDto: KeyDto) {
     await this.savedLoginService.verifyKey(keyDto.password);
-    const login = await this.savedLoginService.getLogin(
-      LoginTypeEnum.ORTOWEAR,
-      keyDto.password,
-    );
-
-    console.log(login);
   }
 
   //use this later

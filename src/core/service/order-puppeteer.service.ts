@@ -228,6 +228,7 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
    * @param hidden
    */
   async checkLocation(selector: string, hidden: boolean): Promise<boolean> {
+    await this.page.waitForSelector()
     const element = await this.page.$(selector);
 
     return !!element;

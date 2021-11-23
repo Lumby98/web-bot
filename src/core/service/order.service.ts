@@ -180,7 +180,18 @@ export class OrderService implements OrderInterface {
     }
 
     await this.orderPuppeteer.goToOrder(orderNumber);
-    await this.orderPuppeteer.wait('#edit_order');
+    if (
+      !(await this.orderPuppeteer.checkLocation(
+        'body > div.wrapper > div.content-wrapper > section.content > div:nth-child(3) > div > div > div > div.row > div.box-header.with-border.print-hide.col-6 > h3',
+        false,
+      ))
+    ) {
+      throw new Error('Could not find order page');
+    }
+
+    if (!(await this.orderPuppeteer.checkLocation('#edit_order', false))) {
+      throw new Error('This order is delivered so it cannot be allocated');
+    }
 
     const order: STSOrderModel = await this.orderPuppeteer.readSTSOrder(
       orderNumber,

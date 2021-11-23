@@ -228,10 +228,16 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
    * @param hidden
    */
   async checkLocation(selector: string, hidden: boolean): Promise<boolean> {
-    await this.page.waitForSelector()
-    const element = await this.page.$(selector);
+    try {
+      await this.page.waitForSelector(selector, {
+        timeout: 8000,
+        hidden: hidden,
+      });
+    } catch (err) {
+      return false;
+    }
 
-    return !!element;
+    return true;
   }
 
   /**

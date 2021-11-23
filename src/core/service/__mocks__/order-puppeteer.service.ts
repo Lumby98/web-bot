@@ -8,6 +8,8 @@ export const OrderPuppeteerService = jest.fn().mockReturnValue({
   readType: jest.fn().mockResolvedValue('STS'),
   readSTSOrder: jest.fn().mockResolvedValue(StsOrderStub()),
   checkLocation: jest.fn().mockResolvedValue(true),
-  getCurrentURL: jest.fn().mockResolvedValue('https://www.google.com/'),
+  getCurrentURL: jest.fn().mockReturnValue('https://www.google.com/'),
   readSelectorText: jest.fn().mockResolvedValue('testString'),
+  wait: jest.fn().mockResolvedValue(undefined),
+  goToOrder: jest.fn().mockResolvedValue(undefined),
 });

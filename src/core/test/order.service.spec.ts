@@ -94,6 +94,11 @@ describe('OrderService', () => {
     const validPassword = 'test$Password99';
     describe('when handleOrtowearNavigation is called with a valid username and password', () => {
       beforeEach(async () => {
+        jest
+          .spyOn(orderPuppeteerService, 'getCurrentURL')
+          .mockReturnValueOnce('https://beta.ortowear.com/')
+          .mockReturnValueOnce('https://beta.ortowear.com/my_page');
+
         await orderService.handleOrtowearNavigation(
           validUsername,
           validPassword,
@@ -113,7 +118,11 @@ describe('OrderService', () => {
 
       it('should throw an error with the right message', async () => {
         await expect(
-          async () => await orderService.handleOrtowearNavigation,
+          async () =>
+            await orderService.handleOrtowearNavigation(
+              emptyUsername,
+              validPassword,
+            ),
         ).rejects.toThrow('Invalid username or password');
       });
     });
@@ -149,6 +158,11 @@ describe('OrderService', () => {
     describe('when handleOrtowearNavigation is called and puppeteer fails login', () => {
       beforeEach(async () => {
         jest
+          .spyOn(orderPuppeteerService, 'getCurrentURL')
+          .mockReturnValueOnce('https://beta.ortowear.com/')
+          .mockReturnValueOnce('https://beta.ortowear.com/my_page');
+
+        jest
           .spyOn(orderPuppeteerService, 'loginOrtowear')
           .mockImplementationOnce(() => {
             throw new Error(
@@ -173,10 +187,9 @@ describe('OrderService', () => {
     describe('when site is down', () => {
       beforeEach(async () => {
         jest
-          .spyOn(orderPuppeteerService, 'loginOrtowear')
-          .mockImplementationOnce(() => {
-            throw new Error('failed to reach website');
-          });
+          .spyOn(orderPuppeteerService, 'getCurrentURL')
+          .mockReturnValueOnce('')
+          .mockReturnValueOnce('');
       });
 
       it('should throw error if site could not be reached', () => {
@@ -185,7 +198,7 @@ describe('OrderService', () => {
             validUsername,
             validPassword,
           );
-        }).rejects.toThrow('failed to reach website');
+        }).rejects.toThrow('Navigation failed: went to the wrong URL');
       });
     });
   });

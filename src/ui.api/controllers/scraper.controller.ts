@@ -5,7 +5,8 @@ import {
   HttpException,
   HttpStatus,
   Inject,
-  Post, Put,
+  Post,
+  Put,
   UseGuards,
 } from '@nestjs/common';
 import { NeskridDto } from '../dto/product/neskrid.dto';

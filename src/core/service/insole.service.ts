@@ -22,7 +22,7 @@ export class InsoleService implements InsoleInterface {
       //opens a new fan
       const page = await browser.newPage();
 
-      //goes to ortowears page to get data of the given insoles
+      //goes to Ortowears page to get data of the given insoles
       //for testing replace 'order' with 'beta'
       await page
         .goto('https://order.ortowear.com/', { waitUntil: 'networkidle2' })

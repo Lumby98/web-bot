@@ -8,6 +8,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { jwtStrategy } from '../../core/strategy/jwt.strategy';
 import { authenticationInterfaceProvider } from '../../core/interfaces/authentication.interface';
+import { OrderModule } from './order.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { authenticationInterfaceProvider } from '../../core/interfaces/authentic
         },
       }),
     }),
+    OrderModule,
   ],
   providers: [
     {

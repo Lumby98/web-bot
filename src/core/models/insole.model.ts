@@ -1,4 +1,4 @@
-export class InsoleModel {
+export interface InsoleModel {
   orderNumber: number;
   registrationCode: number;
   size: string;

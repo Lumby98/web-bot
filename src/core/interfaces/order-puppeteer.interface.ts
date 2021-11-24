@@ -1,6 +1,5 @@
-import { OrderModel } from '../models/order.model';
 import { STSOrderModel } from '../models/sts-order.model';
-import { OrderInsoleModel } from '../models/order-insole.model';
+import { KeyInput } from "puppeteer";
 export const orderPuppeteerInterfaceProvider =
   'orderPuppeteerInterfaceProvider';
 export interface OrderPuppeteerInterface {
@@ -17,4 +16,11 @@ export interface OrderPuppeteerInterface {
   getCurrentURL(): string;
   readSelectorText(selector: string): Promise<string>;
   wait(selector: string);
+  loginNeskrid(username: string, password: string);
+  input(selector: string, text: string);
+  press(key: KeyInput);
+  click(selector: string);
+  select(selector: string, value: string);
+  selectByTexts(text: string);
+  getModelText(selector: string): Promise<string[]>;
 }

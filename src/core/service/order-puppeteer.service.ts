@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { OrderPuppeteerInterface } from '../interfaces/order-puppeteer.interface';
 import { STSOrderModel } from '../models/sts-order.model';
-import { Browser, Page } from 'puppeteer';
+import { Browser, KeyInput, Page } from 'puppeteer';
 import { TargetAndSelector } from '../models/target-and-selector';
 
 @Injectable()
@@ -296,7 +296,60 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
     return await this.page.$eval(selector, (el) => el.textContent);
   }
 
+  /**
+   * waits for selector
+   * @param selector
+   */
   async wait(selector: string) {
     await this.page.waitForSelector(selector);
   }
+
+  /**
+   * logs into neskrid
+   * @param username
+   * @param password
+   */
+  loginNeskrid(username: string, password: string) {}
+
+  async click(selector: string) {
+    await this.page.click(selector);
+  }
+
+  /**
+   * gets texts based on selector
+   * @param selector
+   */
+  getModelText(selector: string): Promise<string[]> {
+    return Promise.resolve([]);
+  }
+
+  /**
+   * inputs text into a text field
+   * @param selector
+   * @param text
+   */
+  async input(selector: string, text: string) {
+    await this.page.type(selector, text);
+  }
+
+  /**
+   * presses a key
+   * @param key
+   */
+  async press(key: KeyInput) {
+    await this.page.keyboard.press(key);
+  }
+
+  /**
+   * selects item in dropdown menu
+   * @param selector
+   * @param value
+   */
+  select(selector: string, value: string) {}
+
+  /**
+   * selects based on given text instead of selector
+   * @param text
+   */
+  selectByTexts(text: string) {}
 }

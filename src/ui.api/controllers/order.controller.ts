@@ -20,12 +20,13 @@ export class OrderController {
 
   @Post('handleOrder')
   async handleOrders(@Body() order: OrderDto) {
-    const orders = await this.orderService.handleOrders(order.orderNumbers, {
+    /*const orders = await this.orderService.handleOrders(order.orderNumbers, {
       username: order.username,
       password: order.password,
     });
     console.log(orders);
-    return orders;
+    return orders;*/
+    await this.orderService.createOrder({STSOrders: [], INSOrders: []}, 'sales@ortowear.com', 'noqczopj');
   }
 
   @Get('stop')

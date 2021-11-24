@@ -8,4 +8,9 @@ export interface OrderInterface {
   startPuppeteer(url: string);
   stopPuppeteer();
   getOrderType(orderNumber: string): Promise<OrderTypeEnum>;
+  createOrder(
+    orders: OrderLists,
+    username: string,
+    password: string,
+  ): Promise<string>;
 }

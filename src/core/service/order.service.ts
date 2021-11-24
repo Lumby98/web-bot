@@ -1,6 +1,9 @@
 import { OrderInterface } from '../interfaces/order.interface';
 import { Inject, Injectable } from '@nestjs/common';
-import { OrderPuppeteerInterface, orderPuppeteerInterfaceProvider } from '../interfaces/order-puppeteer.interface';
+import {
+  OrderPuppeteerInterface,
+  orderPuppeteerInterfaceProvider,
+} from '../interfaces/order-puppeteer.interface';
 import { STSOrderModel } from '../models/sts-order.model';
 import { OrderTypeEnum } from '../enums/type.enum';
 import { LoginDto } from '../../ui.api/dto/user/login.dto';
@@ -112,14 +115,9 @@ export class OrderService implements OrderInterface {
    * @private
    */
   async handleOrtowearNavigation(username: string, password: string) {
-    if (!username || !password) {
-      throw new Error('Invalid username or password');
-    }
-
-    const emailRegex = new RegExp('^\\w+@[a-zA-Z_]+?\\.[a-zA-Z]{2,3}$');
-
-    if (!emailRegex.test(username)) {
-      throw new Error('Invalid username or password');
+    const validateLogin = this.loginValidation(username, password);
+    if (!validateLogin) {
+      throw new Error('Wrong username or password');
     }
 
     await this.goToURL('https://beta.ortowear.com/');
@@ -312,5 +310,147 @@ export class OrderService implements OrderInterface {
     }
 
     return elementText;
+  }
+
+  async createOrder(
+    orders: OrderLists,
+    username: string,
+    password: string,
+  ): Promise<string> {
+    await this.handleNeskridNavigation(username, password);
+
+    if (orders.STSOrders.length > 0) {
+      for (const order of orders.STSOrders) {
+        await this.orderPuppeteer.navigateToURL(
+          'https://neskrid.com/plugins/neskrid/wizard/form_1.aspx',
+        );
+        await this.InputOrderInformation(
+          order.orderNr,
+          order.deliveryAddress,
+          order.insole,
+          order.EU,
+        );
+        await this.orderPuppeteer.checkLocation(
+          '#page-content-wrapper > div > div > h1',
+          false,
+        );
+        await this.inputUsageEnvironment(order.orderNr);
+        await this.inputModel(order.model, order.sizeL, order.widthL);
+        await this.supplement(order.insole);
+      }
+    }
+
+    if (orders.INSOrders.length > 0) {
+      return;
+    }
+    return Promise.resolve('');
+  }
+
+  async handleNeskridNavigation(username: string, password: string) {
+    const validateLogin = this.loginValidation(username, password);
+    if (!validateLogin) {
+      throw new Error('Wrong username or password');
+    }
+
+    await this.goToURL('https://www.neskrid.com/');
+
+    await this.orderPuppeteer.loginNeskrid(username, password);
+    await this.orderPuppeteer.wait(
+      '#page-content-wrapper > div.container-fluid > div:nth-child(1) > div > h1',
+    );
+
+    const desieredPage =
+      'https://neskrid.com/plugins/neskrid/myneskrid_main.aspx';
+    const currentUrl = await this.orderPuppeteer.getCurrentURL();
+    if (desieredPage != currentUrl) {
+      throw new Error('Failed to login to Neskrid');
+    }
+  }
+
+  loginValidation(username: string, password: string): boolean {
+    if (!username || !password) {
+      return false;
+    }
+
+    const emailRegex = new RegExp('^\\w+@[a-zA-Z_]+?\\.[a-zA-Z]{2,3}$');
+
+    if (!emailRegex.test(username)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  private async InputOrderInformation(
+    orderNr: string,
+    deliveryAddress: string,
+    insole: boolean,
+    EU: boolean,
+  ) {
+    await this.orderPuppeteer.input('#order_ordernr', orderNr);
+    if (insole) {
+      await this.orderPuppeteer.input(
+        '#order_afladr_search',
+        'RODOTEKA JSC Gamyklų str, 68108, Marijampole',
+      );
+      await this.orderPuppeteer.press('Enter');
+    } else if (EU) {
+      await this.orderPuppeteer.input(
+        '#order_afladr_search',
+        'Ortowear ApS Mukkerten, 6715, Esbjerg N',
+      );
+      await this.orderPuppeteer.press('Enter');
+    } else {
+      await this.orderPuppeteer.input('#order_afladr_search', deliveryAddress);
+      await this.orderPuppeteer.press('Enter');
+    }
+
+    await this.orderPuppeteer.click(
+      '#scrollrbody > div.wizard_navigation > button.btn.btn-default.wizard_button_next',
+    );
+  }
+
+  private async inputUsageEnvironment(orderNr: string) {
+    await this.orderPuppeteer.input('#order_enduser', orderNr);
+    await this.orderPuppeteer.select('#order_opt_9', 'Unknown');
+    await this.orderPuppeteer.input('#order_function', 'N/A');
+    await this.orderPuppeteer.select('#order_opt_26', 'Safety shoe');
+  }
+
+  private async inputModel(model: string, size: string, width: string) {
+    const models: string[] = await this.orderPuppeteer.getModelText(
+      'div.col-md-7 > div.row > div > h3',
+    );
+
+    if (!models) {
+      throw new Error('could not find models');
+    }
+
+    for (const m of models) {
+      if (model.includes(m)) {
+        await this.orderPuppeteer.selectByTexts(m);
+        break;
+      }
+    }
+    await this.orderPuppeteer.select('#order_opt_15', size);
+
+    const splitter = width.split('-');
+    if (splitter.length < 2) {
+      throw new Error('invalied width');
+    }
+
+    await this.orderPuppeteer.select('#order_opt_16', 'w' + splitter[1]);
+
+    await this.orderPuppeteer.click(
+      '#scrollrbody > div.wizard_navigation.toggled > button.btn.btn-default.wizard_button_next',
+    );
+  }
+
+  private async supplement(insole: boolean) {
+    if (insole) {
+      this.orderPuppeteer.click('#order_info_14');
+      this.orderPuppeteer.click('#choice_224');
+    }
+    //this.orderPuppeteer.click('#wizard_button_save')
   }
 }

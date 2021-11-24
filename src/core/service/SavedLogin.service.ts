@@ -40,6 +40,10 @@ export class SavedLoginService implements savedLoginServiceInterface {
     console.log(prevLogin);
     if (prevLogin) {
       await this.savedLoginRepository.remove(prevLogin);
+      const encryptedLogin = await this.encryptLogin(insertSavedLoginDto);
+      const newLogin = await this.savedLoginRepository.create(encryptedLogin);
+      await this.savedLoginRepository.save(newLogin);
+      return JSON.parse(JSON.stringify(newLogin));
     } else {
       const encryptedLogin = await this.encryptLogin(insertSavedLoginDto);
       const newLogin = await this.savedLoginRepository.create(encryptedLogin);

@@ -20,12 +20,9 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
     this.browser = await this.puppeteer.launch({
       headless: headless,
       args: [`--window-size=1920,1080`],
+      defaultViewport: null,
     });
     this.page = await this.browser.newPage();
-    await this.page.setViewport({
-      width: 1920,
-      height: 1080,
-    });
 
     await this.page.goto(url);
     await this.page.waitForTimeout(2000);
@@ -300,8 +297,16 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
    * waits for selector
    * @param selector
    */
-  async wait(selector: string) {
-    await this.page.waitForSelector(selector);
+  async wait(selector?: string, timeout?: number) {
+    if (selector) {
+      await this.page.waitForSelector(selector);
+    } else if (timeout) {
+      await this.page.waitForTimeout(timeout);
+    } else if (selector && timeout) {
+      await this.page.waitForSelector(selector, { timeout: timeout });
+    } else {
+      throw new Error('invalid arguments');
+    }
   }
 
   /**
@@ -309,7 +314,21 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
    * @param username
    * @param password
    */
-  loginNeskrid(username: string, password: string) {}
+  async loginNeskrid(username: string, password: string) {
+    await this.page.click(
+      '#modallanguages > div > div > div.modal-body.text-center > ul > li:nth-child(1) > a',
+    );
+    await this.page.waitForSelector('#sitebody');
+    await this.page.click(
+      '#sitebody > div.navbar.navbar-fixed-top.subpage > div > div.navbar-collapse.collapse > ul > li:nth-child(6) > a',
+    );
+    await this.page.waitForSelector('#gebruikerscode');
+    await this.page.type('#gebruikerscode', username);
+    await this.page.type('#gebruikerspass', password);
+    await this.page.click(
+      '#login-modal > div > div > div.modal-body > div > form > button',
+    );
+  }
 
   async click(selector: string) {
     await this.page.click(selector);
@@ -319,8 +338,10 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
    * gets texts based on selector
    * @param selector
    */
-  getModelText(selector: string): Promise<string[]> {
-    return Promise.resolve([]);
+  async getModelText(selector: string): Promise<string[]> {
+    return await this.page.$$eval(selector, (el) =>
+      el.map((e) => e.textContent),
+    );
   }
 
   /**
@@ -329,7 +350,7 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
    * @param text
    */
   async input(selector: string, text: string) {
-    await this.page.type(selector, text);
+    await this.page.type(selector, text, { delay: 200 });
   }
 
   /**
@@ -345,11 +366,25 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
    * @param selector
    * @param value
    */
-  select(selector: string, value: string) {}
+  async dropdownSelect(selector: string, value: string) {
+    const dataValue = await this.page.$$eval('option', (options) => {
+      return options
+        .find((o) => o.textContent.includes(value))
+        .getAttribute('value');
+    });
+
+    await this.page.select(selector, dataValue);
+  }
 
   /**
    * selects based on given text instead of selector
    * @param text
    */
-  selectByTexts(text: string) {}
+  async selectByTexts(selector: string, text: string) {
+    const element = await this.page.$$eval(selector, (el) => {
+      return el.find((e) => e.textContent === text).id;
+    });
+
+    await this.page.click(element);
+  }
 }

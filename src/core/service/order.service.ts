@@ -317,12 +317,19 @@ export class OrderService implements OrderInterface {
     username: string,
     password: string,
   ): Promise<string> {
+    await this.orderPuppeteer.start(false, 'https://www.google.com/');
     await this.handleNeskridNavigation(username, password);
-
+    await this.waitClick(
+      '#page-content-wrapper > div.container-fluid > div:nth-child(2) > div.col-lg-3.col-md-4.col-sm-6.col-xs-6 > section > div.panel-body > div > div > div',
+    );
+    await this.waitClick(
+      '#sitebody > div.cc-window.cc-banner.cc-type-opt-out.cc-theme-classic.cc-bottom > div > a.cc-btn.cc-dismiss',
+    );
+    console.log(orders.STSOrders.length);
     if (orders.STSOrders.length > 0) {
       for (const order of orders.STSOrders) {
-        await this.orderPuppeteer.navigateToURL(
-          'https://neskrid.com/plugins/neskrid/wizard/form_1.aspx',
+        await this.waitClick(
+          '#page-content-wrapper > div > div > div > section > div.panel-body > div > div:nth-child(3) > div',
         );
         await this.InputOrderInformation(
           order.orderNr,
@@ -343,7 +350,8 @@ export class OrderService implements OrderInterface {
     if (orders.INSOrders.length > 0) {
       return;
     }
-    return Promise.resolve('');
+    //await this.orderPuppeteer.stop();
+    return 'complete';
   }
 
   async handleNeskridNavigation(username: string, password: string) {
@@ -360,9 +368,11 @@ export class OrderService implements OrderInterface {
     );
 
     const desieredPage =
-      'https://neskrid.com/plugins/neskrid/myneskrid_main.aspx';
+      'https://www.neskrid.com/plugins/neskrid/myneskrid_main.aspx';
     const currentUrl = await this.orderPuppeteer.getCurrentURL();
     if (desieredPage != currentUrl) {
+      console.log(desieredPage);
+      console.log(currentUrl);
       throw new Error('Failed to login to Neskrid');
     }
   }
@@ -387,34 +397,36 @@ export class OrderService implements OrderInterface {
     insole: boolean,
     EU: boolean,
   ) {
+    await this.orderPuppeteer.wait('#order_ordernr');
     await this.orderPuppeteer.input('#order_ordernr', orderNr);
     if (insole) {
-      await this.orderPuppeteer.input(
-        '#order_afladr_search',
-        'RODOTEKA JSC Gamyklų str, 68108, Marijampole',
-      );
-      await this.orderPuppeteer.press('Enter');
+      await this.orderPuppeteer.input('#order_afladr_search', 'RODOTEKA');
+      await this.orderPuppeteer.press('ArrowDown');
+      await this.orderPuppeteer.press('Tab');
     } else if (EU) {
-      await this.orderPuppeteer.input(
-        '#order_afladr_search',
-        'Ortowear ApS Mukkerten, 6715, Esbjerg N',
-      );
+      await this.orderPuppeteer.input('#order_afladr_search', 'Ortowear');
+      await this.orderPuppeteer.press('ArrowDown');
       await this.orderPuppeteer.press('Enter');
     } else {
       await this.orderPuppeteer.input('#order_afladr_search', deliveryAddress);
+      await this.orderPuppeteer.press('ArrowDown');
       await this.orderPuppeteer.press('Enter');
     }
-
-    await this.orderPuppeteer.click(
+    await this.orderPuppeteer.wait('#order_afladr_form');
+    await this.waitClick(
       '#scrollrbody > div.wizard_navigation > button.btn.btn-default.wizard_button_next',
     );
   }
 
   private async inputUsageEnvironment(orderNr: string) {
+    await this.orderPuppeteer.wait('#order_enduser');
     await this.orderPuppeteer.input('#order_enduser', orderNr);
-    await this.orderPuppeteer.select('#order_opt_9', 'Unknown');
+    await this.orderPuppeteer.dropdownSelect('#order_opt_9', 'Unknown');
     await this.orderPuppeteer.input('#order_function', 'N/A');
-    await this.orderPuppeteer.select('#order_opt_26', 'Safety shoe');
+    await this.orderPuppeteer.dropdownSelect(
+      '#order_opt_26',
+      'Safety shoe with protective toecap (EN-ISO 20345:2011)',
+    );
   }
 
   private async inputModel(model: string, size: string, width: string) {
@@ -428,29 +440,41 @@ export class OrderService implements OrderInterface {
 
     for (const m of models) {
       if (model.includes(m)) {
-        await this.orderPuppeteer.selectByTexts(m);
+        await this.orderPuppeteer.selectByTexts(
+          'div.col-md-7 > div.row > div > h3',
+          m,
+        );
         break;
       }
     }
-    await this.orderPuppeteer.select('#order_opt_15', size);
+    await this.orderPuppeteer.dropdownSelect('#order_opt_15', size);
 
     const splitter = width.split('-');
     if (splitter.length < 2) {
       throw new Error('invalied width');
     }
 
-    await this.orderPuppeteer.select('#order_opt_16', 'w' + splitter[1]);
+    await this.orderPuppeteer.dropdownSelect(
+      '#order_opt_16',
+      'w' + splitter[1],
+    );
 
     await this.orderPuppeteer.click(
       '#scrollrbody > div.wizard_navigation.toggled > button.btn.btn-default.wizard_button_next',
     );
   }
 
-  private async supplement(insole: boolean) {
+  async supplement(insole: boolean) {
     if (insole) {
+      await this.orderPuppeteer.wait('#order_info_14');
       this.orderPuppeteer.click('#order_info_14');
       this.orderPuppeteer.click('#choice_224');
     }
     //this.orderPuppeteer.click('#wizard_button_save')
+  }
+
+  async waitClick(selector: string) {
+    await this.orderPuppeteer.wait(selector);
+    await this.orderPuppeteer.click(selector);
   }
 }

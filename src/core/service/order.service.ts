@@ -342,10 +342,15 @@ export class OrderService implements OrderInterface {
           order.EU,
           order.customerName,
         );
-        await this.orderPuppeteer.checkLocation(
+        const isInUsageEnvoPage = await this.orderPuppeteer.checkLocation(
           '#page-content-wrapper > div > div > h1',
           false,
         );
+
+        if (!isInUsageEnvoPage) {
+          throw new Error('Could not load usage envoirment page.');
+        }
+
         await this.inputUsageEnvironment(order.orderNr);
         await this.inputModel(order.model, order.sizeL, order.widthL);
         await this.supplement(order.insole);
@@ -422,20 +427,60 @@ export class OrderService implements OrderInterface {
       );
       await this.inputAddress(deliveryAddress, orderNr, customerName);
     }
-    await this.orderPuppeteer.wait('#order_afladr_form');
+    await this.orderPuppeteer.wait('#order_afladr_name');
     await this.waitClick(
       '#scrollrbody > div.wizard_navigation > button.btn.btn-default.wizard_button_next',
     );
+
+    const isInUsageEnvoPage = await this.orderPuppeteer.checkLocation(
+      '#order_enduser',
+      false,
+    );
+
+    if (!isInUsageEnvoPage) {
+      console.log('Clicked next again');
+      await this.waitClick(
+        '#scrollrbody > div.wizard_navigation > button.btn.btn-default.wizard_button_next',
+      );
+    }
   }
 
   private async inputUsageEnvironment(orderNr: string) {
-    await this.orderPuppeteer.wait('#order_enduser');
+    const endUserIsLoaded = await this.orderPuppeteer.checkLocation(
+      '#order_enduser',
+      false,
+    );
+
+    if (!endUserIsLoaded) {
+      throw new Error('Could not load end user input');
+    }
     await this.orderPuppeteer.input('#order_enduser', orderNr);
+
+    let endUserText = await this.orderPuppeteer.getInputValue('#order_enduser');
+    if (endUserText !== orderNr) {
+      await this.orderPuppeteer.input('#order_enduser', orderNr);
+    }
+
+    endUserText = await this.orderPuppeteer.getInputValue('#order_enduser');
+    if (endUserText !== orderNr) {
+      throw new Error('Failed to input orderNr to end user input');
+    }
+
+    const proffesionalSectorDropdownIsLoaded =
+      await this.orderPuppeteer.checkLocation('#order_enduser', false);
+
+    if (!proffesionalSectorDropdownIsLoaded) {
+      throw new Error('Could not load professional sector dropdown');
+    }
     await this.orderPuppeteer.dropdownSelect('#order_opt_9', 'Unknown');
     await this.orderPuppeteer.input('#order_function', 'N/A');
     await this.orderPuppeteer.dropdownSelect(
       '#order_opt_26',
       'Safety shoe with protective toecap (EN-ISO 20345:2011)',
+    );
+
+    await this.waitClick(
+      '#scrollrbody > div.wizard_navigation > button.btn.btn-default.wizard_button_next',
     );
   }
 
@@ -457,6 +502,15 @@ export class OrderService implements OrderInterface {
         break;
       }
     }
+    const sizeSelectorLoaded = await this.orderPuppeteer.checkLocation(
+      '#order_opt_15',
+      false,
+    );
+
+    if (!sizeSelectorLoaded) {
+      throw new Error('Page failed to load shoe size selector');
+    }
+
     await this.orderPuppeteer.dropdownSelect('#order_opt_15', size);
 
     const splitter = width.split('-');
@@ -464,13 +518,22 @@ export class OrderService implements OrderInterface {
       throw new Error('invalied width');
     }
 
+    const widthSelectorLoaded = await this.orderPuppeteer.checkLocation(
+      '#order_opt_16',
+      false,
+    );
+
+    if (!widthSelectorLoaded) {
+      throw new Error('Page failed to load shoe width selector');
+    }
+
     await this.orderPuppeteer.dropdownSelect(
       '#order_opt_16',
       'w' + splitter[1],
     );
 
-    await this.orderPuppeteer.click(
-      '#scrollrbody > div.wizard_navigation.toggled > button.btn.btn-default.wizard_button_next',
+    await this.waitClick(
+      '#scrollrbody > div.wizard_navigation > button.btn.btn-default.wizard_button_next',
     );
   }
 

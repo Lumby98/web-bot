@@ -26,6 +26,9 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
     this.page = await this.browser.newPage();
 
     await this.page.goto(url);
+    this.page.on('dialog', async (dialog) => {
+      await dialog.dismiss();
+    });
     await this.page.waitForTimeout(2000);
   }
 
@@ -296,6 +299,10 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
     return await this.page.$eval(selector, (el) => el.textContent);
   }
 
+  async getInputValue(selector: string): Promise<string> {
+    return await this.page.$eval(selector, (el: HTMLInputElement) => el.value);
+  }
+
   /**
    * waits for selector
    * @param selector
@@ -323,12 +330,18 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
       '#modallanguages > div > div > div.modal-body.text-center > ul > li:nth-child(1) > a',
     );
     await this.page.waitForSelector('#sitebody');
+    await this.page.waitForSelector(
+      '#sitebody > div.navbar.navbar-fixed-top.subpage > div > div.navbar-collapse.collapse > ul > li:nth-child(6) > a',
+    );
     await this.page.click(
       '#sitebody > div.navbar.navbar-fixed-top.subpage > div > div.navbar-collapse.collapse > ul > li:nth-child(6) > a',
     );
     await this.page.waitForSelector('#gebruikerscode');
     await this.page.type('#gebruikerscode', username);
     await this.page.type('#gebruikerspass', password);
+    await this.page.waitForSelector(
+      '#login-modal > div > div > div.modal-body > div > form > button',
+    );
     await this.page.click(
       '#login-modal > div > div > div.modal-body > div > form > button',
     );
@@ -354,7 +367,15 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
    * @param text
    */
   async input(selector: string, text: string) {
+    await this.page.click(selector, {
+      clickCount: 3,
+      delay: 100,
+    });
+
+    await this.page.keyboard.press('Backspace');
+
     await this.page.type(selector, text, { delay: 200 });
+    await this.page.waitForTimeout(2000);
   }
 
   /**
@@ -368,18 +389,31 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
   /**
    * selects item in dropdown menu
    * @param selector
-   * @param value
+   * @param textValue
    */
-  async dropdownSelect(selector: string, value: string) {
+  async dropdownSelect(selector: string, textValue: string) {
     const dataValue = await this.page.$$eval(
       'option',
-      (elements: HTMLInputElement[]) => {
-        const htmlInputElement = elements.find((o) =>
-          o.textContent.includes(value),
-        );
-
+      (elements: HTMLInputElement[], text: string) => {
+        const htmlInputElement = elements.find((o) => {
+          const uppercaseText = o.textContent.toLocaleUpperCase();
+          return uppercaseText.includes(text.toLocaleUpperCase());
+        });
+        if (!htmlInputElement) {
+          throw new Error(
+            'Found no matching option for:\n' +
+              'text value: ' +
+              text +
+              '\n' +
+              'elements are: ' +
+              elements.map((o) => {
+                return o.textContent;
+              }),
+          );
+        }
         return htmlInputElement.value;
       },
+      textValue,
     );
 
     await this.page.select(selector, dataValue);

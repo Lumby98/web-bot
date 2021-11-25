@@ -1,5 +1,6 @@
 import { STSOrderModel } from '../models/sts-order.model';
 import { KeyInput } from 'puppeteer';
+import { string } from '@hapi/joi';
 export const orderPuppeteerInterfaceProvider =
   'orderPuppeteerInterfaceProvider';
 export interface OrderPuppeteerInterface {
@@ -20,7 +21,8 @@ export interface OrderPuppeteerInterface {
   input(selector: string, text: string);
   press(key: KeyInput);
   click(selector: string);
-  dropdownSelect(selector: string, value: string);
+  dropdownSelect(selector: string, textValue: string);
   selectByTexts(selector: string, text: string);
   getModelText(selector: string): Promise<string[]>;
+  getInputValue(selector: string): Promise<string>;
 }

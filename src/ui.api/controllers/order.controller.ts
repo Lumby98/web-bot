@@ -39,7 +39,11 @@ export class OrderController {
     const sts: STSOrderModel[] = [];
     sts.push({
       orderNr: 'VA 166626',
-      deliveryAddress: 'Gammel Køge Landevej 55 2500 Valby Kobenhavn, Denmark',
+      deliveryAddress: [
+        'Borgervaenget 5',
+        '2100 Koebenhavn',
+        'Kobenhavn, Denmark',
+      ],
       customerName: 'Holger Hansen Sko ApS',
       model: '9052160 Beaver DUO',
       sizeL: '40',

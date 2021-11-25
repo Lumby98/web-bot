@@ -3,6 +3,7 @@ import { OrderPuppeteerInterface } from '../interfaces/order-puppeteer.interface
 import { STSOrderModel } from '../models/sts-order.model';
 import { Browser, KeyInput, Page } from 'puppeteer';
 import { TargetAndSelector } from '../models/target-and-selector';
+import { string } from '@hapi/joi';
 
 @Injectable()
 export class OrderPuppeteerService implements OrderPuppeteerInterface {
@@ -107,20 +108,22 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
       throw new Error('order number does not match page');
     }
 
-    let address;
-    address = await this.readSelectorText(
-      'body > div.wrapper > div.content-wrapper > section.content > div.row > div > div > div > div.box-body > form > div:nth-child(2) > div > div > div > table > tbody > tr:nth-child(2) > td:nth-child(2) > div:nth-child(1)',
+    const address: string[] = [];
+    address.push(
+      await this.readSelectorText(
+        'body > div.wrapper > div.content-wrapper > section.content > div.row > div > div > div > div.box-body > form > div:nth-child(2) > div > div > div > table > tbody > tr:nth-child(2) > td:nth-child(2) > div:nth-child(1)',
+      ),
     );
-    address +=
-      ' ' +
-      (await this.readSelectorText(
+    address.push(
+      await this.readSelectorText(
         'body > div.wrapper > div.content-wrapper > section.content > div.row > div > div > div > div.box-body > form > div:nth-child(2) > div > div > div > table > tbody > tr:nth-child(2) > td:nth-child(2) > div:nth-child(2)',
-      ));
-    address +=
-      ' ' +
-      (await this.readSelectorText(
+      ),
+    );
+    address.push(
+      await this.readSelectorText(
         'body > div.wrapper > div.content-wrapper > section.content > div.row > div > div > div > div.box-body > form > div:nth-child(2) > div > div > div > table > tbody > tr:nth-child(2) > td:nth-child(2) > div:nth-child(3)',
-      ));
+      ),
+    );
 
     const order: STSOrderModel = {
       orderNr: pageOrdernumber,
@@ -296,6 +299,7 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
   /**
    * waits for selector
    * @param selector
+   * @param timeout
    */
   async wait(selector?: string, timeout?: number) {
     if (selector) {
@@ -367,11 +371,16 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
    * @param value
    */
   async dropdownSelect(selector: string, value: string) {
-    const dataValue = await this.page.$$eval('option', (options) => {
-      return options
-        .find((o) => o.textContent.includes(value))
-        .getAttribute('value');
-    });
+    const dataValue = await this.page.$$eval(
+      'option',
+      (elements: HTMLInputElement[]) => {
+        const htmlInputElement = elements.find((o) =>
+          o.textContent.includes(value),
+        );
+
+        return htmlInputElement.value;
+      },
+    );
 
     await this.page.select(selector, dataValue);
   }

@@ -47,7 +47,11 @@ export class OrderService implements OrderInterface {
           const INSS: INSSOrderModel = {
             orderNr: '123123',
             EU: true,
-            deliveryAddress: 'gruss strasse 60',
+            deliveryAddress: [
+              'Borgervaenget 5',
+              '2100 Koebenhavn',
+              'Kobenhavn, Denmark',
+            ],
             sizeL: '40',
             sizeR: '42',
             customerName: 'Klaus Riftbjerg',
@@ -226,7 +230,7 @@ export class OrderService implements OrderInterface {
       throw new Error('failed getting size for left shoe');
     } else if (!order.model || order.model == '') {
       throw new Error('failed getting model');
-    } else if (!order.deliveryAddress || order.deliveryAddress == '') {
+    } else if (!order.deliveryAddress || order.deliveryAddress.length < 3) {
       throw new Error('failed getting delivery address');
     } else if (!order.customerName || order.customerName == '') {
       throw new Error('failed getting customer');
@@ -336,6 +340,7 @@ export class OrderService implements OrderInterface {
           order.deliveryAddress,
           order.insole,
           order.EU,
+          order.customerName,
         );
         await this.orderPuppeteer.checkLocation(
           '#page-content-wrapper > div > div > h1',
@@ -393,24 +398,29 @@ export class OrderService implements OrderInterface {
 
   private async InputOrderInformation(
     orderNr: string,
-    deliveryAddress: string,
+    deliveryAddress: string[],
     insole: boolean,
     EU: boolean,
+    customerName: string,
   ) {
     await this.orderPuppeteer.wait('#order_ordernr');
     await this.orderPuppeteer.input('#order_ordernr', orderNr);
     if (insole) {
       await this.orderPuppeteer.input('#order_afladr_search', 'RODOTEKA');
-      await this.orderPuppeteer.press('ArrowDown');
-      await this.orderPuppeteer.press('Tab');
+      await this.waitClick(
+        '#order_afladr > div > div.panel-heading > div > div > div',
+      );
     } else if (EU) {
       await this.orderPuppeteer.input('#order_afladr_search', 'Ortowear');
-      await this.orderPuppeteer.press('ArrowDown');
-      await this.orderPuppeteer.press('Enter');
+      await this.waitClick(
+        '#order_afladr > div > div.panel-heading > div > div > div',
+      );
     } else {
-      await this.orderPuppeteer.input('#order_afladr_search', deliveryAddress);
-      await this.orderPuppeteer.press('ArrowDown');
-      await this.orderPuppeteer.press('Enter');
+      await this.orderPuppeteer.input('#order_afladr_search', customerName);
+      await this.waitClick(
+        '#order_afladr > div > div.panel-heading > div > div > div',
+      );
+      await this.inputAddress(deliveryAddress, orderNr, customerName);
     }
     await this.orderPuppeteer.wait('#order_afladr_form');
     await this.waitClick(
@@ -476,5 +486,33 @@ export class OrderService implements OrderInterface {
   async waitClick(selector: string) {
     await this.orderPuppeteer.wait(selector);
     await this.orderPuppeteer.click(selector);
+  }
+
+  async inputAddress(
+    deliveryAddress: string[],
+    orderNr: string,
+    customerName: string,
+  ) {
+    await this.orderPuppeteer.wait('#order_afladr_form');
+    await this.orderPuppeteer.input('#order_afladr_name', customerName);
+
+    const address = deliveryAddress[0].split(' ');
+
+    await this.orderPuppeteer.input('#order_afladr_street', address[0]);
+
+    await this.orderPuppeteer.input('#order_afladr_nr', address[1]);
+
+    const postalCodeandCity = deliveryAddress[1].split(' ');
+
+    await this.orderPuppeteer.input('#order_afladr_zip', postalCodeandCity[0]);
+
+    await this.orderPuppeteer.input(
+      '#order_afladr_place',
+      postalCodeandCity[1],
+    );
+
+    const country = deliveryAddress[2].split(' ');
+
+    await this.orderPuppeteer.input('#order_afladr_zip', postalCodeandCity[0]);
   }
 }

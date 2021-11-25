@@ -15,12 +15,14 @@ import { SavedLoginModel } from '../models/Savedlogin.model';
 import { savedLoginServiceInterface } from '../interfaces/savedLoginService.interface';
 import { SavedLoginDto } from '../../ui.api/dto/savedLogin/SavedLoginDto';
 import { LoginTypeEnum } from '../enums/loginType.enum';
+import { InsertKeyDto } from '../../ui.api/dto/savedLogin/insert-Key.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class SavedLoginService implements savedLoginServiceInterface {
   constructor(
     @InjectRepository(Key)
-    private KeyRepository: Repository<Key>,
+    private keyRepository: Repository<Key>,
     @InjectRepository(SavedLogin)
     private savedLoginRepository: Repository<SavedLogin>,
     @Inject(authenticationInterfaceProvider)
@@ -69,9 +71,41 @@ export class SavedLoginService implements savedLoginServiceInterface {
     }
   }
 
+  async changeKey(inserKeyDto: InsertKeyDto) {
+    try {
+      const decryptedLogins = await this.findAllLogins(
+        inserKeyDto.prevPassword,
+      );
+
+      const currentKey = await this.keyRepository.findOne(1);
+      if (currentKey) {
+        const hashedKey = await bcrypt.hash(inserKeyDto.password, 10);
+
+        await this.keyRepository.update(
+          { id: currentKey.id },
+          { password: hashedKey },
+        );
+        await this.getKey();
+
+        for (const decryptedLogin of decryptedLogins) {
+          await this.insertLogin({
+            loginType: decryptedLogin.loginType,
+            username: decryptedLogin.username,
+            password: decryptedLogin.password,
+            key: inserKeyDto.password,
+          });
+        }
+      } else {
+        throw new Error('Could not get key');
+      }
+    } catch (err) {
+      throw err;
+    }
+  }
+
   async getKey(): Promise<KeyModel> {
     try {
-      const key = await this.KeyRepository.findOne(1);
+      const key = await this.keyRepository.findOne(1);
       if (key) {
         return JSON.parse(JSON.stringify(key));
       }
@@ -177,16 +211,20 @@ export class SavedLoginService implements savedLoginServiceInterface {
     }
   }
 
-  /*async findAllLogins(key: string): Promise<SavedLoginModel> {
-    await this.VerifyKey(key);
+  async findAllLogins(key: string): Promise<SavedLoginDto[]> {
+    await this.verifyKey(key);
     try {
       const logins = await this.savedLoginRepository.find();
       if (logins) {
-        return JSON.parse(JSON.stringify(logins));
+        const decryptedLogins = Array<SavedLoginDto>();
+        for (const login of logins) {
+          decryptedLogins.push(await this.decryptLogin(login, key));
+        }
+        return decryptedLogins;
       }
       throw new Error('Could not retrieve logins');
     } catch (err) {
       throw err;
     }
-  }*/
+  }
 }

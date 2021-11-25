@@ -3,6 +3,7 @@ import { SavedLoginModel } from '../models/Savedlogin.model';
 import { KeyModel } from '../models/key.model';
 import { LoginTypeEnum } from '../enums/loginType.enum';
 import { SavedLoginDto } from '../../ui.api/dto/savedLogin/SavedLoginDto';
+import { InsertKeyDto } from "../../ui.api/dto/savedLogin/insert-Key.dto";
 
 export const savedLoginServiceInterfaceProvider =
   'savedLoginServiceInterfaceProvider';
@@ -12,6 +13,8 @@ export interface savedLoginServiceInterface {
   ): Promise<SavedLoginModel>;
 
   getKey(): Promise<KeyModel>;
+
+  changeKey(inserKeyDto: InsertKeyDto);
 
   encryptLogin(
     insertSavedLoginDto: InsertSavedLoginDto,
@@ -26,5 +29,5 @@ export interface savedLoginServiceInterface {
 
   getLogin(loginType: LoginTypeEnum, key: string): Promise<SavedLoginDto>;
 
-  /*findAllLogins(key: string): Promise<SavedLoginModel>;*/
+  findAllLogins(key: string): Promise<SavedLoginDto[]>;
 }

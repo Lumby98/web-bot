@@ -14,8 +14,7 @@ import {
 import { jwtAuthenticationGuard } from '../guard/jwt-authentication.guard';
 import { InsertSavedLoginDto } from '../dto/savedLogin/insert-SavedLogin.dto';
 import { KeyDto } from '../dto/savedLogin/Key.dto';
-import { Response } from 'express';
-import { LoginTypeEnum } from '../../core/enums/loginType.enum';
+import { InsertKeyDto } from "../dto/savedLogin/insert-Key.dto";
 
 @Controller('saved-login')
 export class SavedLoginController {
@@ -37,6 +36,15 @@ export class SavedLoginController {
   @Post('verify')
   async verify(@Body() keyDto: KeyDto) {
     await this.savedLoginService.verifyKey(keyDto.password);
+
+    //console.log(await this.savedLoginService.findAllLogins(keyDto.password));
+  }
+
+  @UseGuards(jwtAuthenticationGuard)
+  @HttpCode(200)
+  @Post('changeKey')
+  async changeKey(@Body() insertKeyDto: InsertKeyDto) {
+    await this.savedLoginService.changeKey(insertKeyDto);
   }
 
   //use this later

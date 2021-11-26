@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { OrderPuppeteerInterface } from '../interfaces/order-puppeteer.interface';
 import { STSOrderModel } from '../models/sts-order.model';
-import { Browser, KeyInput, Page } from 'puppeteer';
+import { Browser, JSHandle, KeyInput, Page } from 'puppeteer';
 import { TargetAndSelector } from '../models/target-and-selector';
 import { string } from '@hapi/joi';
 
@@ -341,6 +341,7 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
     await this.page.type('#gebruikerspass', password);
     await this.page.waitForSelector(
       '#login-modal > div > div > div.modal-body > div > form > button',
+      { visible: true },
     );
     await this.page.click(
       '#login-modal > div > div > div.modal-body > div > form > button',
@@ -356,9 +357,15 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
    * @param selector
    */
   async getModelText(selector: string): Promise<string[]> {
-    return await this.page.$$eval(selector, (el) =>
-      el.map((e) => e.textContent),
-    );
+    return await this.page.$$eval(selector, (el) => {
+      const modelTextArray = el.map((e) => e.textContent);
+      if (modelTextArray.length < 1) {
+        throw new Error(
+          'Failed to find model names: ' + modelTextArray.length.toString(),
+        );
+      }
+      return modelTextArray;
+    });
   }
 
   /**
@@ -421,13 +428,45 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
 
   /**
    * selects based on given text instead of selector
-   * @param text
+   * @param selector
+   * @param textValue
    */
-  async selectByTexts(selector: string, text: string) {
-    const element = await this.page.$$eval(selector, (el) => {
-      return el.find((e) => e.textContent === text).id;
-    });
-
+  async selectByTexts(selector: string, textValue: string) {
+    const element = await this.page.$$eval(
+      selector,
+      (el, text: string) => {
+        return el.find((e) => e.textContent === text).id;
+      },
+      textValue,
+    );
     await this.page.click(element);
   }
+  //I have tried.
+  /*async selectByTexts(selector: string, textValue: string) {
+    const elements = await this.page.$$(selector);
+    const element = await elements.find(async (e) => {
+      const textContent = await e.evaluate((node) => node.textContent);
+      return textContent === textValue;
+    });
+    if (!element) {
+      throw new Error('The element is invalid: ' + element);
+    }
+    console.log(element.toString());
+
+    const parentHandle = await this.page.evaluateHandle(
+      (e) => e.parent,
+      element,
+    );
+
+    const parentElement = parentHandle.asElement();
+    console.log(parentHandle.toString());
+    const id = await parentElement.evaluate((node: Element) => node.id);
+
+    if (!id || id === '') {
+      throw new Error('The id is invalid: ' + id);
+    }
+
+    console.log('id is: ' + id.toString());
+    await this.page.click(id);
+  }*/
 }

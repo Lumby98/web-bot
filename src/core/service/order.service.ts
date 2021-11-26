@@ -485,9 +485,23 @@ export class OrderService implements OrderInterface {
   }
 
   private async inputModel(model: string, size: string, width: string) {
+    const isModelLoaded = this.orderPuppeteer.checkLocation(
+      '#page-content-wrapper > div > div > div > div.col-md-7 > div',
+      false,
+    );
+
+    await this.orderPuppeteer.wait(
+      '#page-content-wrapper > div > div > div > div.col-md-7 > div',
+      5000,
+    );
+
+    if (!isModelLoaded) {
+      throw new Error('failed to load model page');
+    }
     const models: string[] = await this.orderPuppeteer.getModelText(
       'div.col-md-7 > div.row > div > h3',
     );
+    console.log(models);
 
     if (!models) {
       throw new Error('could not find models');
@@ -495,6 +509,7 @@ export class OrderService implements OrderInterface {
 
     for (const m of models) {
       if (model.includes(m)) {
+        console.log(m);
         await this.orderPuppeteer.selectByTexts(
           'div.col-md-7 > div.row > div > h3',
           m,

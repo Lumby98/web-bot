@@ -16,13 +16,13 @@ export interface OrderPuppeteerInterface {
   checkLocation(selector: string, hidden: boolean): Promise<boolean>;
   getCurrentURL(): string;
   readSelectorText(selector: string): Promise<string>;
-  wait(selector: string);
+  wait(selector?: string, timeout?: number);
   loginNeskrid(username: string, password: string);
   input(selector: string, text: string);
   press(key: KeyInput);
   click(selector: string);
   dropdownSelect(selector: string, textValue: string);
-  selectByTexts(selector: string, text: string);
+  selectByTexts(selector: string, textValue: string);
   getModelText(selector: string): Promise<string[]>;
   getInputValue(selector: string): Promise<string>;
 }

@@ -12,7 +12,7 @@ export interface OrderInterface {
     orders: OrderLists,
     username: string,
     password: string,
-  ): Promise<string>;
+  ): Promise<OrderLists>;
   handleAllocations(
     orders: OrderLists,
     username: string,

@@ -9,6 +9,7 @@ import { OrderTypeEnum } from '../enums/type.enum';
 import { LoginDto } from '../../ui.api/dto/user/login.dto';
 import { INSSOrderModel } from '../models/ins-s-order.model';
 import { OrderLists } from '../models/order-lists';
+import * as moment from 'moment';
 
 @Injectable()
 export class OrderService implements OrderInterface {
@@ -323,7 +324,7 @@ export class OrderService implements OrderInterface {
     orders: OrderLists,
     username: string,
     password: string,
-  ): Promise<string> {
+  ): Promise<OrderLists> {
     await this.orderPuppeteer.start(false, 'https://www.google.com/');
     await this.handleNeskridNavigation(username, password);
     await this.waitClick(
@@ -358,6 +359,17 @@ export class OrderService implements OrderInterface {
         await this.inputUsageEnvironment(order.orderNr);
         await this.inputModel(order.model, order.sizeL, order.widthL);
         await this.supplement(order.insole);
+        const dateString = await this.handleOrderCompletion(true);
+        if (!dateString) {
+          throw new Error('failed to get delivery date: ' + dateString);
+        }
+        console.log(dateString);
+        const date = new Date('2011-04-11T10:20:30Z');
+        console.log(date);
+        const format = moment(date).format('DD-MM-YYYY');
+        console.log(format);
+        order.timeOfDelivery = new Date(format);
+        console.log('d:    ' + order.timeOfDelivery);
       }
     }
 
@@ -365,7 +377,7 @@ export class OrderService implements OrderInterface {
       return;
     }
     //await this.orderPuppeteer.stop();
-    return 'complete';
+    return orders;
   }
 
   async handleNeskridNavigation(username: string, password: string) {
@@ -444,8 +456,10 @@ export class OrderService implements OrderInterface {
 
     if (!isInUsageEnvoPage) {
       console.log('Clicked next again');
-      await this.waitClick(
+      await this.tryAgain(
+        '#order_enduser',
         '#scrollrbody > div.wizard_navigation > button.btn.btn-default.wizard_button_next',
+        0,
       );
     }
   }
@@ -536,16 +550,6 @@ export class OrderService implements OrderInterface {
       }
     }
 
-    /* for (const m of models) {
-      if (model.includes(m)) {
-        console.log(m);
-        await this.orderPuppeteer.selectByTexts(
-          'div.col-md-7 > div.row > div > h3',
-          m,
-        );
-        break;
-      }
-    }*/
     const sizeSelectorLoaded = await this.orderPuppeteer.checkLocation(
       '#order_opt_15',
       false,
@@ -591,9 +595,11 @@ export class OrderService implements OrderInterface {
     console.log(isSupplementlLoaded);
 
     if (!isSupplementlLoaded) {
-      console.log('Clicked next again');
-      await this.waitClick(
+      console.log('Clicked next again: supplement');
+      await this.tryAgain(
+        '#order_info_14',
         '#scrollrbody > div.wizard_navigation > button.btn.btn-default.wizard_button_next',
+        0,
       );
     }
   }
@@ -668,8 +674,23 @@ export class OrderService implements OrderInterface {
   }
 
   async handleOrderCompletion(dev: boolean): Promise<string> {
-    this.orderPuppeteer.click('#wizard_button_save', true);
-
+    if (dev) {
+      return '26-11-2021';
+    }
+    await this.orderPuppeteer.click('#wizard_button_save', true);
+    const loginBtn = await this.orderPuppeteer.checkLocation(
+      'temp: order button',
+      false,
+      false,
+    );
+    if (!loginBtn) {
+      await this.tryAgain('tmp: order button', '#wizard_button_save', 0);
+    }
+    await this.orderPuppeteer.click('tmp: order button', false);
+    const deliveryDate = await this.orderPuppeteer.readSelectorText(
+      'delivery date',
+    );
+    return deliveryDate;
   }
 
   async handleAllocations(
@@ -678,5 +699,28 @@ export class OrderService implements OrderInterface {
     password: string,
   ): Promise<string> {
     return Promise.resolve('');
+  }
+
+  async tryAgain(
+    checkSelector: string,
+    clickSelector: string,
+    counter: number,
+  ) {
+    await this.orderPuppeteer.wait(null, 2000);
+    const isChecked = await this.orderPuppeteer.checkLocation(
+      checkSelector,
+      false,
+      false,
+    );
+
+    if (!isChecked) {
+      counter++;
+      if (counter == 10) {
+        throw new Error('failed to try again: ' + checkSelector);
+      }
+      console.log('trying again' + counter);
+      await this.waitClick(clickSelector);
+      await this.tryAgain(checkSelector, clickSelector, counter);
+    }
   }
 }

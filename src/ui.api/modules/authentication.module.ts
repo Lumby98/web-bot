@@ -8,6 +8,12 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { jwtStrategy } from '../../core/strategy/jwt.strategy';
 import { authenticationInterfaceProvider } from '../../core/interfaces/authentication.interface';
+import { savedLoginServiceInterfaceProvider } from '../../core/interfaces/savedLoginService.interface';
+import { SavedLoginService } from '../../core/service/SavedLogin.service';
+import { SavedLoginController } from '../controllers/saved-login.controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { SavedLogin } from '../../infrastructure/entities/Savedlogin.entity';
+import { Key } from '../../infrastructure/entities/key';
 import { OrderModule } from './order.module';
 
 @Module({
@@ -15,6 +21,7 @@ import { OrderModule } from './order.module';
     UserModule,
     PassportModule,
     ConfigModule,
+    TypeOrmModule.forFeature([SavedLogin, Key]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -34,7 +41,11 @@ import { OrderModule } from './order.module';
     },
     LocalStrategy,
     jwtStrategy,
+    {
+      provide: savedLoginServiceInterfaceProvider,
+      useClass: SavedLoginService,
+    },
   ],
-  controllers: [AuthenticationController],
+  controllers: [AuthenticationController, SavedLoginController],
 })
 export class AuthenticationModule {}

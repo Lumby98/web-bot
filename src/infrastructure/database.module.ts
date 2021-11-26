@@ -6,6 +6,8 @@ import { User } from './entities/user.entity';
 import { HultaforsProduct } from './entities/hultafors.product.entity';
 import { Size } from './entities/size.entity';
 import { Site } from './entities/site.entity';
+import { SavedLogin } from './entities/Savedlogin.entity';
+import { Key } from './entities/key';
 
 @Module({
   imports: [
@@ -19,7 +21,15 @@ import { Site } from './entities/site.entity';
         username: configService.get('POSTGRES_USER'),
         password: configService.get('POSTGRES_PASSWORD'),
         database: configService.get('POSTGRES_DB'),
-        entities: [NeskridProduct, User, HultaforsProduct, Size, Site],
+        entities: [
+          NeskridProduct,
+          User,
+          HultaforsProduct,
+          Size,
+          Site,
+          SavedLogin,
+          Key,
+        ],
         synchronize: true,
         logging: true,
       }),

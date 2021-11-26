@@ -138,6 +138,7 @@ export class OrderService implements OrderInterface {
         await this.orderPuppeteer.checkLocation(
           '#loginForm > div.form-group.has-error > span > strong',
           false,
+          false,
         )
       ) {
         throw new Error('Failed to login, but ortowear didnt display error');
@@ -197,6 +198,7 @@ export class OrderService implements OrderInterface {
     await this.orderPuppeteer.goToOrder(orderNumber);
     const check = await this.orderPuppeteer.checkLocation(
       'body > div.wrapper > div.content-wrapper > section.content-header > h1',
+      false,
       false,
     );
 
@@ -262,6 +264,7 @@ export class OrderService implements OrderInterface {
 
     const doesCoverExist = await this.orderPuppeteer.checkLocation(
       insoleSelector,
+      false,
       false,
     );
 
@@ -344,6 +347,7 @@ export class OrderService implements OrderInterface {
         );
         const isInUsageEnvoPage = await this.orderPuppeteer.checkLocation(
           '#page-content-wrapper > div > div > h1',
+          false,
           false,
         );
 
@@ -435,6 +439,7 @@ export class OrderService implements OrderInterface {
     const isInUsageEnvoPage = await this.orderPuppeteer.checkLocation(
       '#order_enduser',
       false,
+      false,
     );
 
     if (!isInUsageEnvoPage) {
@@ -448,6 +453,7 @@ export class OrderService implements OrderInterface {
   private async inputUsageEnvironment(orderNr: string) {
     const endUserIsLoaded = await this.orderPuppeteer.checkLocation(
       '#order_enduser',
+      false,
       false,
     );
 
@@ -467,7 +473,7 @@ export class OrderService implements OrderInterface {
     }
 
     const proffesionalSectorDropdownIsLoaded =
-      await this.orderPuppeteer.checkLocation('#order_enduser', false);
+      await this.orderPuppeteer.checkLocation('#order_enduser', false, false);
 
     if (!proffesionalSectorDropdownIsLoaded) {
       throw new Error('Could not load professional sector dropdown');
@@ -482,11 +488,25 @@ export class OrderService implements OrderInterface {
     await this.waitClick(
       '#scrollrbody > div.wizard_navigation > button.btn.btn-default.wizard_button_next',
     );
+
+    const isModelLoaded = await this.orderPuppeteer.checkLocation(
+      '#page-content-wrapper > div > div > div > div.col-md-7 > div',
+      false,
+      false,
+    );
+
+    if (!isModelLoaded) {
+      console.log('Clicked next again');
+      await this.waitClick(
+        '#scrollrbody > div.wizard_navigation > button.btn.btn-default.wizard_button_next',
+      );
+    }
   }
 
   private async inputModel(model: string, size: string, width: string) {
-    const isModelLoaded = this.orderPuppeteer.checkLocation(
+    const isModelLoaded = await this.orderPuppeteer.checkLocation(
       '#page-content-wrapper > div > div > div > div.col-md-7 > div',
+      false,
       false,
     );
 
@@ -507,7 +527,16 @@ export class OrderService implements OrderInterface {
       throw new Error('could not find models');
     }
 
-    for (const m of models) {
+    console.log(model);
+    for (let i = 0; i < models.length; i++) {
+      if (model.includes(models[i])) {
+        await this.waitClick(
+          `div.col-md-7 > div.row > div:nth-child(${i + 1}) > h3`,
+        );
+      }
+    }
+
+    /* for (const m of models) {
       if (model.includes(m)) {
         console.log(m);
         await this.orderPuppeteer.selectByTexts(
@@ -516,9 +545,10 @@ export class OrderService implements OrderInterface {
         );
         break;
       }
-    }
+    }*/
     const sizeSelectorLoaded = await this.orderPuppeteer.checkLocation(
       '#order_opt_15',
+      false,
       false,
     );
 
@@ -536,6 +566,7 @@ export class OrderService implements OrderInterface {
     const widthSelectorLoaded = await this.orderPuppeteer.checkLocation(
       '#order_opt_16',
       false,
+      false,
     );
 
     if (!widthSelectorLoaded) {
@@ -550,20 +581,62 @@ export class OrderService implements OrderInterface {
     await this.waitClick(
       '#scrollrbody > div.wizard_navigation > button.btn.btn-default.wizard_button_next',
     );
+
+    const isSupplementlLoaded = await this.orderPuppeteer.checkLocation(
+      '#order_info_14',
+      false,
+      true,
+    );
+
+    console.log(isSupplementlLoaded);
+
+    if (!isSupplementlLoaded) {
+      console.log('Clicked next again');
+      await this.waitClick(
+        '#scrollrbody > div.wizard_navigation > button.btn.btn-default.wizard_button_next',
+      );
+    }
   }
 
   async supplement(insole: boolean) {
+    const isSupplementlLoaded = await this.orderPuppeteer.checkLocation(
+      '#order_info_14',
+      false,
+      true,
+    );
+
+    if (!isSupplementlLoaded) {
+      throw new Error('Could not get to supplement page');
+    }
+
     if (insole) {
       await this.orderPuppeteer.wait('#order_info_14');
-      this.orderPuppeteer.click('#order_info_14');
-      this.orderPuppeteer.click('#choice_224');
+      await this.orderPuppeteer.click('#order_info_14', true);
+
+      const isSupplementlLoaded = await this.orderPuppeteer.checkLocation(
+        '#choice_224',
+        false,
+        true,
+      );
+
+      if (!isSupplementlLoaded) {
+        throw new Error('Could not get to orthotic/inlay modal');
+      }
+
+      if (isSupplementlLoaded) {
+        console.log('nani');
+      }
+
+      await this.orderPuppeteer.wait(null, 5000);
+      await this.orderPuppeteer.wait('#choice_224');
+      await this.orderPuppeteer.click('#choice_224', false);
     }
     //this.orderPuppeteer.click('#wizard_button_save')
   }
 
   async waitClick(selector: string) {
     await this.orderPuppeteer.wait(selector);
-    await this.orderPuppeteer.click(selector);
+    await this.orderPuppeteer.click(selector, true);
   }
 
   async inputAddress(

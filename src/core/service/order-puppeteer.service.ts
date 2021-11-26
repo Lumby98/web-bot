@@ -98,6 +98,7 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
     const check = await this.checkLocation(
       'body > div.wrapper > div.content-wrapper > section.content > div.row > div > div > div > div.box-body > form > div:nth-child(2) > div > div > div > table > tbody > tr:nth-child(5) > td:nth-child(2)',
       false,
+      false,
     );
 
     if (!check) {
@@ -270,13 +271,23 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
    * Checks if the element that the given selector points to exists.
    * @param selector
    * @param hidden
+   * @param visible
    */
-  async checkLocation(selector: string, hidden: boolean): Promise<boolean> {
+  async checkLocation(
+    selector: string,
+    hidden: boolean,
+    visible: boolean,
+  ): Promise<boolean> {
     try {
       await this.page.waitForSelector(selector, {
         timeout: 8000,
         hidden: hidden,
+        visible: visible,
       });
+
+      if (!(await this.page.$(selector))) {
+        return false;
+      }
     } catch (err) {
       return false;
     }
@@ -336,7 +347,21 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
     await this.page.click(
       '#sitebody > div.navbar.navbar-fixed-top.subpage > div > div.navbar-collapse.collapse > ul > li:nth-child(6) > a',
     );
-    await this.page.waitForSelector('#gebruikerscode');
+
+    const isSupplementlLoaded = await this.checkLocation(
+      '#gebruikerscode',
+      false,
+      false,
+    );
+
+    if (!isSupplementlLoaded) {
+      console.log('Clicked next again');
+      await this.page.click(
+        '#sitebody > div.navbar.navbar-fixed-top.subpage > div > div.navbar-collapse.collapse > ul > li:nth-child(6) > a',
+      );
+    }
+
+    await this.page.waitForSelector('#gebruikerscode', { visible: true });
     await this.page.type('#gebruikerscode', username);
     await this.page.type('#gebruikerspass', password);
     await this.page.waitForSelector(
@@ -348,7 +373,11 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
     );
   }
 
-  async click(selector: string) {
+  async click(selector: string, hover: boolean) {
+    if (hover) {
+      await this.page.hover(selector);
+    }
+
     await this.page.click(selector);
   }
 

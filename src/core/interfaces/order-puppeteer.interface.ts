@@ -13,14 +13,18 @@ export interface OrderPuppeteerInterface {
   readType(orderNumber: string): Promise<string>;
   goToOrder(orderNumber: string);
   readSTSOrder(orderNumber: string): Promise<STSOrderModel>;
-  checkLocation(selector: string, hidden: boolean): Promise<boolean>;
+  checkLocation(
+    selector: string,
+    hidden: boolean,
+    visible: boolean,
+  ): Promise<boolean>;
   getCurrentURL(): string;
   readSelectorText(selector: string): Promise<string>;
   wait(selector?: string, timeout?: number);
   loginNeskrid(username: string, password: string);
   input(selector: string, text: string);
   press(key: KeyInput);
-  click(selector: string);
+  click(selector: string, hover: boolean);
   dropdownSelect(selector: string, textValue: string);
   selectByTexts(selector: string, textValue: string);
   getModelText(selector: string): Promise<string[]>;

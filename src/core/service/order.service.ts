@@ -666,4 +666,17 @@ export class OrderService implements OrderInterface {
 
     await this.orderPuppeteer.input('#order_afladr_zip', postalCodeandCity[0]);
   }
+
+  async handleOrderCompletion(dev: boolean): Promise<string> {
+    this.orderPuppeteer.click('#wizard_button_save', true);
+
+  }
+
+  async handleAllocations(
+    orders: OrderLists,
+    username: string,
+    password: string,
+  ): Promise<string> {
+    return Promise.resolve('');
+  }
 }

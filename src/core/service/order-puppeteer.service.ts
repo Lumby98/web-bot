@@ -86,6 +86,7 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
   async navigateToURL(url: string) {
     await this.page.goto(url, {
       waitUntil: 'networkidle2',
+      timeout: 60000,
     });
   }
 
@@ -337,6 +338,28 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
    * @param password
    */
   async loginNeskrid(username: string, password: string) {
+    let isLanguageModal = await this.checkLocation(
+      '#modallanguages > div > div > div.modal-body.text-center > ul > li:nth-child(1) > a',
+      false,
+      false,
+    );
+
+    if (!isLanguageModal) {
+      await this.wait(
+        '#modallanguages > div > div > div.modal-body.text-center > ul > li:nth-child(1) > a',
+      );
+    }
+
+    isLanguageModal = await this.checkLocation(
+      '#modallanguages > div > div > div.modal-body.text-center > ul > li:nth-child(1) > a',
+      false,
+      false,
+    );
+
+    if (!isLanguageModal) {
+      throw new Error('Neskrid didnt load language modal');
+    }
+
     await this.page.click(
       '#modallanguages > div > div > div.modal-body.text-center > ul > li:nth-child(1) > a',
     );

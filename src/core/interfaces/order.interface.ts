@@ -13,4 +13,9 @@ export interface OrderInterface {
     username: string,
     password: string,
   ): Promise<string>;
+  handleAllocations(
+    orders: OrderLists,
+    username: string,
+    password: string,
+  ): Promise<string>;
 }

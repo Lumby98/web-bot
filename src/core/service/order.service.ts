@@ -9,7 +9,6 @@ import { OrderTypeEnum } from '../enums/type.enum';
 import { LoginDto } from '../../ui.api/dto/user/login.dto';
 import { INSSOrderModel } from '../models/ins-s-order.model';
 import { OrderLists } from '../models/order-lists';
-import * as moment from 'moment';
 
 @Injectable()
 export class OrderService implements OrderInterface {
@@ -363,12 +362,11 @@ export class OrderService implements OrderInterface {
         if (!dateString) {
           throw new Error('failed to get delivery date: ' + dateString);
         }
-        console.log(dateString);
-        const date = new Date('2011-04-11T10:20:30Z');
-        console.log(date);
-        const format = moment(date).format('DD-MM-YYYY');
-        console.log(format);
-        order.timeOfDelivery = new Date(format);
+
+        order.timeOfDelivery = this.formatDeliveryDate(dateString);
+        if (order.timeOfDelivery.toString() === 'Invalid Date') {
+          throw new Error('Could not get the time of delivery');
+        }
         console.log('d:    ' + order.timeOfDelivery);
       }
     }
@@ -691,6 +689,25 @@ export class OrderService implements OrderInterface {
       'delivery date',
     );
     return deliveryDate;
+  }
+
+  /**
+   * Formats strings to a format that the javascript Date class will accept.
+   * Formats from this: '26-11-2021'
+   * Formats to this format: '2011-04-11T10:20:30Z'
+   * @param deliveryDateString
+   */
+  formatDeliveryDate(deliveryDateString: string): Date {
+    console.log(deliveryDateString);
+    const splitDate = deliveryDateString.split('-');
+    const year = Number.parseInt(splitDate[2]);
+    const month = Number.parseInt(splitDate[1]) - 1;
+    const date = Number.parseInt(splitDate[0]);
+    const formattedDate = new Date(year, month, date);
+    console.log(
+      `Year: ${year}, Month: ${month}, Date: ${date}, formatedDate: ${formattedDate}`,
+    );
+    return formattedDate;
   }
 
   async handleAllocations(

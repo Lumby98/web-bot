@@ -353,7 +353,7 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
     isLanguageModal = await this.checkLocation(
       '#modallanguages > div > div > div.modal-body.text-center > ul > li:nth-child(1) > a',
       false,
-      false,
+      true,
     );
 
     if (!isLanguageModal) {
@@ -371,17 +371,21 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
       '#sitebody > div.navbar.navbar-fixed-top.subpage > div > div.navbar-collapse.collapse > ul > li:nth-child(6) > a',
     );
 
-    const isSupplementlLoaded = await this.checkLocation(
+    const isLoginlLoaded = await this.checkLocation(
       '#gebruikerscode',
       false,
-      false,
+      true,
     );
 
-    if (!isSupplementlLoaded) {
+    if (!isLoginlLoaded) {
       console.log('Clicked next again');
       await this.page.click(
         '#sitebody > div.navbar.navbar-fixed-top.subpage > div > div.navbar-collapse.collapse > ul > li:nth-child(6) > a',
       );
+    }
+
+    if (!isLoginlLoaded) {
+      throw new Error('Could not load Login modal');
     }
 
     await this.page.waitForSelector('#gebruikerscode', { visible: true });

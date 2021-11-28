@@ -57,11 +57,15 @@ export class OrderController {
     });
     const orders: OrderLists = { STSOrders: sts, INSOrders: [] };
 
-    return await this.orderService.createOrder(
+    const createdOrders = await this.orderService.createOrder(
       orders,
       'sales@ortowear.com',
       'noqczopj',
     );
+    console.log(
+      `time of delivery: ${createdOrders.STSOrders[0].timeOfDelivery}`,
+    );
+    return createdOrders;
   }
 
   @Get('stop')

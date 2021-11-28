@@ -163,7 +163,11 @@ export class OrderService implements OrderInterface {
       throw new Error('order number is blank');
     }
 
-    const orderType = await this.orderPuppeteer.readType(orderNumber);
+    const targetAndSelector =
+      await this.orderPuppeteer.getTableTargetandSelector(orderNumber);
+
+    const orderType = targetAndSelector.type;
+
     switch (orderType) {
       case 'STS':
         return OrderTypeEnum.STS;
@@ -195,7 +199,14 @@ export class OrderService implements OrderInterface {
       throw new Error('missing order number');
     }
 
-    await this.orderPuppeteer.goToOrder(orderNumber);
+    const targetAndSelector =
+      await this.orderPuppeteer.getTableTargetandSelector(orderNumber);
+
+    await this.waitClick(targetAndSelector.selector);
+    await this.waitClick(
+      '#topBtns > div > div > button.btn.btn-sm.btn-warning',
+    );
+
     const check = await this.orderPuppeteer.checkLocation(
       'body > div.wrapper > div.content-wrapper > section.content-header > h1',
       false,
@@ -306,6 +317,11 @@ export class OrderService implements OrderInterface {
   }
 
   async getElementText(selector: string): Promise<string> {
+    const check = this.orderPuppeteer.checkLocation(selector, false, false);
+
+    if (!check) {
+      throw new Error('Could not find element');
+    }
     const elementText = await this.orderPuppeteer.readSelectorText(selector);
 
     if (!elementText) {
@@ -374,7 +390,7 @@ export class OrderService implements OrderInterface {
     if (orders.INSOrders.length > 0) {
       return;
     }
-    //await this.orderPuppeteer.stop();
+    await this.stopPuppeteer();
     return orders;
   }
 
@@ -671,9 +687,17 @@ export class OrderService implements OrderInterface {
     await this.orderPuppeteer.input('#order_afladr_zip', postalCodeandCity[0]);
   }
 
+  /**
+   * Handles the completion of the order on neskrid.
+   * Should return something like this: '26-11-2021'
+   * @param dev
+   */
   async handleOrderCompletion(dev: boolean): Promise<string> {
     if (dev) {
-      return '26-11-2021';
+      const date = new Date();
+      date.setDate(date.getDate() + 7);
+
+      return `${date.getDate()}-${date.getMonth()}-${date.getFullYear()}`;
     }
     await this.orderPuppeteer.click('#wizard_button_save', true);
     const loginBtn = await this.orderPuppeteer.checkLocation(
@@ -714,8 +738,137 @@ export class OrderService implements OrderInterface {
     orders: OrderLists,
     username: string,
     password: string,
-  ): Promise<string> {
-    return Promise.resolve('');
+  ): Promise<OrderLists> {
+    await this.startPuppeteer('https://www.google.com/');
+    await this.handleOrtowearNavigation(username, password);
+    await this.goToURL('https://beta.ortowear.com/administration/ordersAdmin/');
+
+    console.log(orders.STSOrders.length);
+    if (orders.STSOrders.length > 0) {
+      for (const order of orders.STSOrders) {
+        const targetAndSelector =
+          await this.orderPuppeteer.getTableTargetandSelector(order.orderNr);
+
+        await this.waitClick(targetAndSelector.selector);
+        await this.waitClick('#topBtns > div > div > button:nth-child(4)');
+
+        const isInAlocation = this.orderPuppeteer.checkLocation(
+          '#delivery',
+          false,
+          false,
+        );
+
+        if (!isInAlocation) {
+          await this.tryAgain(
+            '#delivery',
+            '#topBtns > div > div > button:nth-child(4)',
+            0,
+          );
+        }
+
+        if (order.insole) {
+          if (
+            order.timeOfDelivery.getDay() == 3 ||
+            order.timeOfDelivery.getDay() == 4
+          ) {
+            order.timeOfDelivery = this.getNextDayOfWeek(
+              order.timeOfDelivery,
+              5,
+            );
+          } else {
+            order.timeOfDelivery = this.getNextDayOfWeek(
+              order.timeOfDelivery,
+              3,
+            );
+          }
+        }
+
+        const ortowearYear = await this.getElementText(
+          '#ui-datepicker-div > div > div > span.ui-datepicker-year',
+        );
+
+        const numberOrtowearYear = Number.parseInt(ortowearYear);
+
+        const yearCheck = this.adjustYear(
+          order.timeOfDelivery.getFullYear(),
+          numberOrtowearYear,
+          0,
+        );
+
+        if (!yearCheck) {
+          throw new Error('Failed to set year');
+        }
+
+        const ortowearMonth = await this.getElementText(
+          '#ui-datepicker-div > div > div > span.ui-datepicker-month',
+        );
+
+        const monthCheck = this.adjustMonth(
+          order.timeOfDelivery,
+          ortowearMonth,
+          0,
+        );
+
+        if (!monthCheck) {
+          throw new Error('Failed to set month');
+        }
+      }
+    }
+
+    if (orders.INSOrders.length > 0) {
+      return;
+    }
+    await this.stopPuppeteer();
+    return orders;
+  }
+
+  async adjustYear(
+    orderYear: number,
+    ortowearYear: number,
+    counter: number,
+  ): Promise<boolean> {
+    if (counter > 100) {
+      throw new Error('Failed to adjust year: loop overload');
+    }
+
+    if (orderYear != ortowearYear) {
+      if (orderYear < ortowearYear) {
+        await this.waitClick(
+          '#ui-datepicker-div > div > a.ui-datepicker-next.ui-corner-all',
+        );
+        await this.adjustYear(orderYear, ortowearYear, counter++);
+      } else {
+        throw new Error('Cannot set delivery date in the past');
+      }
+    } else {
+      return true;
+    }
+  }
+
+  async adjustMonth(
+    timeOfDelivery: Date,
+    ortowearMonth: string,
+    counter: number,
+  ): Promise<boolean> {
+    if (counter > 100) {
+      throw new Error('Failed to adjust month: loop overload');
+    }
+
+    const orderMonthNumber = timeOfDelivery.getMonth();
+    const ortowearMonthNumber = this.getMonthFromString(ortowearMonth);
+
+    if (orderMonthNumber != ortowearMonthNumber) {
+      if (orderMonthNumber < ortowearMonthNumber) {
+        await this.waitClick(
+          '#ui-datepicker-div > div > a.ui-datepicker-next.ui-corner-all',
+        );
+        await this.adjustMonth(timeOfDelivery, ortowearMonth, counter++);
+      } else {
+        throw new Error('Cannot set delivery date in the past');
+      }
+    } else {
+      return true;
+    }
   }
 
   async tryAgain(
@@ -731,13 +884,39 @@ export class OrderService implements OrderInterface {
     );
 
     if (!isChecked) {
-      counter++;
       if (counter == 10) {
         throw new Error('failed to try again: ' + checkSelector);
       }
       console.log('trying again' + counter);
       await this.waitClick(clickSelector);
-      await this.tryAgain(checkSelector, clickSelector, counter);
+      await this.tryAgain(checkSelector, clickSelector, counter++);
     }
+  }
+
+  getNextDayOfWeek(date: Date, dayOfWeek: number): Date {
+    // Code to check that date and dayOfWeek are valid left as an exercise ;)
+
+    if (dayOfWeek < 0 || dayOfWeek > 6) {
+      throw new Error(
+        'Invalid day of the week: the day of the week should be from 0-6',
+      );
+    }
+    const resultDate = new Date(date.getTime());
+
+    resultDate.setDate(
+      date.getDate() + ((7 + dayOfWeek - date.getDay() - 1) % 7) + 2,
+    );
+
+    return resultDate;
+  }
+
+  getMonthFromString(month: string): number {
+    const d = Date.parse(month + '1, 2012');
+    if (!isNaN(d)) {
+      return new Date(d).getMonth() + 1;
+    }
+    throw new Error(
+      `Failed to get month from string, input was this: ${month}`,
+    );
   }
 }

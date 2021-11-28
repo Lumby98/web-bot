@@ -42,44 +42,6 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
   }
 
   /**
-   * Navigates to the orders page
-   * using the provided order-number.
-   * @param orderNumber
-   */
-  async goToOrder(orderNumber: string) {
-    //wait for page to be loaded
-    await this.page.waitForSelector('#orders-table_processing', {
-      hidden: true,
-    });
-
-    await this.page.click('#datatable_searchfield', {
-      clickCount: 3,
-      delay: 100,
-    });
-
-    await this.page.keyboard.press('Backspace');
-
-    await this.page.type('#datatable_searchfield', orderNumber);
-
-    //wait for page to find the order
-    await this.page.waitForTimeout(2000);
-    await this.page.waitForSelector('#orders-table_processing', {
-      hidden: false,
-    });
-    await this.page.waitForSelector('#orders-table_processing', {
-      hidden: true,
-    });
-
-    const targetAndSelector = await this.getTableTargetandSelector(orderNumber);
-
-    await this.page.waitForSelector(targetAndSelector.selector);
-    await this.page.click(targetAndSelector.selector);
-    await this.page.click(
-      '#topBtns > div > div > button.btn.btn-sm.btn-warning',
-    );
-  }
-
-  /**
    * Navigates to the given URL.
    * @param url
    */
@@ -162,11 +124,9 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
     return order;
   }
 
-  /**
-   * Reads the order type for the order with the given order-number.
-   * @param orderNumber
-   */
-  async readType(orderNumber: string): Promise<string> {
+  async getTableTargetandSelector(
+    orderNumber: string,
+  ): Promise<TargetAndSelector> {
     //wait for page to be loaded
     await this.page.waitForSelector('#orders-table_processing', {
       hidden: true,
@@ -190,14 +150,6 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
       hidden: true,
     });
 
-    const targetAndSelector = await this.getTableTargetandSelector(orderNumber);
-
-    return targetAndSelector.type;
-  }
-
-  async getTableTargetandSelector(
-    orderNumber: string,
-  ): Promise<TargetAndSelector> {
     //select insole and go to its info page
     const warning = await this.page.$eval(
       '#orders-table > tbody > tr > td',

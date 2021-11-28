@@ -8,6 +8,9 @@ export interface OrderInterface {
   startPuppeteer(url: string);
   stopPuppeteer();
   getOrderType(orderNumber: string): Promise<OrderTypeEnum>;
+  formatDeliveryDate(deliveryDateString: string): Date;
+  getNextDayOfWeek(date: Date, dayOfWeek: number): Date;
+  getMonthFromString(month: string): number;
   createOrder(
     orders: OrderLists,
     username: string,
@@ -17,5 +20,5 @@ export interface OrderInterface {
     orders: OrderLists,
     username: string,
     password: string,
-  ): Promise<string>;
+  ): Promise<OrderLists>;
 }

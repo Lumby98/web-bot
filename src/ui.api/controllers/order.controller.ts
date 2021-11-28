@@ -1,9 +1,8 @@
-import { Body, Controller, Get, Inject, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Inject, Post, Query } from '@nestjs/common';
 import {
   OrderInterface,
   orderInterfaceProvider,
 } from '../../core/interfaces/order.interface';
-import { LoginDto } from '../dto/user/login.dto';
 import { OrderDto } from '../dto/order/order.dto';
 import { OrderLists } from '../../core/models/order-lists';
 import { STSOrderModel } from '../../core/models/sts-order.model';
@@ -66,6 +65,16 @@ export class OrderController {
       `time of delivery: ${createdOrders.STSOrders[0].timeOfDelivery}`,
     );
     return createdOrders;
+  }
+
+  @Get('getNextDayOfWeekTest')
+  async getNextDayOfWeekTest(
+    @Query('date') date: string,
+    @Query('dayOfWeek') dayOfWeek: number,
+  ): Promise<Date> {
+    const formatedDate = this.orderService.formatDeliveryDate(date);
+
+    return this.orderService.getNextDayOfWeek(formatedDate, dayOfWeek);
   }
 
   @Get('stop')

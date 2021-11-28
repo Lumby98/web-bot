@@ -6,6 +6,7 @@ import {
 import { OrderDto } from '../dto/order/order.dto';
 import { OrderLists } from '../../core/models/order-lists';
 import { STSOrderModel } from '../../core/models/sts-order.model';
+import { AllocationDto } from '../dto/order/allocation-dto';
 
 @Controller('order')
 export class OrderController {
@@ -26,40 +27,47 @@ export class OrderController {
       password: order.password,
     });
     console.log(orders);
-    return await this.orderService.createOrder(
+    const registeredOrders = await this.orderService.createOrder(
       orders,
       'sales@ortowear.com',
       'noqczopj',
+      true,
     );
+
+    const completedOrders = await this.orderService.handleAllocations(
+      registeredOrders,
+      order.username,
+      order.password,
+      true,
+    );
+
+    return completedOrders;
+  }
+
+  @Post('allocateOrders')
+  async allocateOrders(@Body() allocationDto: AllocationDto) {
+    allocationDto.orderLists.STSOrders.forEach((order) => {
+      const newDate = new Date();
+      newDate.setDate(newDate.getDate() + 7);
+      order.timeOfDelivery = newDate;
+    });
+    const completedOrders = await this.orderService.handleAllocations(
+      allocationDto.orderLists,
+      allocationDto.username,
+      allocationDto.password,
+      true,
+    );
+
+    return completedOrders;
   }
 
   @Post('createOrder')
-  async createOrders() {
-    const sts: STSOrderModel[] = [];
-    sts.push({
-      orderNr: 'VA 166626',
-      deliveryAddress: [
-        'Borgervaenget 5',
-        '2100 Koebenhavn',
-        'Kobenhavn, Denmark',
-      ],
-      customerName: 'Holger Hansen Sko ApS',
-      model: '9052160 Beaver DUO',
-      sizeL: '40',
-      sizeR: '40',
-      widthL: 'Neskrid 66-11',
-      widthR: 'Neskrid 66-11',
-      sole: 'N167 DUO Black',
-      toeCap: 'Composite',
-      EU: true,
-      insole: true,
-    });
-    const orders: OrderLists = { STSOrders: sts, INSOrders: [] };
-
+  async createOrders(@Body() order: AllocationDto) {
     const createdOrders = await this.orderService.createOrder(
-      orders,
-      'sales@ortowear.com',
-      'noqczopj',
+      order.orderLists,
+      order.username,
+      order.password,
+      true,
     );
     console.log(
       `time of delivery: ${createdOrders.STSOrders[0].timeOfDelivery}`,

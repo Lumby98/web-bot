@@ -127,9 +127,31 @@ export class OrderService implements OrderInterface {
     await this.goToURL('https://beta.ortowear.com/');
 
     await this.orderPuppeteer.loginOrtowear(username, password);
-    await this.orderPuppeteer.wait(
+
+    const checklocation = await this.orderPuppeteer.checkLocation(
       'div.home-main:nth-child(2) > div:nth-child(1)',
+      false,
+      true,
     );
+
+    if (!checklocation) {
+      if (
+        await this.orderPuppeteer.checkLocation(
+          '#loginForm > div.form-group.has-error > span > strong',
+          false,
+          true,
+        )
+      ) {
+        const ortowearError = await this.getElementText(
+          '#loginForm > div.form-group.has-error > span > strong',
+        );
+        throw new Error(
+          'Failed to login, ortowear gave this error:' + ortowearError,
+        );
+      } else {
+        throw new Error('Failed to login, but ortowear didnt display error');
+      }
+    }
 
     const myPageURL = 'https://beta.ortowear.com/my_page';
     const currentURL = await this.orderPuppeteer.getCurrentURL();
@@ -339,6 +361,7 @@ export class OrderService implements OrderInterface {
     orders: OrderLists,
     username: string,
     password: string,
+    dev: boolean,
   ): Promise<OrderLists> {
     await this.orderPuppeteer.start(false, 'https://www.google.com/');
     await this.handleNeskridNavigation(username, password);
@@ -373,8 +396,8 @@ export class OrderService implements OrderInterface {
 
         await this.inputUsageEnvironment(order.orderNr);
         await this.inputModel(order.model, order.sizeL, order.widthL);
-        await this.supplement(order.insole);
-        const dateString = await this.handleOrderCompletion(true);
+        await this.supplement(order.insole, dev);
+        const dateString = await this.handleOrderCompletion(dev);
         if (!dateString) {
           throw new Error('failed to get delivery date: ' + dateString);
         }
@@ -384,6 +407,10 @@ export class OrderService implements OrderInterface {
           throw new Error('Could not get the time of delivery');
         }
         console.log('d:    ' + order.timeOfDelivery);
+
+        await this.goToURL(
+          'https://www.neskrid.com/plugins/neskrid/myneskrid_new.aspx',
+        );
       }
     }
 
@@ -558,9 +585,27 @@ export class OrderService implements OrderInterface {
     console.log(model);
     for (let i = 0; i < models.length; i++) {
       if (model.includes(models[i])) {
-        await this.waitClick(
-          `div.col-md-7 > div.row > div:nth-child(${i + 1}) > h3`,
+        const selector = `div.col-md-7 > div.row > div:nth-child(${
+          i + 1
+        }) > h3`;
+
+        const modelcheck = this.orderPuppeteer.checkLocation(
+          selector,
+          false,
+          true,
         );
+
+        if (!modelcheck) {
+          throw new Error('Cannot locate model select button');
+        }
+
+        await this.orderPuppeteer.click(selector, true);
+
+        const propertyValues = await this.orderPuppeteer.getCSSofElement(
+          `div.col-md-7 > div.row > div:nth-child(${i + 1})`,
+          'background-color',
+        );
+        console.log(`Property values of model: ${propertyValues}`);
       }
     }
 
@@ -618,7 +663,7 @@ export class OrderService implements OrderInterface {
     }
   }
 
-  async supplement(insole: boolean) {
+  async supplement(insole: boolean, dev: boolean) {
     const isSupplementlLoaded = await this.orderPuppeteer.checkLocation(
       '#order_info_14',
       false,
@@ -651,7 +696,10 @@ export class OrderService implements OrderInterface {
       await this.orderPuppeteer.wait('#choice_224');
       await this.orderPuppeteer.click('#choice_224', false);
     }
-    //this.orderPuppeteer.click('#wizard_button_save')
+
+    if (!dev) {
+      await this.waitClick('#wizard_button_save');
+    }
   }
 
   async waitClick(selector: string) {
@@ -738,6 +786,7 @@ export class OrderService implements OrderInterface {
     orders: OrderLists,
     username: string,
     password: string,
+    dev: boolean,
   ): Promise<OrderLists> {
     await this.startPuppeteer('https://www.google.com/');
     await this.handleOrtowearNavigation(username, password);
@@ -783,6 +832,18 @@ export class OrderService implements OrderInterface {
           }
         }
 
+        await this.waitClick('#delivery');
+
+        const isDatepicker = await this.orderPuppeteer.checkLocation(
+          '#ui-datepicker-div',
+          false,
+          true,
+        );
+
+        if (!isDatepicker) {
+          await this.tryAgain('#ui-datepicker-div', '#delivery', 0);
+        }
+
         const ortowearYear = await this.getElementText(
           '#ui-datepicker-div > div > div > span.ui-datepicker-year',
         );
@@ -803,7 +864,7 @@ export class OrderService implements OrderInterface {
           '#ui-datepicker-div > div > div > span.ui-datepicker-month',
         );
 
-        const monthCheck = this.adjustMonth(
+        const monthCheck = await this.adjustMonth(
           order.timeOfDelivery,
           ortowearMonth,
           0,
@@ -812,6 +873,109 @@ export class OrderService implements OrderInterface {
         if (!monthCheck) {
           throw new Error('Failed to set month');
         }
+
+        const dateSelector = await this.orderPuppeteer.selectDate(
+          order.timeOfDelivery.getDate(),
+        );
+
+        if (!dateSelector) {
+          throw new Error('Failed to get date selector');
+        }
+
+        await this.waitClick(dateSelector);
+
+        const formatedOrderDate = `${order.timeOfDelivery.toLocaleDateString(
+          'default',
+          { day: '2-digit' },
+        )}-${order.timeOfDelivery.getMonth()}-${order.timeOfDelivery.getFullYear()}`;
+
+        const inputdate = await this.orderPuppeteer.getInputValue('#delivery');
+        console.log(inputdate);
+
+        if (formatedOrderDate != inputdate) {
+          throw new Error(
+            `Failed to input delivery date: order date: ${formatedOrderDate}, input date: ${inputdate}`,
+          );
+        }
+
+        if (!order.EU) {
+          await this.orderPuppeteer.selectDropdownByValue(
+            '#return_to',
+            'client',
+          );
+
+          const selectedValue = await this.orderPuppeteer.getSelectedValue(
+            '#return_to',
+          );
+
+          if (selectedValue != 'client') {
+            throw new Error('Failed to select return destination: client');
+          }
+        } else {
+          const selectedValue = await this.orderPuppeteer.getSelectedValue(
+            '#return_to',
+          );
+
+          if (selectedValue != 'sender') {
+            await this.orderPuppeteer.selectDropdownByValue(
+              '#return_to',
+              'sender',
+            );
+          }
+
+          if (selectedValue != 'sender') {
+            throw new Error('Failed to select return destination: sender');
+          }
+        }
+
+        if (order.insole) {
+          await this.orderPuppeteer.selectDropdownByValue(
+            '#default > form > div.box-body.row > div.col-6 > div:nth-child(3) > div.col-3 > select',
+            'AVSI3STZSN3F7GRV',
+          );
+
+          const selectedValue = await this.orderPuppeteer.getSelectedValue(
+            '#default > form > div.box-body.row > div.col-6 > div:nth-child(3) > div.col-3 > select',
+          );
+
+          if (selectedValue != 'AVSI3STZSN3F7GRV') {
+            throw new Error('Failed to select supplier: ' + selectedValue);
+          }
+        } else {
+          await this.orderPuppeteer.selectDropdownByValue(
+            '#default > form > div.box-body.row > div.col-6 > div:nth-child(3) > div.col-3 > select',
+            '1x20e4UK1Nfp3S6t',
+          );
+
+          let selectedValue = await this.orderPuppeteer.getSelectedValue(
+            '#default > form > div.box-body.row > div.col-6 > div:nth-child(3) > div.col-3 > select',
+          );
+
+          if (selectedValue != '1x20e4UK1Nfp3S6t') {
+            await this.orderPuppeteer.selectDropdownByValue(
+              '#default > form > div.box-body.row > div.col-6 > div:nth-child(3) > div.col-3 > select',
+              '1x20e4UK1Nfp3S6t',
+            );
+          }
+
+          selectedValue = await this.orderPuppeteer.getSelectedValue(
+            '#default > form > div.box-body.row > div.col-6 > div:nth-child(3) > div.col-3 > select',
+          );
+
+          if (selectedValue != '1x20e4UK1Nfp3S6t') {
+            throw new Error('Failed to select supplier: ' + selectedValue);
+          }
+        }
+
+        if (!dev) {
+          await this.waitClick(
+            '#default > form > div.box-footer > div > button.btn.btn-ow.pull-right.page_speed_2111450335',
+          );
+        }
+
+        await this.goToURL(
+          'https://beta.ortowear.com/administration/ordersAdmin/',
+        );
       }
     }
 
@@ -876,11 +1040,10 @@ export class OrderService implements OrderInterface {
     clickSelector: string,
     counter: number,
   ) {
-    await this.orderPuppeteer.wait(null, 2000);
     const isChecked = await this.orderPuppeteer.checkLocation(
       checkSelector,
       false,
-      false,
+      true,
     );
 
     if (!isChecked) {

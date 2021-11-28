@@ -18,6 +18,7 @@ export interface OrderPuppeteerInterface {
     visible: boolean,
   ): Promise<boolean>;
   getCurrentURL(): string;
+  getCSSofElement(selector: string, property: string): Promise<string>;
   readSelectorText(selector: string): Promise<string>;
   wait(selector?: string, timeout?: number);
   loginNeskrid(username: string, password: string);
@@ -29,4 +30,7 @@ export interface OrderPuppeteerInterface {
   getModelText(selector: string): Promise<string[]>;
   getInputValue(selector: string): Promise<string>;
   getTableTargetandSelector(orderNumber: string): Promise<TargetAndSelector>;
+  selectDate(date: number): Promise<string>;
+  selectDropdownByValue(selector: string, value: string);
+  getSelectedValue(selector: string): Promise<string>;
 }

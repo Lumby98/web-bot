@@ -15,10 +15,12 @@ export interface OrderInterface {
     orders: OrderLists,
     username: string,
     password: string,
+    dev: boolean,
   ): Promise<OrderLists>;
   handleAllocations(
     orders: OrderLists,
     username: string,
     password: string,
+    dev: boolean,
   ): Promise<OrderLists>;
 }

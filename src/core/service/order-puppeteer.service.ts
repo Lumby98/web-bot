@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { OrderPuppeteerInterface } from '../interfaces/order-puppeteer.interface';
 import { STSOrderModel } from '../models/sts-order.model';
-import { Browser, JSHandle, KeyInput, Page } from 'puppeteer';
+import { Browser, KeyInput, Page } from 'puppeteer';
 import { TargetAndSelector } from '../models/target-and-selector';
-import { string } from '@hapi/joi';
 
 @Injectable()
 export class OrderPuppeteerService implements OrderPuppeteerInterface {
@@ -237,10 +236,6 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
         hidden: hidden,
         visible: visible,
       });
-
-      if (!(await this.page.$(selector))) {
-        return false;
-      }
     } catch (err) {
       return false;
     }
@@ -434,6 +429,29 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
     await this.page.select(selector, dataValue);
   }
 
+  async selectDate(date: number): Promise<string> {
+    for (let tr = 1; tr <= 6; tr++) {
+      for (let td = 1; td <= 7; td++) {
+        const currentSelector = `#ui-datepicker-div > table > tbody > tr:nth-child(${tr}) > td:nth-child(${td}) > a`;
+        const cellCheck = await this.checkLocation(
+          currentSelector,
+          false,
+          true,
+        );
+
+        if (cellCheck) {
+          const cellDate = Number.parseInt(
+            await this.readSelectorText(currentSelector),
+          );
+
+          if (date == cellDate) {
+            return currentSelector;
+          }
+        }
+      }
+    }
+  }
+
   /**
    * selects based on given text instead of selector
    * @param selector
@@ -449,8 +467,31 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
     );
     await this.page.click(element);
   }
-  //I have tried.
-  /*async selectByTexts(selector: string, textValue: string) {
+
+  /**
+   * Selects and option in a given select by given value
+   * @param selector
+   * @param value
+   */
+  async selectDropdownByValue(selector: string, value: string) {
+    await this.page.select(selector, value);
+  }
+
+  async getSelectedValue(selector: string): Promise<string> {
+    return await this.page.$eval(
+      selector,
+      (selectedValue: HTMLInputElement) => selectedValue.value,
+    );
+  }
+
+  async getCSSofElement(selector: string, property: string): Promise<string> {
+    return await this.page.$eval(selector, (el) => {
+      const stylesObject = getComputedStyle(el);
+      return stylesObject.backgroundColor;
+    });
+  }
+  /*//I have tried.
+  async selectByTexts(selector: string, textValue: string) {
     const elements = await this.page.$$(selector);
     const element = await elements.find(async (e) => {
       const textContent = await e.evaluate((node) => node.textContent);

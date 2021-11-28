@@ -49,7 +49,7 @@ export class OrderGateway implements OnGatewayConnection, OnGatewayDisconnect {
           status: true,
           timestamp: Date.now().toString(),
         };
-        clientSocket.emit('OrderNumberLogEvent', logEntryDto);
+        clientSocket.emit('OrderLogEvent', logEntryDto);
       });
     } catch (err) {
       clientSocket.error(err.message);

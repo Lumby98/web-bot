@@ -25,7 +25,7 @@ export class OrderGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log('client disconnected ' + client.id);
   }
 
-  @SubscribeMessage('StartOrderRegistration')
+  @SubscribeMessage('startOrderRegistration')
   async handleOrderRegistration(
     @MessageBody() orderReg: OrderRegistrationDto,
     @ConnectedSocket() clientSocket: Socket,
@@ -49,6 +49,7 @@ export class OrderGateway implements OnGatewayConnection, OnGatewayDisconnect {
           status: true,
           timestamp: Date.now().toString(),
         };
+        console.log('emmiting');
         clientSocket.emit('OrderLogEvent', logEntryDto);
       });
     } catch (err) {

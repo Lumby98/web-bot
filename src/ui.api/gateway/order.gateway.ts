@@ -18,11 +18,11 @@ import { date } from '@hapi/joi';
 @WebSocketGateway()
 export class OrderGateway implements OnGatewayConnection, OnGatewayDisconnect {
   handleConnection(client: any, ...args: any[]): any {
-    console.log('client connected ' + client.id);
+    console.log('client connected order gateway ' + client.id);
   }
 
   handleDisconnect(client: any): any {
-    console.log('client disconnected ' + client.id);
+    console.log('client disconnected order gateway ' + client.id);
   }
 
   @SubscribeMessage('startOrderRegistration')
@@ -32,15 +32,20 @@ export class OrderGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ): Promise<void> {
     try {
       const orderNumbers = orderReg.orderNumbers;
-      let idnum = 0;
+      console.log(orderNumbers);
+      let idnum = 1;
       const observable = new Observable((subscriber) => {
-        for (const orderNumber of orderNumbers) {
+        for (let i = 0; i < orderNumbers.length; i++) {
           setTimeout(() => {
-            subscriber.next(orderNumber);
-          }, 1000);
+            subscriber.next(orderNumbers[i]);
+            if (i === orderNumbers.length - 1) {
+              subscriber.complete();
+            }
+          }, 5000 * (i + 1));
         }
-        subscriber.complete();
       });
+
+      console.log(orderNumbers.length);
       observable.pipe(take(orderNumbers.length)).subscribe((orderNumber) => {
         const logEntryDto: LogEntryDto = {
           id: idnum++,
@@ -50,8 +55,10 @@ export class OrderGateway implements OnGatewayConnection, OnGatewayDisconnect {
           timestamp: Date.now().toString(),
         };
         console.log('emmiting');
-        clientSocket.emit('OrderLogEvent', logEntryDto);
+        clientSocket.emit('orderLogEvent', logEntryDto);
       });
+
+      console.log('get here');
     } catch (err) {
       clientSocket.error(err.message);
     }

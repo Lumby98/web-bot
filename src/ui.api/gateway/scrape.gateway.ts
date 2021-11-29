@@ -85,10 +85,10 @@ export class ScrapeGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   handleConnection(client: any, ...args: any[]): any {
-    console.log('client connected ' + client.id);
+    console.log('client connected scraper ' + client.id);
   }
 
   handleDisconnect(client: any): any {
-    console.log('client disconnected ' + client.id);
+    console.log('client disconnected scraper ' + client.id);
   }
 }

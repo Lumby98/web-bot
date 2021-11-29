@@ -123,7 +123,7 @@ describe('OrderService', () => {
               emptyUsername,
               validPassword,
             ),
-        ).rejects.toThrow('Invalid username or password');
+        ).rejects.toThrow('Wrong username or password');
       });
     });
 

@@ -231,7 +231,7 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
     visible: boolean,
   ): Promise<boolean> {
     try {
-      await this.page.waitForSelector(selector, {
+      const element = await this.page.waitForSelector(selector, {
         timeout: 8000,
         hidden: hidden,
         visible: visible,

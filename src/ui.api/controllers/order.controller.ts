@@ -50,7 +50,7 @@ export class OrderController {
   async allocateOrders(@Body() allocationDto: AllocationDto) {
     allocationDto.orderLists.STSOrders.forEach((order) => {
       const newDate = new Date();
-      newDate.setDate(newDate.getDate() + 7);
+      newDate.setDate(newDate.getDate() + 90);
       order.timeOfDelivery = newDate;
     });
     const completedOrders = await this.orderService.handleAllocations(

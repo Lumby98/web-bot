@@ -33,9 +33,7 @@ export class OrderService implements OrderInterface {
     const SOSOrders: [] = [];
     await this.startPuppeteer('https://www.google.com/');
     await this.handleOrtowearNavigation(login.username, login.password);
-    await this.goToURL(
-      'https://order.ortowear.com/administration/ordersAdmin/',
-    );
+    await this.goToURL('https://beta.ortowear.com/administration/ordersAdmin/');
     for (const orderNumber of orderNumbers) {
       const type = await this.getOrderType(orderNumber);
       let order;
@@ -71,7 +69,7 @@ export class OrderService implements OrderInterface {
           throw new Error('could not determine order type');
       }
       await this.goToURL(
-        'https://order.ortowear.com/administration/ordersAdmin/',
+        'https://beta.ortowear.com/administration/ordersAdmin/',
       );
     }
     await this.stopPuppeteer();
@@ -126,7 +124,7 @@ export class OrderService implements OrderInterface {
       throw new Error('Wrong username or password');
     }
 
-    await this.goToURL('https://order.ortowear.com/');
+    await this.goToURL('https://beta.ortowear.com/');
 
     await this.orderPuppeteer.loginOrtowear(username, password);
 
@@ -155,7 +153,7 @@ export class OrderService implements OrderInterface {
       }
     }
 
-    const myPageURL = 'https://order.ortowear.com/my_page';
+    const myPageURL = 'https://beta.ortowear.com/my_page';
     const currentURL = await this.orderPuppeteer.getCurrentURL();
     if (myPageURL != currentURL) {
       if (
@@ -845,9 +843,7 @@ export class OrderService implements OrderInterface {
   ): Promise<OrderLists> {
     await this.startPuppeteer('https://www.google.com/');
     await this.handleOrtowearNavigation(username, password);
-    await this.goToURL(
-      'https://order.ortowear.com/administration/ordersAdmin/',
-    );
+    await this.goToURL('https://beta.ortowear.com/administration/ordersAdmin/');
 
     console.log(orders.STSOrders.length);
     if (orders.STSOrders.length > 0) {
@@ -907,7 +903,7 @@ export class OrderService implements OrderInterface {
 
         const numberOrtowearYear = Number.parseInt(ortowearYear);
 
-        const yearCheck = this.adjustYear(
+        const yearCheck = await this.adjustYear(
           order.timeOfDelivery.getFullYear(),
           numberOrtowearYear,
           0,
@@ -944,7 +940,9 @@ export class OrderService implements OrderInterface {
         const formatedOrderDate = `${order.timeOfDelivery.toLocaleDateString(
           'default',
           { day: '2-digit' },
-        )}-${order.timeOfDelivery.getMonth()}-${order.timeOfDelivery.getFullYear()}`;
+        )}-${order.timeOfDelivery.toLocaleDateString('default', {
+          month: '2-digit',
+        })}-${order.timeOfDelivery.getFullYear()}`;
 
         const inputdate = await this.orderPuppeteer.getInputValue('#delivery');
         console.log(inputdate);
@@ -1031,7 +1029,7 @@ export class OrderService implements OrderInterface {
         }
 
         await this.goToURL(
-          'https://order.ortowear.com/administration/ordersAdmin/',
+          'https://beta.ortowear.com/administration/ordersAdmin/',
         );
       }
     }
@@ -1063,7 +1061,8 @@ export class OrderService implements OrderInterface {
 
         const numberOrtowearYear = Number.parseInt(newYear);
 
-        await this.adjustYear(orderYear, numberOrtowearYear, counter++);
+        counter++;
+        return await this.adjustYear(orderYear, numberOrtowearYear, counter);
       } else {
         throw new Error('Cannot set delivery date in the past');
       }
@@ -1100,7 +1099,8 @@ export class OrderService implements OrderInterface {
           '#ui-datepicker-div > div > div > span.ui-datepicker-month',
         );
 
-        await this.adjustMonth(timeOfDelivery, newMonth, counter++);
+        counter++;
+        return await this.adjustMonth(timeOfDelivery, newMonth, counter);
       } else {
         throw new Error('Cannot set delivery date in the past');
       }

@@ -1,5 +1,5 @@
 import { OrderDto } from './order.dto';
-import { OrderError } from './OrderError';
+import { OrderErrorDto } from './OrderError.dto';
 
 export class LogEntryDto {
   id: number;
@@ -8,5 +8,5 @@ export class LogEntryDto {
   process: string;
   timestamp: string;
   order?: OrderDto;
-  err?: OrderError;
+  err?: OrderErrorDto;
 }

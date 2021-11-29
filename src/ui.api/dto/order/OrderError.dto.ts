@@ -1,4 +1,4 @@
-export class OrderError {
+export class OrderErrorDto {
   id: number;
   errorMessage: string;
 }

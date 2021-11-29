@@ -1,4 +1,4 @@
-export class LogOrder {
+export class LogOrderDto {
   id: number;
   orderNumber: string;
   customerName: string;

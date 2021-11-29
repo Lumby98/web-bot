@@ -9,11 +9,10 @@ import {
 import { OrderRegistrationDto } from '../dto/order/orderRegistrationDto';
 import { Socket } from 'socket.io';
 import { Observable } from 'rxjs';
-import { emit } from 'cluster';
-import { take, timestamp } from 'rxjs/operators';
-import { LogOrder } from '../dto/order/LogOrder';
+import { take } from 'rxjs/operators';
 import { LogEntryDto } from '../dto/order/LogEntry.dto';
-import { date } from '@hapi/joi';
+import { ProcessStepDto } from '../dto/order/processStep.dto';
+import { ProcessStepEnum } from '../../core/enums/processStep.enum';
 
 @WebSocketGateway()
 export class OrderGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -31,34 +30,51 @@ export class OrderGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() clientSocket: Socket,
   ): Promise<void> {
     try {
-      const orderNumbers = orderReg.orderNumbers;
-      console.log(orderNumbers);
-      let idnum = 1;
-      const observable = new Observable((subscriber) => {
-        for (let i = 0; i < orderNumbers.length; i++) {
+      const processSteps: Array<ProcessStepDto> = [
+        { processStep: ProcessStepEnum.GETORDERINFO, error: false },
+        { processStep: ProcessStepEnum.GETORDER, error: false },
+        { processStep: ProcessStepEnum.ALOCATEORDER, error: false },
+      ];
+
+      const observable = new Observable<ProcessStepDto>((subscriber) => {
+        for (let i = 0; i < processSteps.length; i++) {
           setTimeout(() => {
-            subscriber.next(orderNumbers[i]);
-            if (i === orderNumbers.length - 1) {
+            subscriber.next(processSteps[i]);
+            if (i === processSteps.length - 1) {
               subscriber.complete();
             }
           }, 5000 * (i + 1));
         }
       });
 
-      console.log(orderNumbers.length);
-      observable.pipe(take(orderNumbers.length)).subscribe((orderNumber) => {
+      //Emit logEntries
+      const orderNumbers = orderReg.orderNumbers;
+      let idnum = 1;
+      const logEntries: Array<LogEntryDto> = [];
+
+      for (let i = 0; i < orderNumbers.length; i++) {
         const logEntryDto: LogEntryDto = {
           id: idnum++,
-          desc: orderNumber + 'completed',
+          desc: orderNumbers[i] + 'completed',
           process: 'registration',
           status: true,
           timestamp: Date.now().toString(),
         };
-        console.log('emmiting');
-        clientSocket.emit('orderLogEvent', logEntryDto);
-      });
 
-      console.log('get here');
+        logEntries.push(logEntryDto);
+      }
+
+      observable.pipe(take(processSteps.length)).subscribe(
+        (processStep) => {
+          clientSocket.emit('processStepEvent', processStep);
+        },
+        (error) => {
+          console.log(error);
+        },
+        () => {
+          clientSocket.emit('orderLogEvent', logEntries);
+        },
+      );
     } catch (err) {
       clientSocket.error(err.message);
     }

@@ -318,7 +318,7 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
       '#sitebody > div.navbar.navbar-fixed-top.subpage > div > div.navbar-collapse.collapse > ul > li:nth-child(6) > a',
     );
 
-    const isLoginlLoaded = await this.checkLocation(
+    let isLoginlLoaded = await this.checkLocation(
       '#gebruikerscode',
       false,
       true,
@@ -331,6 +331,7 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
       );
     }
 
+    isLoginlLoaded = await this.checkLocation('#gebruikerscode', false, true);
     if (!isLoginlLoaded) {
       throw new Error('Could not load Login modal');
     }

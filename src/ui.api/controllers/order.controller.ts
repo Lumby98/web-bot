@@ -31,14 +31,16 @@ export class OrderController {
       orders,
       'sales@ortowear.com',
       'noqczopj',
-      true,
+      order.dev,
+      order.completeOrder,
     );
 
     const completedOrders = await this.orderService.handleAllocations(
       registeredOrders,
       order.username,
       order.password,
-      true,
+      order.dev,
+      order.completeOrder,
     );
 
     return completedOrders;
@@ -55,7 +57,8 @@ export class OrderController {
       allocationDto.orderLists,
       allocationDto.username,
       allocationDto.password,
-      true,
+      allocationDto.dev,
+      allocationDto.completeOrder,
     );
 
     return completedOrders;
@@ -67,7 +70,8 @@ export class OrderController {
       order.orderLists,
       order.username,
       order.password,
-      true,
+      order.dev,
+      order.completeOrder,
     );
     console.log(
       `time of delivery: ${createdOrders.STSOrders[0].timeOfDelivery}`,

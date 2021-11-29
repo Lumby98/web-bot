@@ -4,4 +4,6 @@ export class AllocationDto {
   orderLists: OrderLists;
   username: string;
   password: string;
+  dev: boolean;
+  completeOrder: boolean;
 }

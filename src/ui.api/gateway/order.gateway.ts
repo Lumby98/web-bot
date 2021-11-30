@@ -58,7 +58,7 @@ export class OrderGateway implements OnGatewayConnection, OnGatewayDisconnect {
           desc: orderNumbers[i] + 'completed',
           process: 'registration',
           status: true,
-          timestamp: Date.now().toString(),
+          timestamp: new Date(),
         };
 
         logEntries.push(logEntryDto);

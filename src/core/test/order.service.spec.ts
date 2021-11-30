@@ -15,7 +15,7 @@ import exp from 'constants';
 import { StsOrderStub } from './stubs/sts-order.stub';
 import { TargetAndSelectorStub } from './stubs/target-and-selector';
 
-jest.mock('src/core/service/order-puppeteer.service.ts');
+jest.mock('src/infrastructure/api/order-puppeteer.service.ts');
 
 describe('OrderService', () => {
   let orderService: OrderService;

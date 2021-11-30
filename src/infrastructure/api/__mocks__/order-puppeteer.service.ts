@@ -1,5 +1,5 @@
-import { StsOrderStub } from '../../test/stubs/sts-order.stub';
-import { TargetAndSelectorStub } from '../../test/stubs/target-and-selector';
+import { StsOrderStub } from '../../../core/test/stubs/sts-order.stub';
+import { TargetAndSelectorStub } from '../../../core/test/stubs/target-and-selector';
 
 export const OrderPuppeteerService = jest.fn().mockReturnValue({
   start: jest.fn().mockResolvedValue(undefined),

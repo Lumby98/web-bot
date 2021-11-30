@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { OrderPuppeteerInterface } from '../interfaces/order-puppeteer.interface';
-import { STSOrderModel } from '../models/sts-order.model';
+import { OrderPuppeteerInterface } from '../../core/domain.services/order-puppeteer.interface';
+import { STSOrderModel } from '../../core/models/sts-order.model';
 import { Browser, KeyInput, Page } from 'puppeteer';
-import { TargetAndSelector } from '../models/target-and-selector';
+import { TargetAndSelector } from '../../core/models/target-and-selector';
 
 @Injectable()
 export class OrderPuppeteerService implements OrderPuppeteerInterface {

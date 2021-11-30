@@ -7,6 +7,8 @@ import * as Joi from '@hapi/joi';
 import { AuthenticationModule } from './ui.api/modules/authentication.module';
 import { InsoleModule } from './ui.api/modules/insole.module';
 import { OrderModule } from './ui.api/modules/order.module';
+import { LogModule } from './ui.api/modules/log.module';
+import { ErrorService } from './core/service/error.service';
 
 @Module({
   imports: [
@@ -28,8 +30,9 @@ import { OrderModule } from './ui.api/modules/order.module';
     AuthenticationModule,
     InsoleModule,
     OrderModule,
+    LogModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [ErrorService],
 })
 export class AppModule {}

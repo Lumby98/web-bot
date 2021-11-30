@@ -3,7 +3,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import {
   OrderPuppeteerInterface,
   orderPuppeteerInterfaceProvider,
-} from '../interfaces/order-puppeteer.interface';
+} from '../domain.services/order-puppeteer.interface';
 import { STSOrderModel } from '../models/sts-order.model';
 import { OrderTypeEnum } from '../enums/type.enum';
 import { LoginDto } from '../../ui.api/dto/user/login.dto';

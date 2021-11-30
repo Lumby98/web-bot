@@ -6,8 +6,8 @@ import { Repository } from 'typeorm';
 import {
   OrderPuppeteerInterface,
   orderPuppeteerInterfaceProvider,
-} from '../interfaces/order-puppeteer.interface';
-import { OrderPuppeteerService } from '../service/order-puppeteer.service';
+} from '../domain.services/order-puppeteer.interface';
+import { OrderPuppeteerService } from '../../infrastructure/api/order-puppeteer.service';
 import { OrderModel } from '../models/order.model';
 import { STSOrderModel } from '../models/sts-order.model';
 import { OrderTypeEnum } from '../enums/type.enum';

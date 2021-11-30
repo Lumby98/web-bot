@@ -13,6 +13,7 @@ import { STSOrderModel } from '../models/sts-order.model';
 import { OrderTypeEnum } from '../enums/type.enum';
 import exp from 'constants';
 import { StsOrderStub } from './stubs/sts-order.stub';
+import { TargetAndSelectorStub } from './stubs/target-and-selector';
 
 jest.mock('src/core/service/order-puppeteer.service.ts');
 
@@ -123,7 +124,7 @@ describe('OrderService', () => {
               emptyUsername,
               validPassword,
             ),
-        ).rejects.toThrow('Invalid username or password');
+        ).rejects.toThrow('Wrong username or password');
       });
     });
 
@@ -137,7 +138,7 @@ describe('OrderService', () => {
               validUsername,
               emptyPassword,
             ),
-        ).rejects.toThrow('Invalid username or password');
+        ).rejects.toThrow('Wrong username or password');
       });
     });
 
@@ -151,7 +152,7 @@ describe('OrderService', () => {
               invalidUsername,
               validPassword,
             ),
-        ).rejects.toThrow('Invalid username or password');
+        ).rejects.toThrow('Wrong username or password');
       });
     });
 
@@ -216,7 +217,9 @@ describe('OrderService', () => {
       });
 
       it('should call readType', () => {
-        expect(orderPuppeteerService.readType).toBeCalledTimes(1);
+        expect(orderPuppeteerService.getTableTargetandSelector).toBeCalledTimes(
+          1,
+        );
       });
     });
 
@@ -231,9 +234,11 @@ describe('OrderService', () => {
     describe('when invalid type is returned', () => {
       const validOrderNumber = '156dt64-1';
       beforeEach(async () => {
+        const targetAndSelector = TargetAndSelectorStub();
+        targetAndSelector.type = 'MTF';
         jest
-          .spyOn(orderPuppeteerService, 'readType')
-          .mockResolvedValueOnce('MTF');
+          .spyOn(orderPuppeteerService, 'getTableTargetandSelector')
+          .mockResolvedValueOnce(targetAndSelector);
       });
       it('should throw error if types does not match enum', () => {
         expect(
@@ -259,7 +264,6 @@ describe('OrderService', () => {
       beforeEach(async () => {
         jest
           .spyOn(orderPuppeteerService, 'checkLocation')
-          .mockResolvedValueOnce(true)
           .mockResolvedValueOnce(false);
         expected = await orderService.checkForInsole();
       });

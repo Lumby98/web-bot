@@ -1,10 +1,12 @@
-import { Body, Controller, Get, Inject, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Inject, Post, Query } from '@nestjs/common';
 import {
   OrderInterface,
   orderInterfaceProvider,
 } from '../../core/interfaces/order.interface';
-import { LoginDto } from '../dto/user/login.dto';
 import { OrderDto } from '../dto/order/order.dto';
+import { OrderLists } from '../../core/models/order-lists';
+import { STSOrderModel } from '../../core/models/sts-order.model';
+import { AllocationDto } from '../dto/order/allocation-dto';
 
 @Controller('order')
 export class OrderController {
@@ -25,7 +27,66 @@ export class OrderController {
       password: order.password,
     });
     console.log(orders);
-    return orders;
+    const registeredOrders = await this.orderService.createOrder(
+      orders,
+      'sales@ortowear.com',
+      'noqczopj',
+      order.dev,
+      order.completeOrder,
+    );
+
+    const completedOrders = await this.orderService.handleAllocations(
+      registeredOrders,
+      order.username,
+      order.password,
+      order.dev,
+      order.completeOrder,
+    );
+
+    return completedOrders;
+  }
+
+  @Post('allocateOrders')
+  async allocateOrders(@Body() allocationDto: AllocationDto) {
+    allocationDto.orderLists.STSOrders.forEach((order) => {
+      const newDate = new Date();
+      newDate.setDate(newDate.getDate() + 90);
+      order.timeOfDelivery = newDate;
+    });
+    const completedOrders = await this.orderService.handleAllocations(
+      allocationDto.orderLists,
+      allocationDto.username,
+      allocationDto.password,
+      allocationDto.dev,
+      allocationDto.completeOrder,
+    );
+
+    return completedOrders;
+  }
+
+  @Post('createOrder')
+  async createOrders(@Body() order: AllocationDto) {
+    const createdOrders = await this.orderService.createOrder(
+      order.orderLists,
+      order.username,
+      order.password,
+      order.dev,
+      order.completeOrder,
+    );
+    console.log(
+      `time of delivery: ${createdOrders.STSOrders[0].timeOfDelivery}`,
+    );
+    return createdOrders;
+  }
+
+  @Get('getNextDayOfWeekTest')
+  async getNextDayOfWeekTest(
+    @Query('date') date: string,
+    @Query('dayOfWeek') dayOfWeek: number,
+  ): Promise<Date> {
+    const formatedDate = this.orderService.formatDeliveryDate(date);
+
+    return this.orderService.getNextDayOfWeek(formatedDate, dayOfWeek);
   }
 
   @Get('stop')

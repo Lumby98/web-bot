@@ -284,14 +284,6 @@ export class OrderService implements OrderInterface {
    * @private
    */
   async checkForInsole(): Promise<boolean> {
-    //Uncomment in production
-    /* const location = await this.orderPuppeteer.checkLocation(
-      '#edit_order',
-      false,
-    );*/
-    /* if (!location) {
-     throw new Error('failed to check for insole');
-   }*/
     const insoleSelector =
       'body > div.wrapper > div.content-wrapper > section.content > div.row > div > div > div > div.box-body > form > div:nth-child(4) > div > div > div.col-6.col-print-6 > table > tbody > tr:nth-child(2) > td:nth-child(2) > p';
 

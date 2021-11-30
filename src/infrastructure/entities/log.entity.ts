@@ -22,6 +22,6 @@ export class LogEntity {
   @ManyToOne(() => OrderEntity, (order) => order.logs)
   order: OrderEntity;
 
-  @ManyToOne(() => ErrorEntity, (error) => error.logs)
+  @ManyToOne(() => ErrorEntity, (error) => error.logs, { nullable: true })
   error: ErrorEntity;
 }

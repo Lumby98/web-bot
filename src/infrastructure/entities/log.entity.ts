@@ -11,10 +11,7 @@ export class LogEntity {
   status: boolean;
 
   @Column()
-  description: string;
-
-  @Column()
-  proccess: string;
+  process: string;
 
   @Column({ type: 'timestamptz' })
   timeStamp: Date;

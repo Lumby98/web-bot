@@ -37,7 +37,7 @@ export class SavedLoginController {
   async verify(@Body() keyDto: KeyDto) {
     await this.savedLoginService.verifyKey(keyDto.password);
 
-    //console.log(await this.savedLoginService.findAllLogins(keyDto.password));
+    //console.logEntry(await this.savedLoginService.findAllLogins(keyDto.password));
   }
 
   @UseGuards(jwtAuthenticationGuard)

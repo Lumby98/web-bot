@@ -6,22 +6,25 @@ import {
   SubscribeMessage,
   WebSocketGateway,
 } from '@nestjs/websockets';
-import { OrderRegistrationDto } from '../dto/order/orderRegistrationDto';
+import { OrderRegistrationDto } from '../dto/order-registration/orderRegistrationDto';
 import { Socket } from 'socket.io';
 import { Observable } from 'rxjs';
 import { take } from 'rxjs/operators';
-import { LogEntryDto } from '../dto/order/LogEntry.dto';
-import { ProcessStepDto } from '../dto/order/processStep.dto';
+import { LogEntryDto } from '../dto/log/logEntry/log-entry.dto';
+import { ProcessStepDto } from '../dto/order-registration/processStep.dto';
 import { ProcessStepEnum } from '../../core/enums/processStep.enum';
+import { number } from '@hapi/joi';
 
 @WebSocketGateway()
-export class OrderGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class OrderRegistrationGateway
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
   handleConnection(client: any, ...args: any[]): any {
-    console.log('client connected order gateway ' + client.id);
+    console.log('client connected order-registration gateway ' + client.id);
   }
 
   handleDisconnect(client: any): any {
-    console.log('client disconnected order gateway ' + client.id);
+    console.log('client disconnected order-registration gateway ' + client.id);
   }
 
   @SubscribeMessage('startOrderRegistration')
@@ -49,17 +52,38 @@ export class OrderGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       //Emit logEntries
       const orderNumbers = orderReg.orderNumbers;
-      let idnum = 1;
+      let logIdNum = 1;
+      let orderIdNum = 1;
       const logEntries: Array<LogEntryDto> = [];
 
-      for (let i = 0; i < orderNumbers.length; i++) {
-        const logEntryDto: LogEntryDto = {
-          id: idnum++,
-          desc: orderNumbers[i] + 'completed',
+      for (let i = 0; i <= orderNumbers.length; i++) {
+        let logEntryDto: LogEntryDto = {
+          id: logIdNum++,
           process: 'registration',
           status: true,
-          timestamp: Date.now().toString(),
+          timestamp: new Date(),
+          order: {
+            id: orderIdNum++,
+            orderNr: Math.floor(Math.random() * (10000 - 100) + 100).toString(),
+            completed: false,
+          },
         };
+
+        if (i == orderNumbers.length) {
+          logEntryDto = {
+            id: logIdNum++,
+            process: 'registration',
+            status: true,
+            timestamp: new Date(),
+            order: {
+              id: orderIdNum++,
+              orderNr: Math.floor(
+                Math.random() * (10000 - 100) + 100,
+              ).toString(),
+              completed: true,
+            },
+          };
+        }
 
         logEntries.push(logEntryDto);
       }

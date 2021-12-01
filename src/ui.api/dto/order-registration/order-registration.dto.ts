@@ -1,4 +1,4 @@
-export class OrderDto {
+export class OrderRegistrationDto {
   orderNumbers: string[];
   username: string;
   password: string;

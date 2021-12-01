@@ -1,9 +1,10 @@
-import { OrderModel } from '../models/order.model';
+import { OrderInfoModel } from '../models/order-info.model';
 import { OrderTypeEnum } from '../enums/type.enum';
 import { LoginDto } from '../../ui.api/dto/user/login.dto';
 import { OrderLists } from '../models/order-lists';
-export const orderInterfaceProvider = 'orderInterfaceProvider';
-export interface OrderInterface {
+export const orderRegistrationInterfaceProvider =
+  'orderRegistrationInterfaceProvider';
+export interface OrderRegistrationInterface {
   handleOrders(orderNumbers: string[], login: LoginDto): Promise<OrderLists>;
   startPuppeteer(url: string);
   stopPuppeteer();

@@ -53,7 +53,7 @@ export class AuthenticationController {
    */
   @HttpCode(200)
   @UseGuards(LocalAuthenticationGuard)
-  @Post('log-in')
+  @Post('logEntry-in')
   async logIn(@Req() request: RequestWithUser, @Res() response: Response) {
     try {
       const { user } = request;
@@ -76,7 +76,7 @@ export class AuthenticationController {
    * @param response
    */
   @UseGuards(jwtAuthenticationGuard)
-  @Post('log-out')
+  @Post('logEntry-out')
   async logOut(@Req() request: RequestWithUser, @Res() response: Response) {
     response.setHeader(
       'set-Cookie',

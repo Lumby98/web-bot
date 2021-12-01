@@ -1,4 +1,4 @@
-export interface OrderModel {
+export interface OrderInfoModel {
   id?: number;
   orderNr: string;
   customerName: string;

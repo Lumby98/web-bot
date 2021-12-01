@@ -1,5 +1,5 @@
-import { UpdateLogDto } from '../../ui.api/dto/log/update-log.dto';
-import { CreateLogDto } from '../../ui.api/dto/log/create-log.dto';
+import { UpdateLogDto } from '../../ui.api/dto/log/logEntry/update-log.dto';
+import { CreateLogDto } from '../../ui.api/dto/log/logEntry/create-log.dto';
 
 export const logInterfaceProvider = 'logInterfaceProvider';
 export interface LogInterface {

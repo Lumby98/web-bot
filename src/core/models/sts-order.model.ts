@@ -1,7 +1,7 @@
-import { OrderModel } from './order.model';
+import { OrderInfoModel } from './order-info.model';
 import { OrderInsoleModel } from './order-insole.model';
 
-export interface STSOrderModel extends OrderModel {
+export interface STSOrderModel extends OrderInfoModel {
   widthL: string;
   widthR: string;
   sizeL: string;

@@ -1,4 +1,4 @@
-import { OrderInterface } from '../interfaces/order.interface';
+import { OrderRegistrationInterface } from '../interfaces/order-registration.interface';
 import { Inject, Injectable } from '@nestjs/common';
 import {
   OrderPuppeteerInterface,
@@ -11,15 +11,15 @@ import { INSSOrderModel } from '../models/ins-s-order.model';
 import { OrderLists } from '../models/order-lists';
 
 @Injectable()
-export class OrderService implements OrderInterface {
+export class OrderRegistrationService implements OrderRegistrationInterface {
   constructor(
     @Inject(orderPuppeteerInterfaceProvider)
     private readonly orderPuppeteer: OrderPuppeteerInterface,
   ) {}
 
   /**
-   * Takes a list of order-numbers and then calls the appropriate puppeteer methods,
-   * in order to retrieve and return a complete list og order object with all the correct data.
+   * Takes a list of order-registration-numbers and then calls the appropriate puppeteer methods,
+   * in order-registration to retrieve and return a complete list og order-registration object with all the correct data.
    * @param orderNumbers
    * @param login
    */
@@ -66,7 +66,7 @@ export class OrderService implements OrderInterface {
           //todo
           break;
         default:
-          throw new Error('could not determine order type');
+          throw new Error('could not determine order-registration type');
       }
       await this.goToURL(
         'https://beta.ortowear.com/administration/ordersAdmin/',
@@ -113,7 +113,7 @@ export class OrderService implements OrderInterface {
   }
 
   /**
-   * navigates to Ortorwear and goes to the order list
+   * navigates to Ortorwear and goes to the order-registration list
    * @param username
    * @param password
    * @private
@@ -176,13 +176,13 @@ export class OrderService implements OrderInterface {
   }
 
   /**
-   * gets order type for the different order numbers given
+   * gets order-registration type for the different order-registration numbers given
    * @private
    * @param orderNumber
    */
   async getOrderType(orderNumber: string): Promise<OrderTypeEnum> {
     if (orderNumber.length < 1) {
-      throw new Error('order number is blank');
+      throw new Error('order-registration number is blank');
     }
 
     const targetAndSelector =
@@ -204,21 +204,21 @@ export class OrderService implements OrderInterface {
         return OrderTypeEnum.SOS;
 
       case 'No matching records found':
-        throw new Error('could not find order');
+        throw new Error('could not find order-registration');
 
       default:
-        throw new Error('invalid order type');
+        throw new Error('invalid order-registration type');
     }
   }
 
   /**
-   * get order information for an STS order
+   * get order-registration information for an STS order-registration
    * @param orderNumber
    * @private
    */
   async handleSTSOrder(orderNumber: string): Promise<STSOrderModel> {
     if (orderNumber.length < 1) {
-      throw new Error('missing order number');
+      throw new Error('missing order-registration number');
     }
 
     const targetAndSelector =
@@ -236,23 +236,23 @@ export class OrderService implements OrderInterface {
     );
 
     if (!check) {
-      throw new Error('Could not find order page');
+      throw new Error('Could not find order-registration page');
     }
 
     //Enable this in production.
     /*if (!(await this.orderPuppeteer.checkLocation('#edit_order', false))) {
-      throw new Error('This order is delivered so it cannot be allocated');
+      throw new Error('This order-registration is delivered so it cannot be allocated');
     }*/
 
     const order: STSOrderModel = await this.orderPuppeteer.readSTSOrder(
       orderNumber,
     );
     if (!order) {
-      throw new Error('failed getting order information');
+      throw new Error('failed getting order-registration information');
     } else if (!order.toeCap || order.toeCap == '') {
       throw new Error('failed getting toe cap');
     } else if (order.orderNr != orderNumber) {
-      throw new Error('failed getting correct order');
+      throw new Error('failed getting correct order-registration');
     } else if (!order.sole || order.sole == '') {
       throw new Error('failed getting sole');
     } else if (!order.widthR || order.widthR == '') {
@@ -280,7 +280,7 @@ export class OrderService implements OrderInterface {
   }
 
   /**
-   * check if an order has an insole
+   * check if an order-registration has an insole
    * @private
    */
   async checkForInsole(): Promise<boolean> {
@@ -300,7 +300,7 @@ export class OrderService implements OrderInterface {
     const insole = await this.orderPuppeteer.readSelectorText(insoleSelector);
 
     if (insole.includes('EMMA')) {
-      throw new Error('invalid order, EMMA order is not supported');
+      throw new Error('invalid order-registration, EMMA order-registration is not supported');
     }
     return true;
   }
@@ -729,7 +729,7 @@ export class OrderService implements OrderInterface {
   }
 
   /**
-   * Handles the completion of the order on neskrid.
+   * Handles the completion of the order-registration on neskrid.
    * Should return something like this: '26/11/2021'
    * @param dev
    */
@@ -1123,8 +1123,6 @@ export class OrderService implements OrderInterface {
   }
 
   getNextDayOfWeek(date: Date, dayOfWeek: number): Date {
-    // Code to check that date and dayOfWeek are valid left as an exercise ;)
-
     if (dayOfWeek < 0 || dayOfWeek > 6) {
       throw new Error(
         'Invalid day of the week: the day of the week should be from 0-6',

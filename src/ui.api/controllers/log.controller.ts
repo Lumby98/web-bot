@@ -1,11 +1,27 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Inject,
+} from '@nestjs/common';
 import { LogService } from '../../core/service/log.service';
-import { CreateLogDto } from '../dto/log/create-log.dto';
-import { UpdateLogDto } from '../dto/log/update-log.dto';
+import { CreateLogDto } from '../dto/log/logEntry/create-log.dto';
+import { UpdateLogDto } from '../dto/log/logEntry/update-log.dto';
+import {
+  LogInterface,
+  logInterfaceProvider,
+} from '../../core/interfaces/log.interface';
 
 @Controller('log')
 export class LogController {
-  constructor(private readonly logService: LogService) {}
+  constructor(
+    @Inject(logInterfaceProvider)
+    private readonly logService: LogInterface,
+  ) {}
 
   @Post()
   create(@Body() createLogDto: CreateLogDto) {

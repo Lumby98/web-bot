@@ -96,7 +96,7 @@ export class AuthenticationService implements AuthenticationInterface {
   }
 
   /**
-   * sets the jwt token to expire, so the log out action can be executed
+   * sets the jwt token to expire, so the logEntry out action can be executed
    */
   public getCookieForLogOut() {
     return `Authentication=; HttpOnly; Path=/; Max-Age=0;`;

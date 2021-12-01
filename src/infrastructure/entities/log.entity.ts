@@ -1,6 +1,7 @@
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { OrderEntity } from './order.entity';
 import { ErrorEntity } from './error.entity';
+import { ProcessStepEnum } from '../../core/enums/processStep.enum';
 
 @Entity()
 export class LogEntity {
@@ -10,8 +11,12 @@ export class LogEntity {
   @Column()
   status: boolean;
 
-  @Column()
-  process: string;
+  @Column({
+    type: 'enum',
+    enum: ProcessStepEnum,
+    default: ProcessStepEnum.GETORDERINFO,
+  })
+  process: ProcessStepEnum;
 
   @Column({ type: 'timestamptz' })
   timeStamp: Date;

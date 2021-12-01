@@ -38,11 +38,6 @@ export class LogController {
     return this.logService.findOne(+id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateLogDto: UpdateLogDto) {
-    return this.logService.update(+id, updateLogDto);
-  }
-
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.logService.remove(+id);

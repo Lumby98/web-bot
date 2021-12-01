@@ -6,6 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { LogEntity } from '../../infrastructure/entities/log.entity';
 import { OrderEntity } from '../../infrastructure/entities/order.entity';
 import { ErrorEntity } from '../../infrastructure/entities/error.entity';
+import { logErrorInterfaceProvider } from '../../core/interfaces/log-error.interface';
 
 @Module({
   imports: [TypeOrmModule.forFeature([LogEntity, OrderEntity, ErrorEntity])],

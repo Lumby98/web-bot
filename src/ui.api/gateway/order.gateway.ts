@@ -55,7 +55,7 @@ export class OrderGateway implements OnGatewayConnection, OnGatewayDisconnect {
       for (let i = 0; i < orderNumbers.length; i++) {
         const logEntryDto: LogEntryDto = {
           id: idnum++,
-          desc: orderNumbers[i] + 'completed',
+          desc: orderNumbers[i] + ' ' + 'completed',
           process: 'registration',
           status: true,
           timestamp: new Date(),

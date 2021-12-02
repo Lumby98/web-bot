@@ -16,8 +16,17 @@ export class LogErrorService implements logErrorInterface {
     @InjectRepository(ErrorEntity)
     private errorRepository: Repository<ErrorEntity>,
   ) {}
-  async create(logError: CreateOrderErrorDto): Promise<ErrorLogModel> {
-    return Promise.resolve(undefined);
+  async create(createLogError: CreateOrderErrorDto): Promise<ErrorLogModel> {
+    const errorCheck = await this.errorCheck(createLogError.errorMessage);
+    if (errorCheck) {
+      throw new Error(
+        'Cant create error, an error with this error message already exists',
+      );
+    }
+    const errorEntity = this.errorRepository.create(createLogError);
+    return JSON.parse(
+      JSON.stringify(await this.errorRepository.save(errorEntity)),
+    );
   }
 
   async errorCheck(errorString: string): Promise<boolean> {

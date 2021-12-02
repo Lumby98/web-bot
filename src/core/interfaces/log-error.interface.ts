@@ -8,7 +8,7 @@ import { PaginationDto } from '../../ui.api/dto/filter/pagination-dto';
 export const logErrorInterfaceProvider = 'logErrorInterfaceProvider';
 
 export interface logErrorInterface {
-  create(logError: CreateOrderErrorDto): Promise<ErrorLogModel>;
+  create(createLogError: CreateOrderErrorDto): Promise<ErrorLogModel>;
   findOne(id: number): Promise<ErrorLogModel>;
   findAll(query: QueryDto): Promise<PaginationDto<ErrorLogModel>>;
   update(id: number, updateError: UpdateOrderErrorDto);

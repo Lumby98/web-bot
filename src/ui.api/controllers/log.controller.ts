@@ -8,7 +8,7 @@ import {
   Delete,
   Inject,
 } from '@nestjs/common';
-import { LogService } from '../../core/service/log.service';
+import { LogService } from '../../core/service/log/log.service';
 import { CreateLogDto } from '../dto/log/logEntry/create-log.dto';
 import { UpdateLogDto } from '../dto/log/logEntry/update-log.dto';
 import {

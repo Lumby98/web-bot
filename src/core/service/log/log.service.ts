@@ -1,19 +1,22 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { CreateLogDto } from '../../ui.api/dto/log/logEntry/create-log.dto';
-import { UpdateLogDto } from '../../ui.api/dto/log/logEntry/update-log.dto';
-import { LogInterface } from '../interfaces/log.interface';
+import { CreateLogDto } from '../../../ui.api/dto/log/logEntry/create-log.dto';
+import { UpdateLogDto } from '../../../ui.api/dto/log/logEntry/update-log.dto';
+import { LogInterface } from '../../interfaces/log.interface';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LogEntity } from '../../infrastructure/entities/log.entity';
-import { Repository } from 'typeorm';
-import { LogModel } from '../models/logEntry/log.model';
+import { LogEntity } from '../../../infrastructure/entities/log.entity';
+import { Like, Repository } from 'typeorm';
+import { LogModel } from '../../models/logEntry/log.model';
 import {
   OrderInterface,
   orderInterfaceProvider,
-} from '../interfaces/order.interface';
+} from '../../interfaces/order.interface';
 import {
   logErrorInterface,
   logErrorInterfaceProvider,
-} from '../interfaces/log-error.interface';
+} from '../../interfaces/log-error.interface';
+import { QueryDto } from '../../../ui.api/dto/filter/query.dto';
+import { PaginationDto } from '../../../ui.api/dto/filter/pagination-dto';
+import { OrderLogModel } from '../../models/logEntry/order-log.model';
 
 @Injectable()
 export class LogService implements LogInterface {
@@ -56,34 +59,47 @@ export class LogService implements LogInterface {
       log.order = order;
     }
 
-    const errorCheck = await this.logErrorService.errorCheck(
-      createLogDto.error.errorMessage,
-    );
+    if (createLogDto.error) {
+      const errorCheck = await this.logErrorService.errorCheck(
+        createLogDto.error.errorMessage,
+      );
 
-    let logError;
-    if (!errorCheck) {
-      logError = await this.logErrorService.create(createLogDto.error);
-      log.error = {
-        id: logError.id,
-        errorMessage: logError.errorMessage,
-        logs: [],
-      };
-    } else {
-      logError = this.logErrorService.findByMessage(log.error.errorMessage);
-      log.error = logError;
+      let logError;
+      if (!errorCheck) {
+        logError = await this.logErrorService.create(createLogDto.error);
+        log.error = {
+          id: logError.id,
+          errorMessage: logError.errorMessage,
+          logs: [],
+        };
+      } else {
+        logError = this.logErrorService.findByMessage(log.error.errorMessage);
+        log.error = logError;
+      }
     }
 
     return JSON.parse(JSON.stringify(await this.logRepository.save(log)));
   }
 
-  async findAll(): Promise<LogModel[]> {
-    return JSON.parse(
-      JSON.stringify(
-        await this.logRepository.find({
-          relations: ['order', 'error'],
-        }),
-      ),
-    );
+  async findAll(query: QueryDto): Promise<PaginationDto<LogModel>> {
+    const take = query.take || 10;
+    const skip = query.skip || 0;
+    const keyword = query.keyword || '';
+
+    const [result, total] = await this.logRepository.findAndCount({
+      where: { order: { orderNr: Like('%' + keyword + '%') } },
+      relations: ['order', 'error'],
+      order: { timeStamp: 'DESC' },
+      take: take,
+      skip: skip,
+    });
+
+    const models = JSON.parse(JSON.stringify(result));
+
+    return {
+      data: models,
+      count: total,
+    };
   }
 
   async findOne(id: number): Promise<LogModel> {

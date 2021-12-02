@@ -2,15 +2,18 @@ import { CreateOrderErrorDto } from '../../ui.api/dto/log/error/create-order-err
 import { ErrorLogModel } from '../models/logEntry/error-log.model';
 import { UpdateOrderErrorDto } from '../../ui.api/dto/log/error/update-order-error.dto';
 import { ErrorEntity } from '../../infrastructure/entities/error.entity';
+import { QueryDto } from '../../ui.api/dto/filter/query.dto';
+import { PaginationDto } from '../../ui.api/dto/filter/pagination-dto';
 
 export const logErrorInterfaceProvider = 'logErrorInterfaceProvider';
 
 export interface logErrorInterface {
   create(logError: CreateOrderErrorDto): Promise<ErrorLogModel>;
   findOne(id: number): Promise<ErrorLogModel>;
-  find(): Promise<ErrorLogModel[]>;
+  findAll(query: QueryDto): Promise<PaginationDto<ErrorLogModel>>;
   update(id: number, updateError: UpdateOrderErrorDto);
   remove(id: number);
+  removeAll();
   findByMessage(message: string): Promise<ErrorEntity>;
   errorCheck(errorString: string): Promise<boolean>;
 }

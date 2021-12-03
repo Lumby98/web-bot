@@ -66,8 +66,12 @@ export class OrderService implements OrderInterface {
   }
 
   async findOne(id: number): Promise<OrderLogModel> {
-    const order = await this.orderRepository.findOne(id);
-
+    const order = await this.orderRepository.findOne(id, {
+      relations: ['logs'],
+    });
+    if (!order) {
+      throw new Error('could not find order with given id');
+    }
     return JSON.parse(JSON.stringify(order));
   }
 

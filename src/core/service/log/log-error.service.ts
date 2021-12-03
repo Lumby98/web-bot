@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { logErrorInterface } from '../../interfaces/log-error.interface';
+import { LogErrorInterface } from '../../interfaces/log-error.interface';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ErrorEntity } from '../../../infrastructure/entities/error.entity';
 import { Like, Repository } from 'typeorm';
@@ -11,7 +11,7 @@ import { PaginationDto } from '../../../ui.api/dto/filter/pagination-dto';
 import { OrderLogModel } from '../../models/logEntry/order-log.model';
 
 @Injectable()
-export class LogErrorService implements logErrorInterface {
+export class LogErrorService implements LogErrorInterface {
   constructor(
     @InjectRepository(ErrorEntity)
     private errorRepository: Repository<ErrorEntity>,
@@ -61,12 +61,17 @@ export class LogErrorService implements logErrorInterface {
     const error = await this.errorRepository.findOne({
       where: { errorMessage: message },
     });
-
     return error;
   }
 
   async findOne(id: number): Promise<ErrorLogModel> {
-    const error = await this.errorRepository.findOne(id);
+    const error = await this.errorRepository.findOne(id, {
+      relations: ['logs'],
+    });
+
+    if (!error) {
+      throw new Error('could not find error  with given id');
+    }
 
     return JSON.parse(JSON.stringify(error));
   }

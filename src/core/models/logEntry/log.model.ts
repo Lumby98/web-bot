@@ -1,12 +1,12 @@
-import { OrderRegistrationDto } from '../../../ui.api/dto/order-registration/order-registration.dto';
-import { OrderErrorDto } from '../../../ui.api/dto/log/error/order-error.dto';
 import { ProcessStepEnum } from '../../enums/processStep.enum';
+import { OrderLogModel } from './order-log.model';
+import { ErrorLogModel } from './error-log.model';
 
 export interface LogModel {
   id: number;
   status: boolean;
   process: ProcessStepEnum;
   timestamp: Date;
-  order: OrderRegistrationDto;
-  error?: OrderErrorDto;
+  order: OrderLogModel;
+  error?: ErrorLogModel;
 }

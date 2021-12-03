@@ -21,52 +21,78 @@ import {
 } from '../../core/interfaces/log.interface';
 import { QueryDto } from '../dto/filter/query.dto';
 import { HTTPResponse } from 'puppeteer';
+import { LogEntryDto } from '../dto/log/logEntry/log-entry.dto';
+import {
+  OrderInterface,
+  orderInterfaceProvider,
+} from '../../core/interfaces/order.interface';
+import {
+  LogErrorInterface,
+  logErrorInterfaceProvider,
+} from '../../core/interfaces/log-error.interface';
 
 @Controller('log')
 export class LogController {
   constructor(
     @Inject(logInterfaceProvider)
     private readonly logService: LogInterface,
+    @Inject(orderInterfaceProvider)
+    private readonly orderService: OrderInterface,
+    @Inject(logErrorInterfaceProvider)
+    private readonly errorService: LogErrorInterface,
   ) {}
 
   @Post()
-  create(@Body() createLogDto: CreateLogDto) {
+  async create(@Body() createLogDto: CreateLogDto): Promise<LogEntryDto> {
     try {
-      return this.logService.create(createLogDto);
+      return JSON.parse(
+        JSON.stringify(await this.logService.create(createLogDto)),
+      );
     } catch (err) {
+      console.log(err.message);
       throw new HttpException(err, HttpStatus.BAD_REQUEST);
     }
   }
 
   @Get()
-  findAll(@Query() query: QueryDto) {
+  async findAll(@Query() query: QueryDto): Promise<LogEntryDto[]> {
     try {
-      return this.logService.findAll(query);
+      return JSON.parse(JSON.stringify(await this.logService.findAll(query)));
     } catch (err) {
       throw new HttpException(err, HttpStatus.BAD_REQUEST);
     }
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string): Promise<LogEntryDto> {
     try {
-      return this.logService.findOne(+id);
+      return JSON.parse(JSON.stringify(await this.logService.findOne(+id)));
     } catch (err) {
       throw new HttpException(err, HttpStatus.BAD_REQUEST);
     }
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
+  @Delete('delete/:id')
+  async remove(@Param('id') id: string) {
     try {
-      return this.logService.remove(+id);
+      return await this.logService.remove(+id);
     } catch (err) {
       throw new HttpException(err, HttpStatus.BAD_REQUEST);
     }
   }
 
   @Delete('deleteAll')
-  removeAll() {
-    return this.logService.removeAll();
+  async removeAll() {
+    return await this.logService.removeAll();
+  }
+
+  @Get('order/:id')
+  async findOrder(@Param('id') id: string) {
+    return await this.orderService.findOne(+id);
+  }
+
+  @Get('Error/:id')
+  async findError(@Param('id') id: string) {
+    return await this.errorService.findOne(+id);
   }
 }

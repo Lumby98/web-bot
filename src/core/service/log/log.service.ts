@@ -11,7 +11,7 @@ import {
   orderInterfaceProvider,
 } from '../../interfaces/order.interface';
 import {
-  logErrorInterface,
+  LogErrorInterface,
   logErrorInterfaceProvider,
 } from '../../interfaces/log-error.interface';
 import { QueryDto } from '../../../ui.api/dto/filter/query.dto';
@@ -26,7 +26,7 @@ export class LogService implements LogInterface {
     @Inject(orderInterfaceProvider)
     private orderService: OrderInterface,
     @Inject(logErrorInterfaceProvider)
-    private logErrorService: logErrorInterface,
+    private logErrorService: LogErrorInterface,
   ) {}
 
   /**
@@ -73,7 +73,9 @@ export class LogService implements LogInterface {
           logs: [],
         };
       } else {
-        logError = this.logErrorService.findByMessage(log.error.errorMessage);
+        logError = await this.logErrorService.findByMessage(
+          createLogDto.error.errorMessage,
+        );
         log.error = logError;
       }
     }

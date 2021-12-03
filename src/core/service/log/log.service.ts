@@ -5,7 +5,7 @@ import { LogInterface } from '../../interfaces/log.interface';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LogEntity } from '../../../infrastructure/entities/log.entity';
 import { Like, Repository } from 'typeorm';
-import { LogModel } from '../../models/logEntry/log.model';
+import { LogModel } from '../../../../../web-bot-frontend/src/app/log/core/models/log.model';
 import {
   OrderInterface,
   orderInterfaceProvider,
@@ -14,9 +14,9 @@ import {
   LogErrorInterface,
   logErrorInterfaceProvider,
 } from '../../interfaces/log-error.interface';
+import { OrderLogModel } from '../../../../../web-bot-frontend/src/app/log/core/models/order-log.model';
 import { QueryDto } from '../../../ui.api/dto/filter/query.dto';
 import { PaginationDto } from '../../../ui.api/dto/filter/pagination-dto';
-import { OrderLogModel } from '../../models/logEntry/order-log.model';
 
 @Injectable()
 export class LogService implements LogInterface {
@@ -85,8 +85,10 @@ export class LogService implements LogInterface {
 
   async findAll(query: QueryDto): Promise<PaginationDto<LogModel>> {
     const take = query.take || 10;
-    const skip = query.skip || 0;
+    const page = query.page || 1;
     const keyword = query.keyword || '';
+    const skip = (page - 1) * take;
+    console.log(skip + 'never fear, cause i am here');
 
     const [result, total] = await this.logRepository.findAndCount({
       where: { order: { orderNr: Like('%' + keyword + '%') } },

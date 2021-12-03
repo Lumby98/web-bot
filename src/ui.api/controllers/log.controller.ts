@@ -12,16 +12,11 @@ import {
   Query,
   HttpCode,
 } from '@nestjs/common';
-import { LogService } from '../../core/service/log/log.service';
 import { CreateLogDto } from '../dto/log/logEntry/create-log.dto';
-import { UpdateLogDto } from '../dto/log/logEntry/update-log.dto';
 import {
   LogInterface,
   logInterfaceProvider,
 } from '../../core/interfaces/log.interface';
-import { QueryDto } from '../dto/filter/query.dto';
-import { HTTPResponse } from 'puppeteer';
-import { LogEntryDto } from '../dto/log/logEntry/log-entry.dto';
 import {
   OrderInterface,
   orderInterfaceProvider,
@@ -30,6 +25,9 @@ import {
   LogErrorInterface,
   logErrorInterfaceProvider,
 } from '../../core/interfaces/log-error.interface';
+import { QueryDto } from '../dto/filter/query.dto';
+import { LogEntryDto } from '../dto/log/logEntry/log-entry.dto';
+import { PaginationDto } from '../dto/filter/pagination-dto';
 
 @Controller('log')
 export class LogController {
@@ -55,19 +53,25 @@ export class LogController {
   }
 
   @Get()
-  async findAll(@Query() query: QueryDto): Promise<LogEntryDto[]> {
+  async findAll(@Query() query: QueryDto): Promise<PaginationDto<LogEntryDto>> {
     try {
-      return JSON.parse(JSON.stringify(await this.logService.findAll(query)));
+      const q: QueryDto = {
+        take: +query.take,
+        page: +query.page,
+        keyword: query.keyword,
+      };
+      return JSON.parse(JSON.stringify(await this.logService.findAll(q)));
     } catch (err) {
       throw new HttpException(err, HttpStatus.BAD_REQUEST);
     }
   }
 
-  @Get(':id')
+  @Get('one/:id')
   async findOne(@Param('id') id: string): Promise<LogEntryDto> {
     try {
       return JSON.parse(JSON.stringify(await this.logService.findOne(+id)));
     } catch (err) {
+      console.log(err.message);
       throw new HttpException(err, HttpStatus.BAD_REQUEST);
     }
   }

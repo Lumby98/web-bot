@@ -8,7 +8,6 @@ import { AuthenticationModule } from './ui.api/modules/authentication.module';
 import { InsoleModule } from './ui.api/modules/insole.module';
 import { OrderRegistrationModule } from './ui.api/modules/order-registration.module';
 import { LogModule } from './ui.api/modules/log.module';
-import { ErrorService } from './core/service/error.service';
 
 @Module({
   imports: [
@@ -33,6 +32,6 @@ import { ErrorService } from './core/service/error.service';
     LogModule,
   ],
   controllers: [],
-  providers: [ErrorService],
+  providers: [],
 })
 export class AppModule {}

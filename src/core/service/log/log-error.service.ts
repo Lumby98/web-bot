@@ -4,11 +4,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ErrorEntity } from '../../../infrastructure/entities/error.entity';
 import { Like, Repository } from 'typeorm';
 import { CreateOrderErrorDto } from '../../../ui.api/dto/log/error/create-order-error.dto';
-import { ErrorLogModel } from '../../models/logEntry/error-log.model';
+import { ErrorLogModel } from '../../../../../web-bot-frontend/src/app/log/core/models/error-log.model';
 import { UpdateOrderErrorDto } from '../../../ui.api/dto/log/error/update-order-error.dto';
-import { QueryDto } from '../../../ui.api/dto/filter/query.dto';
-import { PaginationDto } from '../../../ui.api/dto/filter/pagination-dto';
-import { OrderLogModel } from '../../models/logEntry/order-log.model';
+import { OrderLogModel } from '../../../../../web-bot-frontend/src/app/log/core/models/order-log.model';
+import { QueryDto } from "../../../ui.api/dto/filter/query.dto";
+import { PaginationDto } from "../../../ui.api/dto/filter/pagination-dto";
 
 @Injectable()
 export class LogErrorService implements LogErrorInterface {
@@ -39,14 +39,14 @@ export class LogErrorService implements LogErrorInterface {
 
   async findAll(query: QueryDto): Promise<PaginationDto<ErrorLogModel>> {
     const take = query.take || 10;
-    const skip = query.skip || 0;
+    const skip = query.page || 1;
     const keyword = query.keyword || '';
 
     const [result, total] = await this.errorRepository.findAndCount({
       where: { errorMessage: Like('%' + keyword + '%') },
       order: { id: 'DESC' },
       take: take,
-      skip: skip,
+      skip: (skip - 1 ) * take,
     });
 
     const models = JSON.parse(JSON.stringify(result));

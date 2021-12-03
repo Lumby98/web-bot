@@ -4,7 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { OrderEntity } from '../../../infrastructure/entities/order.entity';
 import { Like, Repository } from 'typeorm';
 import { CreateLogOrderDto } from '../../../ui.api/dto/log/order/create-log-order.dto';
-import { OrderLogModel } from '../../models/logEntry/order-log.model';
+import { OrderLogModel } from '../../../../../web-bot-frontend/src/app/log/core/models/order-log.model';
 import { UpdateLogOrderDto } from '../../../ui.api/dto/log/order/update-log-order.dto';
 import { QueryDto } from '../../../ui.api/dto/filter/query.dto';
 import { PaginationDto } from '../../../ui.api/dto/filter/pagination-dto';
@@ -39,14 +39,14 @@ export class OrderService implements OrderInterface {
 
   async findAll(query: QueryDto): Promise<PaginationDto<OrderLogModel>> {
     const take = query.take || 10;
-    const skip = query.skip || 0;
+    const skip = query.page || 1;
     const keyword = query.keyword || '';
 
     const [result, total] = await this.orderRepository.findAndCount({
       where: { orderNr: Like('%' + keyword + '%') },
       order: { id: 'DESC' },
       take: take,
-      skip: skip,
+      skip: (skip - 1) * take,
     });
 
     const models = JSON.parse(JSON.stringify(result));

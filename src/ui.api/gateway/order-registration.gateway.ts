@@ -4,16 +4,15 @@ import {
   OnGatewayConnection,
   OnGatewayDisconnect,
   SubscribeMessage,
-  WebSocketGateway,
-} from '@nestjs/websockets';
-import { OrderRegistrationDto } from '../dto/order-registration/orderRegistrationDto';
-import { Socket } from 'socket.io';
-import { Observable } from 'rxjs';
-import { take } from 'rxjs/operators';
-import { LogEntryDto } from '../dto/log/logEntry/log-entry.dto';
-import { ProcessStepDto } from '../dto/order-registration/processStep.dto';
-import { ProcessStepEnum } from '../../core/enums/processStep.enum';
-import { number } from '@hapi/joi';
+  WebSocketGateway
+} from "@nestjs/websockets";
+import { OrderRegistrationDto } from "../dto/order-registration/orderRegistrationDto";
+import { Socket } from "socket.io";
+import { Observable } from "rxjs";
+import { take } from "rxjs/operators";
+import { ProcessStepDto } from "../dto/order-registration/processStep.dto";
+import { ProcessStepEnum } from "../../core/enums/processStep.enum";
+import { LogEntryDto } from "../dto/log/logEntry/log-entry.dto";
 
 @WebSocketGateway()
 export class OrderRegistrationGateway
@@ -59,7 +58,7 @@ export class OrderRegistrationGateway
       for (let i = 0; i <= orderNumbers.length; i++) {
         let logEntryDto: LogEntryDto = {
           id: logIdNum++,
-          process: 'registration',
+          process: ProcessStepEnum.GETORDER,
           status: true,
           timestamp: new Date(),
           order: {
@@ -72,7 +71,7 @@ export class OrderRegistrationGateway
         if (i == orderNumbers.length) {
           logEntryDto = {
             id: logIdNum++,
-            process: 'registration',
+            process: ProcessStepEnum.GETORDER,
             status: true,
             timestamp: new Date(),
             order: {

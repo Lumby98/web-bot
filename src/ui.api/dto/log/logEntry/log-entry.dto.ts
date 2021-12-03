@@ -1,11 +1,12 @@
-import { OrderRegistrationDto } from '../../order-registration/order-registration.dto';
+import { ProcessStepEnum } from '../../../../core/enums/processStep.enum';
 import { OrderErrorDto } from '../error/order-error.dto';
-import { LogOrderDto } from '../order/log-order.dto';
+
+class LogOrderDto {}
 
 export interface LogEntryDto {
   id: number;
   status: boolean;
-  process: string;
+  process: ProcessStepEnum;
   timestamp: Date;
   order: LogOrderDto;
   error?: OrderErrorDto;

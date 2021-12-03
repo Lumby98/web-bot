@@ -5,7 +5,7 @@ import { LogInterface } from '../../interfaces/log.interface';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LogEntity } from '../../../infrastructure/entities/log.entity';
 import { Like, Repository } from 'typeorm';
-import { LogModel } from '../../../../../web-bot-frontend/src/app/log/core/models/log.model';
+import { LogModel } from '../../models/logEntry/log.model';
 import {
   OrderInterface,
   orderInterfaceProvider,
@@ -14,7 +14,6 @@ import {
   LogErrorInterface,
   logErrorInterfaceProvider,
 } from '../../interfaces/log-error.interface';
-import { OrderLogModel } from '../../../../../web-bot-frontend/src/app/log/core/models/order-log.model';
 import { QueryDto } from '../../../ui.api/dto/filter/query.dto';
 import { PaginationDto } from '../../../ui.api/dto/filter/pagination-dto';
 

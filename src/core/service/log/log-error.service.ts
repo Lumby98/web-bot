@@ -4,11 +4,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ErrorEntity } from '../../../infrastructure/entities/error.entity';
 import { Like, Repository } from 'typeorm';
 import { CreateOrderErrorDto } from '../../../ui.api/dto/log/error/create-order-error.dto';
-import { ErrorLogModel } from '../../../../../web-bot-frontend/src/app/log/core/models/error-log.model';
 import { UpdateOrderErrorDto } from '../../../ui.api/dto/log/error/update-order-error.dto';
-import { OrderLogModel } from '../../../../../web-bot-frontend/src/app/log/core/models/order-log.model';
-import { QueryDto } from "../../../ui.api/dto/filter/query.dto";
-import { PaginationDto } from "../../../ui.api/dto/filter/pagination-dto";
+import { QueryDto } from '../../../ui.api/dto/filter/query.dto';
+import { PaginationDto } from '../../../ui.api/dto/filter/pagination-dto';
+import { ErrorLogModel } from '../../models/logEntry/error-log.model';
 
 @Injectable()
 export class LogErrorService implements LogErrorInterface {
@@ -46,7 +45,7 @@ export class LogErrorService implements LogErrorInterface {
       where: { errorMessage: Like('%' + keyword + '%') },
       order: { id: 'DESC' },
       take: take,
-      skip: (skip - 1 ) * take,
+      skip: (skip - 1) * take,
     });
 
     const models = JSON.parse(JSON.stringify(result));

@@ -1,9 +1,9 @@
 import { CreateOrderErrorDto } from '../../ui.api/dto/log/error/create-order-error.dto';
-import { ErrorLogModel } from '../../../../web-bot-frontend/src/app/log/core/models/error-log.model';
 import { UpdateOrderErrorDto } from '../../ui.api/dto/log/error/update-order-error.dto';
 import { ErrorEntity } from '../../infrastructure/entities/error.entity';
 import { QueryDto } from '../../ui.api/dto/filter/query.dto';
 import { PaginationDto } from '../../ui.api/dto/filter/pagination-dto';
+import { ErrorLogModel } from '../models/logEntry/error-log.model';
 
 export const logErrorInterfaceProvider = 'logErrorInterfaceProvider';
 

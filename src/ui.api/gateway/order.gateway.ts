@@ -13,6 +13,7 @@ import { take } from 'rxjs/operators';
 import { LogEntryDto } from '../dto/order/LogEntry.dto';
 import { ProcessStepDto } from '../dto/order/processStep.dto';
 import { ProcessStepEnum } from '../../core/enums/processStep.enum';
+import { LogOrderDto } from '../dto/order/LogOrder.dto';
 
 @WebSocketGateway()
 export class OrderGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -53,12 +54,18 @@ export class OrderGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const logEntries: Array<LogEntryDto> = [];
 
       for (let i = 0; i < orderNumbers.length; i++) {
+        const logOrder: LogOrderDto = {
+          id: idnum++,
+          orderNumber: orderNumbers[i],
+          completed: true,
+        };
+
         const logEntryDto: LogEntryDto = {
           id: idnum++,
-          desc: orderNumbers[i] + ' ' + 'completed',
           process: 'registration',
           status: true,
           timestamp: new Date(),
+          order: logOrder,
         };
 
         logEntries.push(logEntryDto);

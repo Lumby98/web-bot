@@ -1,4 +1,5 @@
 import { StsOrderStub } from '../../test/stubs/sts-order.stub';
+import { TargetAndSelectorStub } from '../../test/stubs/target-and-selector';
 
 export const OrderPuppeteerService = jest.fn().mockReturnValue({
   start: jest.fn().mockResolvedValue(undefined),
@@ -10,6 +11,10 @@ export const OrderPuppeteerService = jest.fn().mockReturnValue({
   checkLocation: jest.fn().mockResolvedValue(true),
   getCurrentURL: jest.fn().mockReturnValue('https://www.google.com/'),
   readSelectorText: jest.fn().mockResolvedValue('testString'),
+  getTableTargetandSelector: jest
+    .fn()
+    .mockResolvedValue(TargetAndSelectorStub()),
   wait: jest.fn().mockResolvedValue(undefined),
+  click: jest.fn().mockResolvedValue(undefined),
   goToOrder: jest.fn().mockResolvedValue(undefined),
 });

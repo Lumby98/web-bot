@@ -83,11 +83,23 @@ export class LogService implements LogInterface {
   }
 
   async findAll(query: QueryDto): Promise<PaginationDto<LogModel>> {
-    const take = query.take || 10;
-    const page = query.page || 1;
+    let take = query.take;
+    if (!query.take || query.take < 1) {
+      take = 10;
+    }
+
+    console.log(take + 'take');
+
+    let page = query.page;
+    if (!query.page || query.page < 1) {
+      page = 1;
+    }
+
+    console.log(page + 'page');
+
     const keyword = query.keyword || '';
     const skip = (page - 1) * take;
-    console.log(skip + 'never fear, cause i am here');
+    console.log(skip + 'skip');
 
     const [result, total] = await this.logRepository.findAndCount({
       where: { order: { orderNr: Like('%' + keyword + '%') } },

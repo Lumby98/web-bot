@@ -55,12 +55,7 @@ export class LogController {
   @Get()
   async findAll(@Query() query: QueryDto): Promise<PaginationDto<LogEntryDto>> {
     try {
-      const q: QueryDto = {
-        take: +query.take,
-        page: +query.page,
-        keyword: query.keyword,
-      };
-      return JSON.parse(JSON.stringify(await this.logService.findAll(q)));
+      return JSON.parse(JSON.stringify(await this.logService.findAll(query)));
     } catch (err) {
       throw new HttpException(err, HttpStatus.BAD_REQUEST);
     }

@@ -54,6 +54,11 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
         },
       };
       logEntries.push(log);
+      return {
+        STSOrders: STSOrders,
+        INSOrders: INSOrders,
+        logEntries: logEntries,
+      };
     }
     for (const orderNumber of orderNumbers) {
       try {
@@ -401,6 +406,10 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     dev: boolean,
     completeOrder: boolean,
   ): Promise<OrderLists> {
+    const STSOrders: STSOrderModel[] = [];
+    const INSOrders: INSSOrderModel[] = [];
+    const OSAOrders: [] = [];
+    const SOSOrders: [] = [];
     try {
       await this.orderPuppeteer.start(false, 'https://www.google.com/');
       await this.handleNeskridNavigation(username, password);
@@ -423,6 +432,11 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
         },
       };
       orders.logEntries.push(log);
+      return {
+        STSOrders: STSOrders,
+        INSOrders: INSOrders,
+        logEntries: orders.logEntries,
+      };
     }
     if (orders.STSOrders.length > 0) {
       for (const order of orders.STSOrders) {
@@ -469,6 +483,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
             timestamp: new Date(),
             order: { orderNr: order.orderNr, completed: false },
           };
+          STSOrders.push(order);
           orders.logEntries.push(log);
           await this.goToURL(
             'https://www.neskrid.com/plugins/neskrid/myneskrid_new.aspx',
@@ -493,7 +508,11 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       return;
     }
     await this.stopPuppeteer();
-    return orders;
+    return {
+      STSOrders: STSOrders,
+      INSOrders: INSOrders,
+      logEntries: orders.logEntries,
+    };
   }
 
   async handleNeskridNavigation(username: string, password: string) {
@@ -929,6 +948,10 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     dev: boolean,
     completeOrder: boolean,
   ): Promise<OrderLists> {
+    const STSOrders: STSOrderModel[] = [];
+    const INSOrders: INSSOrderModel[] = [];
+    const OSAOrders: [] = [];
+    const SOSOrders: [] = [];
     try {
       await this.startPuppeteer('https://www.google.com/');
       await this.handleOrtowearNavigation(username, password);
@@ -949,6 +972,11 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
         },
       };
       orders.logEntries.push(log);
+      return {
+        STSOrders: STSOrders,
+        INSOrders: INSOrders,
+        logEntries: orders.logEntries,
+      };
     }
     if (orders.STSOrders.length > 0) {
       for (const order of orders.STSOrders) {
@@ -1143,6 +1171,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
               completed: true,
             },
           };
+          STSOrders.push(order);
           orders.logEntries.push(log);
           await this.goToURL(
             'https://beta.ortowear.com/administration/ordersAdmin/',
@@ -1170,7 +1199,11 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       return;
     }
     await this.stopPuppeteer();
-    return orders;
+    return {
+      STSOrders: STSOrders,
+      INSOrders: INSOrders,
+      logEntries: orders.logEntries,
+    };
   }
 
   async adjustYear(

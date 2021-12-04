@@ -1,5 +1,5 @@
 export enum ProcessStepEnum {
   GETORDERINFO,
-  GETORDER,
+  REGISTERORDER,
   ALOCATEORDER,
 }

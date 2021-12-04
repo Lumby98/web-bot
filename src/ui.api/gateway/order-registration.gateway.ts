@@ -4,15 +4,15 @@ import {
   OnGatewayConnection,
   OnGatewayDisconnect,
   SubscribeMessage,
-  WebSocketGateway
-} from "@nestjs/websockets";
-import { OrderRegistrationDto } from "../dto/order-registration/orderRegistrationDto";
-import { Socket } from "socket.io";
-import { Observable } from "rxjs";
-import { take } from "rxjs/operators";
-import { ProcessStepDto } from "../dto/order-registration/processStep.dto";
-import { ProcessStepEnum } from "../../core/enums/processStep.enum";
-import { LogEntryDto } from "../dto/log/logEntry/log-entry.dto";
+  WebSocketGateway,
+} from '@nestjs/websockets';
+import { OrderRegistrationDto } from '../dto/order-registration/orderRegistrationDto';
+import { Socket } from 'socket.io';
+import { Observable } from 'rxjs';
+import { take } from 'rxjs/operators';
+import { ProcessStepDto } from '../dto/order-registration/processStep.dto';
+import { ProcessStepEnum } from '../../core/enums/processStep.enum';
+import { LogEntryDto } from '../dto/log/logEntry/log-entry.dto';
 
 @WebSocketGateway()
 export class OrderRegistrationGateway
@@ -34,7 +34,7 @@ export class OrderRegistrationGateway
     try {
       const processSteps: Array<ProcessStepDto> = [
         { processStep: ProcessStepEnum.GETORDERINFO, error: false },
-        { processStep: ProcessStepEnum.GETORDER, error: false },
+        { processStep: ProcessStepEnum.REGISTERORDER, error: false },
         { processStep: ProcessStepEnum.ALOCATEORDER, error: false },
       ];
 
@@ -58,7 +58,7 @@ export class OrderRegistrationGateway
       for (let i = 0; i <= orderNumbers.length; i++) {
         let logEntryDto: LogEntryDto = {
           id: logIdNum++,
-          process: ProcessStepEnum.GETORDER,
+          process: ProcessStepEnum.REGISTERORDER,
           status: true,
           timestamp: new Date(),
           order: {
@@ -71,7 +71,7 @@ export class OrderRegistrationGateway
         if (i == orderNumbers.length) {
           logEntryDto = {
             id: logIdNum++,
-            process: ProcessStepEnum.GETORDER,
+            process: ProcessStepEnum.REGISTERORDER,
             status: true,
             timestamp: new Date(),
             order: {

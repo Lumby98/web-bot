@@ -300,7 +300,9 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     const insole = await this.orderPuppeteer.readSelectorText(insoleSelector);
 
     if (insole.includes('EMMA')) {
-      throw new Error('invalid order-registration, EMMA order-registration is not supported');
+      throw new Error(
+        'invalid order-registration, EMMA order-registration is not supported',
+      );
     }
     return true;
   }

@@ -6,9 +6,10 @@ import { orderPuppeteerInterfaceProvider } from '../../core/domain.services/orde
 import { OrderPuppeteerService } from '../../infrastructure/api/order-puppeteer.service';
 import { OrderRegistrationGateway } from '../gateway/order-registration.gateway';
 import { AuthenticationModule } from './authentication.module';
+import { LogModule } from './log.module';
 
 @Module({
-  imports: [AuthenticationModule],
+  imports: [AuthenticationModule, LogModule],
   controllers: [OrderRegistrationController],
   providers: [
     {

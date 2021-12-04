@@ -19,5 +19,6 @@ import { LogErrorService } from '../../core/service/log/log-error.service';
     { provide: orderInterfaceProvider, useClass: OrderService },
     { provide: logErrorInterfaceProvider, useClass: LogErrorService },
   ],
+  exports: [{ provide: logInterfaceProvider, useClass: LogService }],
 })
 export class LogModule {}

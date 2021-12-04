@@ -81,6 +81,10 @@ export class OrderRegistrationGateway
               ).toString(),
               completed: true,
             },
+            error: {
+              id: orderIdNum++,
+              errorMessage: 'could not determine order-registration type ',
+            },
           };
         }
 

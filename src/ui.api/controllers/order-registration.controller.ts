@@ -50,6 +50,19 @@ export class OrderRegistrationController {
     return completedOrders;
   }
 
+  @Post('getOrderInfo')
+  async getOrderInfo(@Body() order: OrderRegistrationDto) {
+    const orders = await this.orderRegistrationService.handleOrders(
+      order.orderNumbers,
+      {
+        username: order.username,
+        password: order.password,
+      },
+    );
+
+    return orders;
+  }
+
   @Post('allocateOrders')
   async allocateOrders(@Body() allocationDto: AllocationDto) {
     allocationDto.orderLists.STSOrders.forEach((order) => {

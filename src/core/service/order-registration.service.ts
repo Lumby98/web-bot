@@ -9,6 +9,10 @@ import { OrderTypeEnum } from '../enums/type.enum';
 import { LoginDto } from '../../ui.api/dto/user/login.dto';
 import { INSSOrderModel } from '../models/ins-s-order.model';
 import { OrderLists } from '../models/order-lists';
+import { LogEntryDto } from '../../ui.api/dto/log/logEntry/log-entry.dto';
+import { CreateLogDto } from '../../ui.api/dto/log/logEntry/create-log.dto';
+import { ProcessStepEnum } from '../enums/processStep.enum';
+import { transformException } from '@nestjs/platform-express/multer/multer/multer.utils';
 
 @Injectable()
 export class OrderRegistrationService implements OrderRegistrationInterface {
@@ -31,51 +35,90 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     const INSOrders: INSSOrderModel[] = [];
     const OSAOrders: [] = [];
     const SOSOrders: [] = [];
-    await this.startPuppeteer('https://www.google.com/');
-    await this.handleOrtowearNavigation(login.username, login.password);
-    await this.goToURL('https://beta.ortowear.com/administration/ordersAdmin/');
-    for (const orderNumber of orderNumbers) {
-      const type = await this.getOrderType(orderNumber);
-      let order;
-      switch (type) {
-        case OrderTypeEnum.STS:
-          order = await this.handleSTSOrder(orderNumber);
-          order.insole = await this.checkForInsole();
-          STSOrders.push(order);
-          break;
-        case OrderTypeEnum.INSS:
-          const INSS: INSSOrderModel = {
-            orderNr: '123123',
-            EU: true,
-            deliveryAddress: [
-              'Borgervaenget 5',
-              '2100 Koebenhavn',
-              'Kobenhavn, Denmark',
-            ],
-            sizeL: '40',
-            sizeR: '42',
-            customerName: 'Klaus Riftbjerg',
-            model: 'Bunka',
-          };
-          INSOrders.push(INSS);
-          break;
-        case OrderTypeEnum.OSA:
-          //todo
-          break;
-        case OrderTypeEnum.SOS:
-          //todo
-          break;
-        default:
-          throw new Error('could not determine order-registration type');
-      }
+    const logEntries: Array<CreateLogDto> = [];
+    try {
+      await this.startPuppeteer('https://www.google.com/');
+      await this.handleOrtowearNavigation(login.username, login.password);
       await this.goToURL(
         'https://beta.ortowear.com/administration/ordersAdmin/',
       );
+    } catch (err) {
+      const log: CreateLogDto = {
+        error: err.message,
+        status: false,
+        process: ProcessStepEnum.GETORDERINFO,
+        timestamp: new Date(),
+        order: {
+          orderNr: 'No Order number: failed to navigate to ortowear',
+          completed: false,
+        },
+      };
+      logEntries.push(log);
+    }
+    for (const orderNumber of orderNumbers) {
+      try {
+        const type = await this.getOrderType(orderNumber);
+        let order;
+        switch (type) {
+          case OrderTypeEnum.STS:
+            order = await this.handleSTSOrder(orderNumber);
+            order.insole = await this.checkForInsole();
+            STSOrders.push(order);
+            break;
+          case OrderTypeEnum.INSS:
+            const INSS: INSSOrderModel = {
+              orderNr: '123123',
+              EU: true,
+              deliveryAddress: [
+                'Borgervaenget 5',
+                '2100 Koebenhavn',
+                'Kobenhavn, Denmark',
+              ],
+              sizeL: '40',
+              sizeR: '42',
+              customerName: 'Klaus Riftbjerg',
+              model: 'Bunka',
+            };
+            INSOrders.push(INSS);
+            break;
+          case OrderTypeEnum.OSA:
+            //todo
+            break;
+          case OrderTypeEnum.SOS:
+            //todo
+            break;
+          default:
+            throw new Error('could not determine order-registration type');
+        }
+        const log: CreateLogDto = {
+          status: true,
+          process: ProcessStepEnum.GETORDERINFO,
+          timestamp: new Date(),
+          order: { orderNr: orderNumber, completed: false },
+        };
+        logEntries.push(log);
+        await this.goToURL(
+          'https://beta.ortowear.com/administration/ordersAdmin/',
+        );
+      } catch (err) {
+        const log: CreateLogDto = {
+          error: err.message,
+          status: false,
+          process: ProcessStepEnum.GETORDERINFO,
+          timestamp: new Date(),
+          order: { orderNr: orderNumber, completed: false },
+        };
+        logEntries.push(log);
+        await this.goToURL(
+          'https://beta.ortowear.com/administration/ordersAdmin/',
+        );
+      }
     }
     await this.stopPuppeteer();
     return {
       STSOrders: STSOrders,
       INSOrders: INSOrders,
+      logEntries: logEntries,
     };
   }
 
@@ -358,54 +401,91 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     dev: boolean,
     completeOrder: boolean,
   ): Promise<OrderLists> {
-    await this.orderPuppeteer.start(false, 'https://www.google.com/');
-    await this.handleNeskridNavigation(username, password);
-    await this.waitClick(
-      '#page-content-wrapper > div.container-fluid > div:nth-child(2) > div.col-lg-3.col-md-4.col-sm-6.col-xs-6 > section > div.panel-body > div > div > div',
-    );
-    await this.waitClick(
-      '#sitebody > div.cc-window.cc-banner.cc-type-opt-out.cc-theme-classic.cc-bottom > div > a.cc-btn.cc-dismiss',
-    );
-    console.log(orders.STSOrders.length);
+    try {
+      await this.orderPuppeteer.start(false, 'https://www.google.com/');
+      await this.handleNeskridNavigation(username, password);
+      await this.waitClick(
+        '#page-content-wrapper > div.container-fluid > div:nth-child(2) > div.col-lg-3.col-md-4.col-sm-6.col-xs-6 > section > div.panel-body > div > div > div',
+      );
+      await this.waitClick(
+        '#sitebody > div.cc-window.cc-banner.cc-type-opt-out.cc-theme-classic.cc-bottom > div > a.cc-btn.cc-dismiss',
+      );
+      console.log(orders.STSOrders.length);
+    } catch (err) {
+      const log: CreateLogDto = {
+        error: err.message,
+        status: false,
+        process: ProcessStepEnum.REGISTERORDER,
+        timestamp: new Date(),
+        order: {
+          orderNr: 'No Order number: failed to navigate to neskrid',
+          completed: false,
+        },
+      };
+      orders.logEntries.push(log);
+    }
     if (orders.STSOrders.length > 0) {
       for (const order of orders.STSOrders) {
-        await this.waitClick(
-          '#page-content-wrapper > div > div > div > section > div.panel-body > div > div:nth-child(3) > div',
-        );
-        await this.InputOrderInformation(
-          order.orderNr,
-          order.deliveryAddress,
-          order.insole,
-          order.EU,
-          order.customerName,
-        );
-        const isInUsageEnvoPage = await this.orderPuppeteer.checkLocation(
-          '#page-content-wrapper > div > div > h1',
-          false,
-          false,
-        );
+        try {
+          await this.waitClick(
+            '#page-content-wrapper > div > div > div > section > div.panel-body > div > div:nth-child(3) > div',
+          );
+          await this.InputOrderInformation(
+            order.orderNr,
+            order.deliveryAddress,
+            order.insole,
+            order.EU,
+            order.customerName,
+          );
+          const isInUsageEnvoPage = await this.orderPuppeteer.checkLocation(
+            '#page-content-wrapper > div > div > h1',
+            false,
+            false,
+          );
 
-        if (!isInUsageEnvoPage) {
-          throw new Error('Could not load usage envoirment page.');
+          if (!isInUsageEnvoPage) {
+            throw new Error('Could not load usage envoirment page.');
+          }
+
+          await this.inputUsageEnvironment(order.orderNr);
+          await this.inputModel(order.model, order.sizeL, order.widthL);
+          await this.supplement(order.insole, dev);
+          const dateString = await this.handleOrderCompletion(
+            dev,
+            completeOrder,
+          );
+          if (!dateString) {
+            throw new Error('failed to get delivery date: ' + dateString);
+          }
+
+          order.timeOfDelivery = this.formatDeliveryDate(dateString);
+          if (order.timeOfDelivery.toString() === 'Invalid Date') {
+            throw new Error('Could not get the time of delivery');
+          }
+          console.log('d:    ' + order.timeOfDelivery);
+          const log: CreateLogDto = {
+            status: true,
+            process: ProcessStepEnum.REGISTERORDER,
+            timestamp: new Date(),
+            order: { orderNr: order.orderNr, completed: false },
+          };
+          orders.logEntries.push(log);
+          await this.goToURL(
+            'https://www.neskrid.com/plugins/neskrid/myneskrid_new.aspx',
+          );
+        } catch (err) {
+          const log: CreateLogDto = {
+            error: err.message,
+            status: false,
+            process: ProcessStepEnum.REGISTERORDER,
+            timestamp: new Date(),
+            order: { orderNr: order.orderNr, completed: false },
+          };
+          orders.logEntries.push(log);
+          await this.goToURL(
+            'https://www.neskrid.com/plugins/neskrid/myneskrid_new.aspx',
+          );
         }
-
-        await this.inputUsageEnvironment(order.orderNr);
-        await this.inputModel(order.model, order.sizeL, order.widthL);
-        await this.supplement(order.insole, dev);
-        const dateString = await this.handleOrderCompletion(dev, completeOrder);
-        if (!dateString) {
-          throw new Error('failed to get delivery date: ' + dateString);
-        }
-
-        order.timeOfDelivery = this.formatDeliveryDate(dateString);
-        if (order.timeOfDelivery.toString() === 'Invalid Date') {
-          throw new Error('Could not get the time of delivery');
-        }
-        console.log('d:    ' + order.timeOfDelivery);
-
-        await this.goToURL(
-          'https://www.neskrid.com/plugins/neskrid/myneskrid_new.aspx',
-        );
       }
     }
 
@@ -578,6 +658,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     }
 
     console.log(model);
+    let found = false;
     for (let i = 0; i < models.length; i++) {
       if (model.includes(models[i])) {
         const selector = `div.col-md-7 > div.row > div:nth-child(${
@@ -596,12 +677,17 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
 
         await this.orderPuppeteer.click(selector, true);
 
+        found = true;
         const propertyValues = await this.orderPuppeteer.getCSSofElement(
           `div.col-md-7 > div.row > div:nth-child(${i + 1})`,
           'background-color',
         );
         console.log(`Property values of model: ${propertyValues}`);
       }
+    }
+
+    if (!found) {
+      throw new Error('Could not find matching model for: ' + model);
     }
 
     const sizeSelectorLoaded = await this.orderPuppeteer.checkLocation(
@@ -734,16 +820,24 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
    * Handles the completion of the order-registration on neskrid.
    * Should return something like this: '26/11/2021'
    * @param dev
+   * @param completeOrder
    */
   async handleOrderCompletion(
     dev: boolean,
     completeOrder: boolean,
   ): Promise<string> {
     if (dev) {
-      const date = new Date();
-      date.setDate(date.getDate() + 7);
+      const newDate = new Date();
+      newDate.setDate(newDate.getDate() + 7);
 
-      return `${date.getDate()}/${date.getMonth()}/${date.getFullYear()}`;
+      console.log(
+        `Date is : ${newDate.getDate()}/${
+          newDate.getMonth() + 1
+        }/${newDate.getFullYear()}`,
+      );
+      return `${newDate.getDate()}/${
+        newDate.getMonth() + 1
+      }/${newDate.getFullYear()}`;
     }
     await this.orderPuppeteer.click('#wizard_button_save', true);
     const loginBtn = await this.orderPuppeteer.checkLocation(
@@ -835,196 +929,240 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     dev: boolean,
     completeOrder: boolean,
   ): Promise<OrderLists> {
-    await this.startPuppeteer('https://www.google.com/');
-    await this.handleOrtowearNavigation(username, password);
-    await this.goToURL('https://beta.ortowear.com/administration/ordersAdmin/');
+    try {
+      await this.startPuppeteer('https://www.google.com/');
+      await this.handleOrtowearNavigation(username, password);
+      await this.goToURL(
+        'https://beta.ortowear.com/administration/ordersAdmin/',
+      );
 
-    console.log(orders.STSOrders.length);
+      console.log(orders.STSOrders.length);
+    } catch (err) {
+      const log: CreateLogDto = {
+        error: err.message,
+        status: false,
+        process: ProcessStepEnum.ALOCATEORDER,
+        timestamp: new Date(),
+        order: {
+          orderNr: 'No Order number: failed to navigate to ortowear',
+          completed: false,
+        },
+      };
+      orders.logEntries.push(log);
+    }
     if (orders.STSOrders.length > 0) {
       for (const order of orders.STSOrders) {
-        const targetAndSelector =
-          await this.orderPuppeteer.getTableTargetandSelector(order.orderNr);
+        try {
+          const targetAndSelector =
+            await this.orderPuppeteer.getTableTargetandSelector(order.orderNr);
 
-        await this.waitClick(targetAndSelector.selector);
-        await this.waitClick('#topBtns > div > div > button:nth-child(4)');
+          await this.waitClick(targetAndSelector.selector);
+          await this.waitClick('#topBtns > div > div > button:nth-child(4)');
 
-        const isInAlocation = this.orderPuppeteer.checkLocation(
-          '#delivery',
-          false,
-          false,
-        );
-
-        if (!isInAlocation) {
-          await this.tryAgain(
+          const isInAlocation = this.orderPuppeteer.checkLocation(
             '#delivery',
-            '#topBtns > div > div > button:nth-child(4)',
+            false,
+            false,
+          );
+
+          if (!isInAlocation) {
+            await this.tryAgain(
+              '#delivery',
+              '#topBtns > div > div > button:nth-child(4)',
+              0,
+            );
+          }
+
+          if (order.insole) {
+            if (
+              order.timeOfDelivery.getDay() == 3 ||
+              order.timeOfDelivery.getDay() == 4
+            ) {
+              order.timeOfDelivery = this.getNextDayOfWeek(
+                order.timeOfDelivery,
+                5,
+              );
+            } else {
+              order.timeOfDelivery = this.getNextDayOfWeek(
+                order.timeOfDelivery,
+                3,
+              );
+            }
+          }
+
+          await this.waitClick('#delivery');
+
+          const isDatepicker = await this.orderPuppeteer.checkLocation(
+            '#ui-datepicker-div',
+            false,
+            true,
+          );
+
+          if (!isDatepicker) {
+            await this.tryAgain('#ui-datepicker-div', '#delivery', 0);
+          }
+
+          const ortowearYear = await this.getElementText(
+            '#ui-datepicker-div > div > div > span.ui-datepicker-year',
+          );
+
+          const numberOrtowearYear = Number.parseInt(ortowearYear);
+
+          const yearCheck = await this.adjustYear(
+            order.timeOfDelivery.getFullYear(),
+            numberOrtowearYear,
             0,
           );
-        }
 
-        if (order.insole) {
-          if (
-            order.timeOfDelivery.getDay() == 3 ||
-            order.timeOfDelivery.getDay() == 4
-          ) {
-            order.timeOfDelivery = this.getNextDayOfWeek(
-              order.timeOfDelivery,
-              5,
-            );
-          } else {
-            order.timeOfDelivery = this.getNextDayOfWeek(
-              order.timeOfDelivery,
-              3,
+          if (!yearCheck) {
+            throw new Error('Failed to set year');
+          }
+
+          const ortowearMonth = await this.getElementText(
+            '#ui-datepicker-div > div > div > span.ui-datepicker-month',
+          );
+
+          const monthCheck = await this.adjustMonth(
+            order.timeOfDelivery,
+            ortowearMonth,
+            0,
+          );
+
+          if (!monthCheck) {
+            throw new Error('Failed to set month');
+          }
+
+          const dateSelector = await this.orderPuppeteer.selectDate(
+            order.timeOfDelivery.getDate(),
+          );
+
+          if (!dateSelector) {
+            throw new Error('Failed to get date selector');
+          }
+
+          await this.waitClick(dateSelector);
+
+          const formatedOrderDate = `${order.timeOfDelivery.toLocaleDateString(
+            'default',
+            { day: '2-digit' },
+          )}-${order.timeOfDelivery.toLocaleDateString('default', {
+            month: '2-digit',
+          })}-${order.timeOfDelivery.getFullYear()}`;
+
+          const inputdate = await this.orderPuppeteer.getInputValue(
+            '#delivery',
+          );
+          console.log(inputdate);
+
+          if (formatedOrderDate != inputdate) {
+            throw new Error(
+              `Failed to input delivery date: order date: ${formatedOrderDate}, input date: ${inputdate}`,
             );
           }
-        }
 
-        await this.waitClick('#delivery');
-
-        const isDatepicker = await this.orderPuppeteer.checkLocation(
-          '#ui-datepicker-div',
-          false,
-          true,
-        );
-
-        if (!isDatepicker) {
-          await this.tryAgain('#ui-datepicker-div', '#delivery', 0);
-        }
-
-        const ortowearYear = await this.getElementText(
-          '#ui-datepicker-div > div > div > span.ui-datepicker-year',
-        );
-
-        const numberOrtowearYear = Number.parseInt(ortowearYear);
-
-        const yearCheck = await this.adjustYear(
-          order.timeOfDelivery.getFullYear(),
-          numberOrtowearYear,
-          0,
-        );
-
-        if (!yearCheck) {
-          throw new Error('Failed to set year');
-        }
-
-        const ortowearMonth = await this.getElementText(
-          '#ui-datepicker-div > div > div > span.ui-datepicker-month',
-        );
-
-        const monthCheck = await this.adjustMonth(
-          order.timeOfDelivery,
-          ortowearMonth,
-          0,
-        );
-
-        if (!monthCheck) {
-          throw new Error('Failed to set month');
-        }
-
-        const dateSelector = await this.orderPuppeteer.selectDate(
-          order.timeOfDelivery.getDate(),
-        );
-
-        if (!dateSelector) {
-          throw new Error('Failed to get date selector');
-        }
-
-        await this.waitClick(dateSelector);
-
-        const formatedOrderDate = `${order.timeOfDelivery.toLocaleDateString(
-          'default',
-          { day: '2-digit' },
-        )}-${order.timeOfDelivery.toLocaleDateString('default', {
-          month: '2-digit',
-        })}-${order.timeOfDelivery.getFullYear()}`;
-
-        const inputdate = await this.orderPuppeteer.getInputValue('#delivery');
-        console.log(inputdate);
-
-        if (formatedOrderDate != inputdate) {
-          throw new Error(
-            `Failed to input delivery date: order date: ${formatedOrderDate}, input date: ${inputdate}`,
-          );
-        }
-
-        if (!order.EU) {
-          await this.orderPuppeteer.selectDropdownByValue(
-            '#return_to',
-            'client',
-          );
-
-          const selectedValue = await this.orderPuppeteer.getSelectedValue(
-            '#return_to',
-          );
-
-          if (selectedValue != 'client') {
-            throw new Error('Failed to select return destination: client');
-          }
-        } else {
-          const selectedValue = await this.orderPuppeteer.getSelectedValue(
-            '#return_to',
-          );
-
-          if (selectedValue != 'sender') {
+          if (!order.EU) {
             await this.orderPuppeteer.selectDropdownByValue(
               '#return_to',
-              'sender',
+              'client',
             );
+
+            const selectedValue = await this.orderPuppeteer.getSelectedValue(
+              '#return_to',
+            );
+
+            if (selectedValue != 'client') {
+              throw new Error('Failed to select return destination: client');
+            }
+          } else {
+            const selectedValue = await this.orderPuppeteer.getSelectedValue(
+              '#return_to',
+            );
+
+            if (selectedValue != 'sender') {
+              await this.orderPuppeteer.selectDropdownByValue(
+                '#return_to',
+                'sender',
+              );
+            }
+
+            if (selectedValue != 'sender') {
+              throw new Error('Failed to select return destination: sender');
+            }
           }
 
-          if (selectedValue != 'sender') {
-            throw new Error('Failed to select return destination: sender');
-          }
-        }
+          if (order.insole) {
+            await this.orderPuppeteer.selectDropdownByValue(
+              '#default > form > div.box-body.row > div.col-6 > div:nth-child(3) > div.col-3 > select',
+              'AVSI3STZSN3F7GRV',
+            );
 
-        if (order.insole) {
-          await this.orderPuppeteer.selectDropdownByValue(
-            '#default > form > div.box-body.row > div.col-6 > div:nth-child(3) > div.col-3 > select',
-            'AVSI3STZSN3F7GRV',
-          );
+            const selectedValue = await this.orderPuppeteer.getSelectedValue(
+              '#default > form > div.box-body.row > div.col-6 > div:nth-child(3) > div.col-3 > select',
+            );
 
-          const selectedValue = await this.orderPuppeteer.getSelectedValue(
-            '#default > form > div.box-body.row > div.col-6 > div:nth-child(3) > div.col-3 > select',
-          );
-
-          if (selectedValue != 'AVSI3STZSN3F7GRV') {
-            throw new Error('Failed to select supplier: ' + selectedValue);
-          }
-        } else {
-          await this.orderPuppeteer.selectDropdownByValue(
-            '#default > form > div.box-body.row > div.col-6 > div:nth-child(3) > div.col-3 > select',
-            '1x20e4UK1Nfp3S6t',
-          );
-
-          let selectedValue = await this.orderPuppeteer.getSelectedValue(
-            '#default > form > div.box-body.row > div.col-6 > div:nth-child(3) > div.col-3 > select',
-          );
-
-          if (selectedValue != '1x20e4UK1Nfp3S6t') {
+            if (selectedValue != 'AVSI3STZSN3F7GRV') {
+              throw new Error('Failed to select supplier: ' + selectedValue);
+            }
+          } else {
             await this.orderPuppeteer.selectDropdownByValue(
               '#default > form > div.box-body.row > div.col-6 > div:nth-child(3) > div.col-3 > select',
               '1x20e4UK1Nfp3S6t',
             );
+
+            let selectedValue = await this.orderPuppeteer.getSelectedValue(
+              '#default > form > div.box-body.row > div.col-6 > div:nth-child(3) > div.col-3 > select',
+            );
+
+            if (selectedValue != '1x20e4UK1Nfp3S6t') {
+              await this.orderPuppeteer.selectDropdownByValue(
+                '#default > form > div.box-body.row > div.col-6 > div:nth-child(3) > div.col-3 > select',
+                '1x20e4UK1Nfp3S6t',
+              );
+            }
+
+            selectedValue = await this.orderPuppeteer.getSelectedValue(
+              '#default > form > div.box-body.row > div.col-6 > div:nth-child(3) > div.col-3 > select',
+            );
+
+            if (selectedValue != '1x20e4UK1Nfp3S6t') {
+              throw new Error('Failed to select supplier: ' + selectedValue);
+            }
           }
 
-          selectedValue = await this.orderPuppeteer.getSelectedValue(
-            '#default > form > div.box-body.row > div.col-6 > div:nth-child(3) > div.col-3 > select',
-          );
-
-          if (selectedValue != '1x20e4UK1Nfp3S6t') {
-            throw new Error('Failed to select supplier: ' + selectedValue);
+          if (completeOrder) {
+            await this.waitClick(
+              '#default > form > div.box-footer > div > button.btn.btn-ow.pull-right.page_speed_2111450335',
+            );
           }
-        }
-
-        if (completeOrder) {
-          await this.waitClick(
-            '#default > form > div.box-footer > div > button.btn.btn-ow.pull-right.page_speed_2111450335',
+          const log: CreateLogDto = {
+            status: true,
+            process: ProcessStepEnum.ALOCATEORDER,
+            timestamp: new Date(),
+            order: {
+              orderNr: order.orderNr,
+              completed: true,
+            },
+          };
+          orders.logEntries.push(log);
+          await this.goToURL(
+            'https://beta.ortowear.com/administration/ordersAdmin/',
+          );
+        } catch (err) {
+          const log: CreateLogDto = {
+            error: err.message,
+            status: false,
+            process: ProcessStepEnum.ALOCATEORDER,
+            timestamp: new Date(),
+            order: {
+              orderNr: order.orderNr,
+              completed: false,
+            },
+          };
+          orders.logEntries.push(log);
+          await this.goToURL(
+            'https://beta.ortowear.com/administration/ordersAdmin/',
           );
         }
-
-        await this.goToURL(
-          'https://beta.ortowear.com/administration/ordersAdmin/',
-        );
       }
     }
 
@@ -1115,12 +1253,13 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     );
 
     if (!isChecked) {
-      if (counter == 10) {
+      if (counter == 5) {
         throw new Error('failed to try again: ' + checkSelector);
       }
+      counter++;
       console.log('trying again' + counter);
       await this.waitClick(clickSelector);
-      await this.tryAgain(checkSelector, clickSelector, counter++);
+      return await this.tryAgain(checkSelector, clickSelector, counter);
     }
   }
 

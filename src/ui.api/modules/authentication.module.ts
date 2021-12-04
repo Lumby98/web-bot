@@ -14,7 +14,6 @@ import { SavedLoginController } from '../controllers/saved-login.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { SavedLogin } from '../../infrastructure/entities/Savedlogin.entity';
 import { Key } from '../../infrastructure/entities/key';
-import { OrderRegistrationModule } from './order-registration.module';
 
 @Module({
   imports: [
@@ -32,7 +31,6 @@ import { OrderRegistrationModule } from './order-registration.module';
         },
       }),
     }),
-    OrderRegistrationModule,
   ],
   providers: [
     {
@@ -41,6 +39,13 @@ import { OrderRegistrationModule } from './order-registration.module';
     },
     LocalStrategy,
     jwtStrategy,
+    {
+      provide: savedLoginServiceInterfaceProvider,
+      useClass: SavedLoginService,
+    },
+  ],
+
+  exports: [
     {
       provide: savedLoginServiceInterfaceProvider,
       useClass: SavedLoginService,

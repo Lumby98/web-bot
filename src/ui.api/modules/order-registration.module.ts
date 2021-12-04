@@ -5,9 +5,10 @@ import { OrderRegistrationService } from '../../core/service/order-registration.
 import { orderPuppeteerInterfaceProvider } from '../../core/domain.services/order-puppeteer.interface';
 import { OrderPuppeteerService } from '../../infrastructure/api/order-puppeteer.service';
 import { OrderRegistrationGateway } from '../gateway/order-registration.gateway';
+import { AuthenticationModule } from './authentication.module';
 
 @Module({
-  imports: [],
+  imports: [AuthenticationModule],
   controllers: [OrderRegistrationController],
   providers: [
     {

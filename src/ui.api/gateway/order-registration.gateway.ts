@@ -8,16 +8,29 @@ import {
 } from '@nestjs/websockets';
 import { OrderRegistrationDto } from '../dto/order-registration/orderRegistrationDto';
 import { Socket } from 'socket.io';
-import { Observable } from 'rxjs';
-import { take } from 'rxjs/operators';
+import { Inject } from '@nestjs/common';
+import {
+  OrderRegistrationInterface,
+  orderRegistrationInterfaceProvider,
+} from '../../core/interfaces/order-registration.interface';
+import {
+  savedLoginServiceInterface,
+  savedLoginServiceInterfaceProvider,
+} from '../../core/interfaces/savedLoginService.interface';
+import { LoginTypeEnum } from '../../core/enums/loginType.enum';
 import { ProcessStepDto } from '../dto/order-registration/processStep.dto';
 import { ProcessStepEnum } from '../../core/enums/processStep.enum';
-import { LogEntryDto } from '../dto/log/logEntry/log-entry.dto';
 
 @WebSocketGateway()
 export class OrderRegistrationGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
+  constructor(
+    @Inject(orderRegistrationInterfaceProvider)
+    private readonly orderRegistrationService: OrderRegistrationInterface,
+    @Inject(savedLoginServiceInterfaceProvider)
+    private readonly savedLoginService: savedLoginServiceInterface,
+  ) {}
   handleConnection(client: any, ...args: any[]): any {
     console.log('client connected order-registration gateway ' + client.id);
   }
@@ -32,7 +45,54 @@ export class OrderRegistrationGateway
     @ConnectedSocket() clientSocket: Socket,
   ): Promise<void> {
     try {
-      const processSteps: Array<ProcessStepDto> = [
+      const ortowearLogin = await this.savedLoginService.getLogin(
+        LoginTypeEnum.ORTOWEAR,
+        orderReg.key,
+      );
+
+      const neskridLogin = await this.savedLoginService.getLogin(
+        LoginTypeEnum.NESKRID,
+        orderReg.key,
+      );
+      const order = await this.orderRegistrationService.handleOrders(
+        orderReg.orderNumbers,
+        { username: ortowearLogin.username, password: ortowearLogin.password },
+      );
+
+      if (order.STSOrders.length !== 0 && order.INSOrders.length !== 0) {
+        const processStep: ProcessStepDto = {
+          processStep: ProcessStepEnum.GETORDERINFO,
+          error: false,
+        };
+        clientSocket.emit('processStepEvent', processStep);
+      } else {
+        const getOrderInfo: ProcessStepDto = {
+          processStep: ProcessStepEnum.GETORDERINFO,
+          error: true,
+          errorMessage: 'Failed to get order info',
+        };
+
+        const registerOrder: ProcessStepDto = {
+          processStep: ProcessStepEnum.REGISTERORDER,
+          error: true,
+          errorMessage: 'Previous step failed',
+        };
+
+        const alocateOrder: ProcessStepDto = {
+          processStep: ProcessStepEnum.ALOCATEORDER,
+          error: true,
+          errorMessage: 'Previous step failed',
+        };
+
+        clientSocket.emit('processStepEvent', getOrderInfo);
+        clientSocket.emit('processStepEvent', registerOrder);
+        clientSocket.emit('processStepEvent', alocateOrder);
+        clientSocket.emit('orderLogEvent', order.logEntries);
+
+        return;
+      }
+
+      /*const processSteps: Array<ProcessStepDto> = [
         { processStep: ProcessStepEnum.GETORDERINFO, error: false },
         { processStep: ProcessStepEnum.REGISTERORDER, error: false },
         { processStep: ProcessStepEnum.ALOCATEORDER, error: false },
@@ -101,7 +161,7 @@ export class OrderRegistrationGateway
         () => {
           clientSocket.emit('orderLogEvent', logEntries);
         },
-      );
+      );*/
     } catch (err) {
       clientSocket.error(err.message);
     }

@@ -1,7 +1,6 @@
 import { ProcessStepEnum } from '../../../../core/enums/processStep.enum';
 import { OrderErrorDto } from '../error/order-error.dto';
-
-class LogOrderDto {}
+import { LogOrderDto } from '../order/log-order.dto';
 
 export interface LogEntryDto {
   id: number;

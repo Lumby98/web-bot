@@ -4,15 +4,15 @@ import {
   OnGatewayConnection,
   OnGatewayDisconnect,
   SubscribeMessage,
-  WebSocketGateway
-} from "@nestjs/websockets";
-import { OrderRegistrationDto } from "../dto/order-registration/orderRegistrationDto";
-import { Socket } from "socket.io";
-import { Observable } from "rxjs";
-import { take } from "rxjs/operators";
-import { ProcessStepDto } from "../dto/order-registration/processStep.dto";
-import { ProcessStepEnum } from "../../core/enums/processStep.enum";
-import { LogEntryDto } from "../dto/log/logEntry/log-entry.dto";
+  WebSocketGateway,
+} from '@nestjs/websockets';
+import { OrderRegistrationDto } from '../dto/order-registration/orderRegistrationDto';
+import { Socket } from 'socket.io';
+import { Observable } from 'rxjs';
+import { take } from 'rxjs/operators';
+import { ProcessStepDto } from '../dto/order-registration/processStep.dto';
+import { ProcessStepEnum } from '../../core/enums/processStep.enum';
+import { LogEntryDto } from '../dto/log/logEntry/log-entry.dto';
 
 @WebSocketGateway()
 export class OrderRegistrationGateway

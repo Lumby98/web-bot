@@ -4,7 +4,7 @@ import { UpdateLogDto } from '../../../ui.api/dto/log/logEntry/update-log.dto';
 import { LogInterface } from '../../interfaces/log.interface';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LogEntity } from '../../../infrastructure/entities/log.entity';
-import { Like, Repository } from 'typeorm';
+import { Connection, EntityManager, Like, Repository } from 'typeorm';
 import { LogModel } from '../../models/logEntry/log.model';
 import {
   OrderInterface,
@@ -16,6 +16,9 @@ import {
 } from '../../interfaces/log-error.interface';
 import { QueryDto } from '../../../ui.api/dto/filter/query.dto';
 import { PaginationDto } from '../../../ui.api/dto/filter/pagination-dto';
+import { NeskridModel } from '../../models/neskrid.model';
+import { NeskridProduct } from '../../../infrastructure/entities/neskrid.product.entity';
+import { log } from 'util';
 
 @Injectable()
 export class LogService implements LogInterface {
@@ -26,13 +29,14 @@ export class LogService implements LogInterface {
     private orderService: OrderInterface,
     @Inject(logErrorInterfaceProvider)
     private logErrorService: LogErrorInterface,
+    private connection: Connection,
   ) {}
 
   /**
    *
    * @param createLogDto
    */
-  async create(createLogDto: CreateLogDto) {
+  async create(createLogDto: CreateLogDto): Promise<LogModel> {
     const log = this.logRepository.create();
     log.process = createLogDto.process;
     log.status = createLogDto.status;
@@ -56,6 +60,7 @@ export class LogService implements LogInterface {
         createLogDto.order.orderNr,
       );
       log.order = order;
+      log.order.completed = createLogDto.order.completed;
     }
 
     if (createLogDto.error) {
@@ -80,6 +85,100 @@ export class LogService implements LogInterface {
     }
 
     return JSON.parse(JSON.stringify(await this.logRepository.save(log)));
+  }
+
+  /**
+   *
+   * @param createLogDto
+   * @param manager
+   */
+  async createWithEntityManager(
+    createLogDto: CreateLogDto,
+    manager: EntityManager,
+  ): Promise<LogModel> {
+    const log = manager.create(LogEntity);
+    log.process = createLogDto.process;
+    log.status = createLogDto.status;
+    log.timeStamp = createLogDto.timestamp;
+
+    const orderCheck = await this.orderService.checkOrderWithEntityManager(
+      createLogDto.order.orderNr,
+      manager,
+    );
+
+    let order;
+    if (!orderCheck) {
+      order = await this.orderService.createWithEntityManager(
+        createLogDto.order,
+        manager,
+      );
+      log.order = {
+        id: order.id,
+        orderNr: order.orderNr,
+        completed: order.completed,
+        logs: [],
+      };
+    } else {
+      order = await this.orderService.findByOrderNumberWithEntityManager(
+        createLogDto.order.orderNr,
+        manager,
+      );
+      log.order = order;
+      log.order.completed = createLogDto.order.completed;
+    }
+
+    if (createLogDto.error) {
+      const errorCheck = await this.logErrorService.errorCheckWithEntityManager(
+        createLogDto.error.errorMessage,
+        manager,
+      );
+
+      let logError;
+      if (!errorCheck) {
+        logError = await this.logErrorService.createWithEntityManager(
+          createLogDto.error,
+          manager,
+        );
+        log.error = {
+          id: logError.id,
+          errorMessage: logError.errorMessage,
+          logs: [],
+        };
+      } else {
+        logError = await this.logErrorService.findByMessageWithEntityManager(
+          createLogDto.error.errorMessage,
+          manager,
+        );
+        log.error = logError;
+      }
+    }
+
+    return JSON.parse(JSON.stringify(await manager.save(LogEntity, log)));
+  }
+
+  /**
+   * creates a number of products in the database at the same time using a transaction.
+   * @param logsToCreate
+   */
+  async createAll(logsToCreate: CreateLogDto[]): Promise<LogModel[]> {
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const logs: LogModel[] = [];
+      for (const logToCreate of logsToCreate) {
+        logs.push(
+          await this.createWithEntityManager(logToCreate, queryRunner.manager),
+        );
+      }
+      await queryRunner.commitTransaction();
+      return logs;
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async findAll(query: QueryDto): Promise<PaginationDto<LogModel>> {

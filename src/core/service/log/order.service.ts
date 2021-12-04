@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { OrderInterface } from '../../interfaces/order.interface';
 import { InjectRepository } from '@nestjs/typeorm';
 import { OrderEntity } from '../../../infrastructure/entities/order.entity';
-import { Like, Repository } from 'typeorm';
+import { EntityManager, Like, Repository } from 'typeorm';
 import { CreateLogOrderDto } from '../../../ui.api/dto/log/order/create-log-order.dto';
 import { OrderLogModel } from '../../models/logEntry/order-log.model';
 import { UpdateLogOrderDto } from '../../../ui.api/dto/log/order/update-log-order.dto';
@@ -24,6 +24,17 @@ export class OrderService implements OrderInterface {
     return !!order;
   }
 
+  async checkOrderWithEntityManager(
+    orderNumber: string,
+    manager: EntityManager,
+  ): Promise<boolean> {
+    const order = await manager.findOne(OrderEntity, {
+      where: { orderNr: orderNumber },
+    });
+
+    return !!order;
+  }
+
   async create(createLogOrder: CreateLogOrderDto): Promise<OrderLogModel> {
     const orderCheck = await this.checkOrder(createLogOrder.orderNr);
     if (orderCheck) {
@@ -34,6 +45,25 @@ export class OrderService implements OrderInterface {
     const orderEntity = this.orderRepository.create(createLogOrder);
     return JSON.parse(
       JSON.stringify(await this.orderRepository.save(orderEntity)),
+    );
+  }
+
+  async createWithEntityManager(
+    createLogOrder: CreateLogOrderDto,
+    manager: EntityManager,
+  ): Promise<OrderLogModel> {
+    const orderCheck = await this.checkOrderWithEntityManager(
+      createLogOrder.orderNr,
+      manager,
+    );
+    if (orderCheck) {
+      throw new Error(
+        'Cant create order, an order with this order number already exists',
+      );
+    }
+    const orderEntity = manager.create(OrderEntity, createLogOrder);
+    return JSON.parse(
+      JSON.stringify(await manager.save(OrderEntity, orderEntity)),
     );
   }
 
@@ -59,6 +89,17 @@ export class OrderService implements OrderInterface {
 
   async findByOrderNumber(orderNumber: string): Promise<OrderEntity> {
     const order = await this.orderRepository.findOne({
+      where: { orderNr: orderNumber },
+    });
+
+    return order;
+  }
+
+  async findByOrderNumberWithEntityManager(
+    orderNumber: string,
+    manager: EntityManager,
+  ): Promise<OrderEntity> {
+    const order = await manager.findOne(OrderEntity, {
       where: { orderNr: orderNumber },
     });
 

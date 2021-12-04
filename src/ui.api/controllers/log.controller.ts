@@ -52,6 +52,20 @@ export class LogController {
     }
   }
 
+  @Post('createAll')
+  async createAll(
+    @Body() createLogDtos: CreateLogDto[],
+  ): Promise<LogEntryDto[]> {
+    try {
+      return JSON.parse(
+        JSON.stringify(await this.logService.createAll(createLogDtos)),
+      );
+    } catch (err) {
+      console.log(err.message);
+      throw new HttpException(err, HttpStatus.BAD_REQUEST);
+    }
+  }
+
   @Get()
   async findAll(@Query() query: QueryDto): Promise<PaginationDto<LogEntryDto>> {
     try {

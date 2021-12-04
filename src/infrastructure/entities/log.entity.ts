@@ -19,7 +19,7 @@ export class LogEntity {
   process: ProcessStepEnum;
 
   @Column({ type: 'timestamptz' })
-  timeStamp: Date;
+  timestamp: Date;
 
   @ManyToOne(() => OrderEntity, (order) => order.logs)
   order: OrderEntity;

@@ -40,7 +40,7 @@ export class LogService implements LogInterface {
     const log = this.logRepository.create();
     log.process = createLogDto.process;
     log.status = createLogDto.status;
-    log.timeStamp = createLogDto.timestamp;
+    log.timestamp = createLogDto.timestamp;
 
     const orderCheck = await this.orderService.checkOrder(
       createLogDto.order.orderNr,
@@ -99,7 +99,7 @@ export class LogService implements LogInterface {
     const log = manager.create(LogEntity);
     log.process = createLogDto.process;
     log.status = createLogDto.status;
-    log.timeStamp = createLogDto.timestamp;
+    log.timestamp = createLogDto.timestamp;
 
     const orderCheck = await this.orderService.checkOrderWithEntityManager(
       createLogDto.order.orderNr,
@@ -203,7 +203,7 @@ export class LogService implements LogInterface {
     const [result, total] = await this.logRepository.findAndCount({
       where: { order: { orderNr: Like('%' + keyword + '%') } },
       relations: ['order', 'error'],
-      order: { timeStamp: 'DESC' },
+      order: { timestamp: 'DESC' },
       take: take,
       skip: skip,
     });

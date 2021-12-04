@@ -44,7 +44,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       );
     } catch (err) {
       const log: CreateLogDto = {
-        error: err.message,
+        error: { errorMessage: err.message },
         status: false,
         process: ProcessStepEnum.GETORDERINFO,
         timestamp: new Date(),
@@ -102,7 +102,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
         );
       } catch (err) {
         const log: CreateLogDto = {
-          error: err.message,
+          error: { errorMessage: err.message },
           status: false,
           process: ProcessStepEnum.GETORDERINFO,
           timestamp: new Date(),
@@ -413,7 +413,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       console.log(orders.STSOrders.length);
     } catch (err) {
       const log: CreateLogDto = {
-        error: err.message,
+        error: { errorMessage: err.message },
         status: false,
         process: ProcessStepEnum.REGISTERORDER,
         timestamp: new Date(),
@@ -475,7 +475,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
           );
         } catch (err) {
           const log: CreateLogDto = {
-            error: err.message,
+            error: { errorMessage: err.message },
             status: false,
             process: ProcessStepEnum.REGISTERORDER,
             timestamp: new Date(),
@@ -939,7 +939,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       console.log(orders.STSOrders.length);
     } catch (err) {
       const log: CreateLogDto = {
-        error: err.message,
+        error: { errorMessage: err.message },
         status: false,
         process: ProcessStepEnum.ALOCATEORDER,
         timestamp: new Date(),
@@ -1149,7 +1149,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
           );
         } catch (err) {
           const log: CreateLogDto = {
-            error: err.message,
+            error: { errorMessage: err.message },
             status: false,
             process: ProcessStepEnum.ALOCATEORDER,
             timestamp: new Date(),

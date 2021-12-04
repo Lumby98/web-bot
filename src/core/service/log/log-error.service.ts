@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { LogErrorInterface } from '../../interfaces/log-error.interface';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ErrorEntity } from '../../../infrastructure/entities/error.entity';
-import { Like, Repository } from 'typeorm';
+import { EntityManager, Like, Repository } from 'typeorm';
 import { CreateOrderErrorDto } from '../../../ui.api/dto/log/error/create-order-error.dto';
 import { UpdateOrderErrorDto } from '../../../ui.api/dto/log/error/update-order-error.dto';
 import { QueryDto } from '../../../ui.api/dto/filter/query.dto';
@@ -28,8 +28,38 @@ export class LogErrorService implements LogErrorInterface {
     );
   }
 
+  async createWithEntityManager(
+    createLogError: CreateOrderErrorDto,
+    manager: EntityManager,
+  ): Promise<ErrorLogModel> {
+    const errorCheck = await this.errorCheckWithEntityManager(
+      createLogError.errorMessage,
+      manager,
+    );
+    if (errorCheck) {
+      throw new Error(
+        'Cant create error, an error with this error message already exists',
+      );
+    }
+    const errorEntity = manager.create(ErrorEntity, createLogError);
+    return JSON.parse(
+      JSON.stringify(await manager.save(ErrorEntity, errorEntity)),
+    );
+  }
+
   async errorCheck(errorString: string): Promise<boolean> {
     const error = await this.errorRepository.findOne({
+      where: { errorMessage: errorString },
+    });
+
+    return !!error;
+  }
+
+  async errorCheckWithEntityManager(
+    errorString: string,
+    manager: EntityManager,
+  ): Promise<boolean> {
+    const error = await manager.findOne(ErrorEntity, {
       where: { errorMessage: errorString },
     });
 
@@ -58,6 +88,16 @@ export class LogErrorService implements LogErrorInterface {
 
   async findByMessage(message: string): Promise<ErrorEntity> {
     const error = await this.errorRepository.findOne({
+      where: { errorMessage: message },
+    });
+    return error;
+  }
+
+  async findByMessageWithEntityManager(
+    message: string,
+    manager: EntityManager,
+  ): Promise<ErrorEntity> {
+    const error = await manager.findOne(ErrorEntity, {
       where: { errorMessage: message },
     });
     return error;

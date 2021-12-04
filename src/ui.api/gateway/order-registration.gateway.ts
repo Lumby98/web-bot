@@ -20,6 +20,10 @@ import {
 import { LoginTypeEnum } from '../../core/enums/loginType.enum';
 import { ProcessStepDto } from '../dto/order-registration/processStep.dto';
 import { ProcessStepEnum } from '../../core/enums/processStep.enum';
+import {
+  LogInterface,
+  logInterfaceProvider,
+} from '../../core/interfaces/log.interface';
 
 @WebSocketGateway()
 export class OrderRegistrationGateway
@@ -30,6 +34,8 @@ export class OrderRegistrationGateway
     private readonly orderRegistrationService: OrderRegistrationInterface,
     @Inject(savedLoginServiceInterfaceProvider)
     private readonly savedLoginService: savedLoginServiceInterface,
+    @Inject(logInterfaceProvider)
+    private readonly logService: LogInterface,
   ) {}
   handleConnection(client: any, ...args: any[]): any {
     console.log('client connected order-registration gateway ' + client.id);
@@ -54,12 +60,13 @@ export class OrderRegistrationGateway
         LoginTypeEnum.NESKRID,
         orderReg.key,
       );
-      const order = await this.orderRegistrationService.handleOrders(
+
+      const orders = await this.orderRegistrationService.handleOrders(
         orderReg.orderNumbers,
         { username: ortowearLogin.username, password: ortowearLogin.password },
       );
 
-      if (order.STSOrders.length !== 0 && order.INSOrders.length !== 0) {
+      if (orders.STSOrders.length !== 0 && orders.INSOrders.length !== 0) {
         const processStep: ProcessStepDto = {
           processStep: ProcessStepEnum.GETORDERINFO,
           error: false,
@@ -84,13 +91,26 @@ export class OrderRegistrationGateway
           errorMessage: 'Previous step failed',
         };
 
+        const logs = await this.logService.createAll(orders.logEntries);
+
         clientSocket.emit('processStepEvent', getOrderInfo);
         clientSocket.emit('processStepEvent', registerOrder);
         clientSocket.emit('processStepEvent', alocateOrder);
-        clientSocket.emit('orderLogEvent', order.logEntries);
+        clientSocket.emit('orderLogEvent', logs);
 
         return;
       }
+
+      const regOrders = await this.orderRegistrationService.createOrder(
+        orders,
+        neskridLogin.username,
+        neskridLogin.password,
+        true,
+        false,
+      );
+
+
+
 
       /*const processSteps: Array<ProcessStepDto> = [
         { processStep: ProcessStepEnum.GETORDERINFO, error: false },
@@ -166,4 +186,6 @@ export class OrderRegistrationGateway
       clientSocket.error(err.message);
     }
   }
+
+  /*handleStep() {}*/
 }

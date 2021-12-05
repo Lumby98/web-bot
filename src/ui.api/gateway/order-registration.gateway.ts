@@ -127,6 +127,38 @@ export class OrderRegistrationGateway
         return;
       }
 
+      const allocatedOrders =
+        await this.orderRegistrationService.handleAllocations(
+          regOrders,
+          ortowearLogin.username,
+          ortowearLogin.password,
+          true,
+          false,
+        );
+
+      processStepList = [
+        {
+          processStep: ProcessStepEnum.ALOCATEORDER,
+          error: true,
+          errorMessage: 'Failed to allocate orders',
+        },
+      ];
+
+      stepCheck = await this.handleStep(
+        allocatedOrders,
+        ProcessStepEnum.ALOCATEORDER,
+        processStepList,
+        clientSocket,
+      );
+
+      if (!stepCheck) {
+        return;
+      }
+
+      const logs = await this.logService.createAll(orders.logEntries);
+
+      clientSocket.emit('orderLogEvent', logs);
+
       /*const processSteps: Array<ProcessStepDto> = [
         { processStep: ProcessStepEnum.GETORDERINFO, error: false },
         { processStep: ProcessStepEnum.REGISTERORDER, error: false },

@@ -24,6 +24,7 @@ import {
   LogInterface,
   logInterfaceProvider,
 } from '../../core/interfaces/log.interface';
+import { OrderLists } from '../../core/models/order-lists';
 
 @WebSocketGateway()
 export class OrderRegistrationGateway
@@ -66,51 +67,41 @@ export class OrderRegistrationGateway
         { username: ortowearLogin.username, password: ortowearLogin.password },
       );
 
-      if (orders.STSOrders.length !== 0 && orders.INSOrders.length !== 0) {
-        const processStep: ProcessStepDto = {
-          processStep: ProcessStepEnum.GETORDERINFO,
-          error: false,
-        };
-        clientSocket.emit('processStepEvent', processStep);
-      } else {
-        const getOrderInfo: ProcessStepDto = {
+      const processStepList: ProcessStepDto[] = [
+        {
           processStep: ProcessStepEnum.GETORDERINFO,
           error: true,
           errorMessage: 'Failed to get order info',
-        };
-
-        const registerOrder: ProcessStepDto = {
+        },
+        {
           processStep: ProcessStepEnum.REGISTERORDER,
           error: true,
           errorMessage: 'Previous step failed',
-        };
-
-        const alocateOrder: ProcessStepDto = {
+        },
+        {
           processStep: ProcessStepEnum.ALOCATEORDER,
           error: true,
           errorMessage: 'Previous step failed',
-        };
+        },
+      ];
 
-        const logs = await this.logService.createAll(orders.logEntries);
-
-        clientSocket.emit('processStepEvent', getOrderInfo);
-        clientSocket.emit('processStepEvent', registerOrder);
-        clientSocket.emit('processStepEvent', alocateOrder);
-        clientSocket.emit('orderLogEvent', logs);
-
+      const stepCheck = await this.handleStep(
+        orders,
+        ProcessStepEnum.GETORDERINFO,
+        processStepList,
+        clientSocket,
+      );
+      if (!stepCheck) {
         return;
       }
 
-      const regOrders = await this.orderRegistrationService.createOrder(
+      /*const regOrders = await this.orderRegistrationService.createOrder(
         orders,
         neskridLogin.username,
         neskridLogin.password,
         true,
         false,
-      );
-
-
-
+      );*/
 
       /*const processSteps: Array<ProcessStepDto> = [
         { processStep: ProcessStepEnum.GETORDERINFO, error: false },
@@ -187,5 +178,28 @@ export class OrderRegistrationGateway
     }
   }
 
-  /*handleStep() {}*/
+  async handleStep(
+    orders: OrderLists,
+    processStepEnum: ProcessStepEnum,
+    processStepList: ProcessStepDto[],
+    clientSocket: Socket,
+  ): Promise<boolean> {
+    if (orders.STSOrders.length !== 0 && orders.INSOrders.length !== 0) {
+      const processStep: ProcessStepDto = {
+        processStep: processStepEnum,
+        error: false,
+      };
+      clientSocket.emit('processStepEvent', processStep);
+      return true;
+    } else {
+      const logs = await this.logService.createAll(orders.logEntries);
+
+      for (const processStep of processStepList) {
+        clientSocket.emit('processStepEvent', processStep);
+      }
+      clientSocket.emit('orderLogEvent', logs);
+
+      return false;
+    }
+  }
 }

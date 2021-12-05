@@ -1,30 +1,30 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { OrderService } from '../service/order.service';
+import { OrderRegistrationService } from '../service/order-registration.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { HultaforsProduct } from '../../infrastructure/entities/hultafors.product.entity';
 import { Repository } from 'typeorm';
 import {
   OrderPuppeteerInterface,
   orderPuppeteerInterfaceProvider,
-} from '../interfaces/order-puppeteer.interface';
-import { OrderPuppeteerService } from '../service/order-puppeteer.service';
-import { OrderModel } from '../models/order.model';
+} from '../domain.services/order-puppeteer.interface';
+import { OrderPuppeteerService } from '../../infrastructure/api/order-puppeteer.service';
+import { OrderInfoModel } from '../models/order-info.model';
 import { STSOrderModel } from '../models/sts-order.model';
 import { OrderTypeEnum } from '../enums/type.enum';
 import exp from 'constants';
 import { StsOrderStub } from './stubs/sts-order.stub';
 import { TargetAndSelectorStub } from './stubs/target-and-selector';
 
-jest.mock('src/core/service/order-puppeteer.service.ts');
+jest.mock('src/infrastructure/api/order-registration-puppeteer.service.ts');
 
-describe('OrderService', () => {
-  let orderService: OrderService;
+describe('OrderRegistrationService', () => {
+  let orderRegistrationService: OrderRegistrationService;
   let orderPuppeteerService: OrderPuppeteerInterface;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        OrderService,
+        OrderRegistrationService,
         OrderPuppeteerService,
         {
           provide: orderPuppeteerInterfaceProvider,
@@ -33,7 +33,9 @@ describe('OrderService', () => {
       ],
     }).compile();
 
-    orderService = module.get<OrderService>(OrderService);
+    orderRegistrationService = module.get<OrderRegistrationService>(
+      OrderRegistrationService,
+    );
     orderPuppeteerService = module.get<OrderPuppeteerService>(
       OrderPuppeteerService,
     );
@@ -41,7 +43,7 @@ describe('OrderService', () => {
   });
 
   it('should be defined', () => {
-    expect(orderService).toBeDefined();
+    expect(orderRegistrationService).toBeDefined();
   });
 
   describe('startPuppeteer', () => {
@@ -49,10 +51,10 @@ describe('OrderService', () => {
 
     describe('when startPuppeteer is called with a valid url', () => {
       beforeEach(async () => {
-        await orderService.startPuppeteer(validURL);
+        await orderRegistrationService.startPuppeteer(validURL);
       });
 
-      it('should call the order-puppeteer.service start method with the right arguments', async () => {
+      it('should call the order-registration-puppeteer.service start method with the right arguments', async () => {
         expect(orderPuppeteerService.start).toBeCalledWith(false, validURL);
       });
     });
@@ -62,7 +64,7 @@ describe('OrderService', () => {
 
       it('should throw an error with the right message', async () => {
         await expect(
-          async () => await orderService.startPuppeteer(emptyURL),
+          async () => await orderRegistrationService.startPuppeteer(emptyURL),
         ).rejects.toThrow('Invalid url, the given url is empty');
       });
     });
@@ -72,7 +74,7 @@ describe('OrderService', () => {
 
       it('should throw an error with the right message', async () => {
         await expect(
-          async () => await orderService.startPuppeteer(invalidURL),
+          async () => await orderRegistrationService.startPuppeteer(invalidURL),
         ).rejects.toThrow('Invalid url, the given url is invalid');
       });
     });
@@ -81,10 +83,10 @@ describe('OrderService', () => {
   describe('stopPuppeteer', () => {
     describe('when stopPuppeteer is called', () => {
       beforeEach(async () => {
-        await orderService.stopPuppeteer();
+        await orderRegistrationService.stopPuppeteer();
       });
 
-      it('should call the order-puppeteer.service stop method', async () => {
+      it('should call the order-registration-puppeteer.service stop method', async () => {
         expect(orderPuppeteerService.stop).toBeCalled();
       });
     });
@@ -100,13 +102,13 @@ describe('OrderService', () => {
           .mockReturnValueOnce('https://beta.ortowear.com/')
           .mockReturnValueOnce('https://beta.ortowear.com/my_page');
 
-        await orderService.handleOrtowearNavigation(
+        await orderRegistrationService.handleOrtowearNavigation(
           validUsername,
           validPassword,
         );
       });
 
-      it('should call order-puppeter.service loginOrtowear method with the right arguments', async () => {
+      it('should call order-registration-puppeter.service loginOrtowear method with the right arguments', async () => {
         expect(orderPuppeteerService.loginOrtowear).toBeCalledWith(
           validUsername,
           validPassword,
@@ -120,7 +122,7 @@ describe('OrderService', () => {
       it('should throw an error with the right message', async () => {
         await expect(
           async () =>
-            await orderService.handleOrtowearNavigation(
+            await orderRegistrationService.handleOrtowearNavigation(
               emptyUsername,
               validPassword,
             ),
@@ -134,7 +136,7 @@ describe('OrderService', () => {
       it('should throw an error with the right message', () => {
         expect(
           async () =>
-            await orderService.handleOrtowearNavigation(
+            await orderRegistrationService.handleOrtowearNavigation(
               validUsername,
               emptyPassword,
             ),
@@ -148,7 +150,7 @@ describe('OrderService', () => {
       it('should throw an error with the right message', () => {
         expect(
           async () =>
-            await orderService.handleOrtowearNavigation(
+            await orderRegistrationService.handleOrtowearNavigation(
               invalidUsername,
               validPassword,
             ),
@@ -175,7 +177,7 @@ describe('OrderService', () => {
       it('should throw an error with the right message when username and password is correct, but something else happened', () => {
         expect(
           async () =>
-            await orderService.handleOrtowearNavigation(
+            await orderRegistrationService.handleOrtowearNavigation(
               validUsername,
               validPassword,
             ),
@@ -195,7 +197,7 @@ describe('OrderService', () => {
 
       it('should throw error if site could not be reached', () => {
         expect(async () => {
-          await orderService.handleOrtowearNavigation(
+          await orderRegistrationService.handleOrtowearNavigation(
             validUsername,
             validPassword,
           );
@@ -205,11 +207,13 @@ describe('OrderService', () => {
   });
 
   describe('getOrderType', () => {
-    describe('when called with valid order number', () => {
+    describe('when called with valid order-registration number', () => {
       const validOrderNumber = '155d215-1';
       let expected;
       beforeEach(async () => {
-        expected = await orderService.getOrderType(validOrderNumber);
+        expected = await orderRegistrationService.getOrderType(
+          validOrderNumber,
+        );
       });
 
       it('should return STS', () => {
@@ -223,11 +227,11 @@ describe('OrderService', () => {
       });
     });
 
-    describe('when called with invalid order number', () => {
-      it('should throw error if order number is blank', () => {
-        expect(async () => orderService.getOrderType('')).rejects.toThrow(
-          'order number is blank',
-        );
+    describe('when called with invalid order-registration number', () => {
+      it('should throw error if order-registration number is blank', () => {
+        expect(async () =>
+          orderRegistrationService.getOrderType(''),
+        ).rejects.toThrow('order-registration number is blank');
       });
     });
 
@@ -242,8 +246,9 @@ describe('OrderService', () => {
       });
       it('should throw error if types does not match enum', () => {
         expect(
-          async () => await orderService.getOrderType(validOrderNumber),
-        ).rejects.toThrow('invalid order type');
+          async () =>
+            await orderRegistrationService.getOrderType(validOrderNumber),
+        ).rejects.toThrow('invalid order-registration type');
       });
     });
   });
@@ -252,7 +257,7 @@ describe('OrderService', () => {
     describe('when there is an insole', () => {
       let expected;
       beforeEach(async () => {
-        expected = await orderService.checkForInsole();
+        expected = await orderRegistrationService.checkForInsole();
       });
 
       it('should return true', () => {
@@ -265,7 +270,7 @@ describe('OrderService', () => {
         jest
           .spyOn(orderPuppeteerService, 'checkLocation')
           .mockResolvedValueOnce(false);
-        expected = await orderService.checkForInsole();
+        expected = await orderRegistrationService.checkForInsole();
       });
 
       it('should return false', () => {
@@ -275,13 +280,13 @@ describe('OrderService', () => {
   });
 
   describe('handleSTSOrder', () => {
-    describe('when a sts order is returned', () => {
+    describe('when a sts order-registration is returned', () => {
       const orderNumber = 'dfxdvcxv';
       let expected;
       beforeEach(async () => {
-        expected = await orderService.handleSTSOrder(orderNumber);
+        expected = await orderRegistrationService.handleSTSOrder(orderNumber);
       });
-      it('should return an STS order', () => {
+      it('should return an STS order-registration', () => {
         expect(expected).toEqual(StsOrderStub());
       });
     });

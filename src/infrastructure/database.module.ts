@@ -8,6 +8,9 @@ import { Size } from './entities/size.entity';
 import { Site } from './entities/site.entity';
 import { SavedLogin } from './entities/Savedlogin.entity';
 import { Key } from './entities/key';
+import { LogEntity } from './entities/log.entity';
+import { ErrorEntity } from './entities/error.entity';
+import { OrderEntity } from './entities/order.entity';
 
 @Module({
   imports: [
@@ -29,6 +32,9 @@ import { Key } from './entities/key';
           Site,
           SavedLogin,
           Key,
+          LogEntity,
+          ErrorEntity,
+          OrderEntity,
         ],
         synchronize: true,
         logging: true,

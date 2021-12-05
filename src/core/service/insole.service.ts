@@ -23,7 +23,7 @@ export class InsoleService implements InsoleInterface {
       const page = await browser.newPage();
 
       //goes to Ortowears page to get data of the given insoles
-      //for testing replace 'order' with 'beta'
+      //for testing replace 'order-registration' with 'beta'
       await page
         .goto('https://order.ortowear.com/', { waitUntil: 'networkidle2' })
         .catch(() => {
@@ -130,10 +130,10 @@ export class InsoleService implements InsoleInterface {
 
       //creation of completion message shown to the user
       let returnString = 'complete';
-      //if any insoles where not created add the order number of the insole to the message
+      //if any insoles where not created add the order-registration number of the insole to the message
       console.log(couldNotFind.length + ' arr');
       if (couldNotFind.length > 0) {
-        returnString += ', but failed to register insoles with order number: ';
+        returnString += ', but failed to register insoles with order-registration number: ';
         for (const failed of couldNotFind) {
           returnString += failed.orderNumber + ', ';
         }
@@ -186,7 +186,7 @@ export class InsoleService implements InsoleInterface {
       //wait for the page to finish loading
       await page.waitForSelector('#orders-table_processing', { hidden: true });
     } catch (err) {
-      throw new Error('failed to get order list');
+      throw new Error('failed to get order-registration list');
     }
   }
 
@@ -198,7 +198,7 @@ export class InsoleService implements InsoleInterface {
    */
   private static async findInsole(page: Page, insole: InsoleFromSheetDto) {
     try {
-      //searches for the insole by order number
+      //searches for the insole by order-registration number
       const searchText: string = insole.orderNumber.toString();
       await page.type('#datatable_searchfield', searchText.trim());
 
@@ -236,7 +236,7 @@ export class InsoleService implements InsoleInterface {
         return 'STS';
       }
     } catch (err) {
-      throw new Error('failed to find order');
+      throw new Error('failed to find order-registration');
     }
   }
 
@@ -282,7 +282,7 @@ export class InsoleService implements InsoleInterface {
           break;
         }
         case 'INS': {
-          // gets the size of order
+          // gets the size of order-registration
           const s = await page.$eval(
             'body > div.wrapper > div.content-wrapper > section.content > div.row > div > div > div > div.box-body >' +
               ' form > div:nth-child(3) > div > div > div:nth-child(2) > div > div > table > tbody > tr:nth-child(6) > td:nth-child(2)',
@@ -301,7 +301,7 @@ export class InsoleService implements InsoleInterface {
           break;
         }
         default: {
-          throw new Error('failed to define order type');
+          throw new Error('failed to define order-registration type');
         }
       }
       //retun a InsoleModel
@@ -312,11 +312,11 @@ export class InsoleService implements InsoleInterface {
         model: model,
       };
     } catch (err) {
-      if (err.message == 'failed to define order type') {
+      if (err.message == 'failed to define order-registration type') {
         throw err;
       }
       throw err;
-      //throw new Error('failed to get order information');
+      //throw new Error('failed to get order-registration information');
     }
   }
 

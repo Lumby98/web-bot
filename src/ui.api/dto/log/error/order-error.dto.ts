@@ -1,4 +1,4 @@
-export class OrderErrorDto {
+export interface OrderErrorDto {
   id: number;
   errorMessage: string;
 }

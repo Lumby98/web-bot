@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { OrderPuppeteerInterface } from '../interfaces/order-puppeteer.interface';
-import { STSOrderModel } from '../models/sts-order.model';
+import { OrderPuppeteerInterface } from '../../core/domain.services/order-puppeteer.interface';
+import { STSOrderModel } from '../../core/models/sts-order.model';
 import { Browser, KeyInput, Page } from 'puppeteer';
-import { TargetAndSelector } from '../models/target-and-selector';
+import { TargetAndSelector } from '../../core/models/target-and-selector';
 
 @Injectable()
 export class OrderPuppeteerService implements OrderPuppeteerInterface {
@@ -64,14 +64,14 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
     );
 
     if (!check) {
-      throw new Error('Could not read order number');
+      throw new Error('Could not read order-registration number');
     }
 
     const pageOrdernumber = await this.readSelectorText(
       'body > div.wrapper > div.content-wrapper > section.content > div.row > div > div > div > div.box-body > form > div:nth-child(2) > div > div > div > table > tbody > tr:nth-child(5) > td:nth-child(2)',
     );
     if (pageOrdernumber != orderNumber) {
-      throw new Error('order number does not match page');
+      throw new Error('order-registration number does not match page');
     }
 
     const address: string[] = [];
@@ -160,7 +160,7 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
       warning == 'Ingen linjer matcher søgningen' ||
       warning == 'No matching records found'
     ) {
-      throw new Error('Could not find order' + warning);
+      throw new Error('Could not find order-registration' + warning);
     }
 
     const data = await this.page.$$eval(
@@ -501,7 +501,7 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
     if (!element) {
       throw new Error('The element is invalid: ' + element);
     }
-    console.log(element.toString());
+    console.logEntry(element.toString());
 
     const parentHandle = await this.page.evaluateHandle(
       (e) => e.parent,
@@ -509,14 +509,14 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
     );
 
     const parentElement = parentHandle.asElement();
-    console.log(parentHandle.toString());
+    console.logEntry(parentHandle.toString());
     const id = await parentElement.evaluate((node: Element) => node.id);
 
     if (!id || id === '') {
       throw new Error('The id is invalid: ' + id);
     }
 
-    console.log('id is: ' + id.toString());
+    console.logEntry('id is: ' + id.toString());
     await this.page.click(id);
   }*/
 }

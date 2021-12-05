@@ -67,7 +67,7 @@ export class OrderRegistrationGateway
         { username: ortowearLogin.username, password: ortowearLogin.password },
       );
 
-      const processStepList: ProcessStepDto[] = [
+      let processStepList: ProcessStepDto[] = [
         {
           processStep: ProcessStepEnum.GETORDERINFO,
           error: true,
@@ -85,7 +85,7 @@ export class OrderRegistrationGateway
         },
       ];
 
-      const stepCheck = await this.handleStep(
+      let stepCheck = await this.handleStep(
         orders,
         ProcessStepEnum.GETORDERINFO,
         processStepList,
@@ -95,13 +95,37 @@ export class OrderRegistrationGateway
         return;
       }
 
-      /*const regOrders = await this.orderRegistrationService.createOrder(
+      const regOrders = await this.orderRegistrationService.createOrder(
         orders,
         neskridLogin.username,
         neskridLogin.password,
         true,
         false,
-      );*/
+      );
+
+      processStepList = [
+        {
+          processStep: ProcessStepEnum.REGISTERORDER,
+          error: true,
+          errorMessage: 'Register orders failed',
+        },
+        {
+          processStep: ProcessStepEnum.ALOCATEORDER,
+          error: true,
+          errorMessage: 'Previous step failed',
+        },
+      ];
+
+      stepCheck = await this.handleStep(
+        regOrders,
+        ProcessStepEnum.REGISTERORDER,
+        processStepList,
+        clientSocket,
+      );
+
+      if (!stepCheck) {
+        return;
+      }
 
       /*const processSteps: Array<ProcessStepDto> = [
         { processStep: ProcessStepEnum.GETORDERINFO, error: false },
@@ -184,14 +208,7 @@ export class OrderRegistrationGateway
     processStepList: ProcessStepDto[],
     clientSocket: Socket,
   ): Promise<boolean> {
-    if (orders.STSOrders.length !== 0 && orders.INSOrders.length !== 0) {
-      const processStep: ProcessStepDto = {
-        processStep: processStepEnum,
-        error: false,
-      };
-      clientSocket.emit('processStepEvent', processStep);
-      return true;
-    } else {
+    if (orders.STSOrders.length === 0 && orders.INSOrders.length === 0) {
       const logs = await this.logService.createAll(orders.logEntries);
 
       for (const processStep of processStepList) {
@@ -200,6 +217,13 @@ export class OrderRegistrationGateway
       clientSocket.emit('orderLogEvent', logs);
 
       return false;
+    } else {
+      const processStep: ProcessStepDto = {
+        processStep: processStepEnum,
+        error: false,
+      };
+      clientSocket.emit('processStepEvent', processStep);
+      return true;
     }
   }
 }

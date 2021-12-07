@@ -40,7 +40,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       await this.startPuppeteer('https://www.google.com/');
       await this.handleOrtowearNavigation(login.username, login.password);
       await this.goToURL(
-        'https://beta.ortowear.com/administration/ordersAdmin/',
+        'https://order.ortowear.com/administration/ordersAdmin/',
       );
     } catch (err) {
       const log: CreateLogDto = {
@@ -103,7 +103,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
         };
         logEntries.push(log);
         await this.goToURL(
-          'https://beta.ortowear.com/administration/ordersAdmin/',
+          'https://order.ortowear.com/administration/ordersAdmin/',
         );
       } catch (err) {
         const log: CreateLogDto = {
@@ -115,7 +115,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
         };
         logEntries.push(log);
         await this.goToURL(
-          'https://beta.ortowear.com/administration/ordersAdmin/',
+          'https://order.ortowear.com/administration/ordersAdmin/',
         );
       }
     }
@@ -172,7 +172,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       throw new Error('Wrong username or password');
     }
 
-    await this.goToURL('https://beta.ortowear.com/');
+    await this.goToURL('https://order.ortowear.com/');
 
     await this.orderPuppeteer.loginOrtowear(username, password);
 
@@ -201,7 +201,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       }
     }
 
-    const myPageURL = 'https://beta.ortowear.com/my_page';
+    const myPageURL = 'https://order.ortowear.com/my_page';
     const currentURL = await this.orderPuppeteer.getCurrentURL();
     if (myPageURL != currentURL) {
       if (
@@ -859,12 +859,12 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       }/${newDate.getFullYear()}`;
     }
     await this.orderPuppeteer.click('#wizard_button_save', true);
-    const loginBtn = await this.orderPuppeteer.checkLocation(
+    const pageCheck = await this.orderPuppeteer.checkLocation(
       '#page-content-wrapper > div > div:nth-child(3) > div > section > div.panel-footer > a.btn.btn-success',
       false,
       false,
     );
-    if (!loginBtn) {
+    if (!pageCheck) {
       await this.tryAgain(
         '#page-content-wrapper > div > div:nth-child(3) > div > section > div.panel-footer > a.btn.btn-success',
         '#wizard_button_save',
@@ -908,6 +908,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
         '#choiceinvalid-footer > button.btn.btn-success',
         true,
       );
+      await this.orderPuppeteer.wait(null, 5000);
     } else {
       //cancel btn
       await this.orderPuppeteer.click(
@@ -924,16 +925,16 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
 
   /**
    * Formats strings to a format that the javascript Date class will accept.
-   * Formats from this: '26-11-2021'
-   * Formats to this format: '2011-04-11T10:20:30Z'
+   * Formats from this: 'mm/dd/yyyy'
+   * Formats to this format: 'yyyy-mm-ddThh:mm:ssZ'
    * @param deliveryDateString
    */
   formatDeliveryDate(deliveryDateString: string): Date {
     console.log(deliveryDateString);
     const splitDate = deliveryDateString.split('/');
     const year = Number.parseInt(splitDate[2]);
-    const month = Number.parseInt(splitDate[1]) - 1;
-    const date = Number.parseInt(splitDate[0]);
+    const month = Number.parseInt(splitDate[0]) - 1;
+    const date = Number.parseInt(splitDate[1]);
     const formattedDate = new Date(year, month, date);
     console.log(
       `Year: ${year}, Month: ${month}, Date: ${date}, formatedDate: ${formattedDate}`,
@@ -956,7 +957,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       await this.startPuppeteer('https://www.google.com/');
       await this.handleOrtowearNavigation(username, password);
       await this.goToURL(
-        'https://beta.ortowear.com/administration/ordersAdmin/',
+        'https://order.ortowear.com/administration/ordersAdmin/',
       );
 
       console.log(orders.STSOrders.length);
@@ -1159,8 +1160,9 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
 
           if (completeOrder) {
             await this.waitClick(
-              '#default > form > div.box-footer > div > button.btn.btn-ow.pull-right.page_speed_2111450335',
+              '#default > form > div.box-footer > div > button.btn.btn-ow.pull-right',
             );
+            await this.orderPuppeteer.wait(null, 5000);
           }
           const log: CreateLogDto = {
             status: true,
@@ -1174,7 +1176,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
           STSOrders.push(order);
           orders.logEntries.push(log);
           await this.goToURL(
-            'https://beta.ortowear.com/administration/ordersAdmin/',
+            'https://order.ortowear.com/administration/ordersAdmin/',
           );
         } catch (err) {
           const log: CreateLogDto = {
@@ -1189,7 +1191,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
           };
           orders.logEntries.push(log);
           await this.goToURL(
-            'https://beta.ortowear.com/administration/ordersAdmin/',
+            'https://order.ortowear.com/administration/ordersAdmin/',
           );
         }
       }

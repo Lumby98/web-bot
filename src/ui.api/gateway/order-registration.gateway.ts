@@ -99,8 +99,8 @@ export class OrderRegistrationGateway
         orders,
         neskridLogin.username,
         neskridLogin.password,
-        true,
         false,
+        true,
       );
 
       processStepList = [
@@ -132,8 +132,8 @@ export class OrderRegistrationGateway
           regOrders,
           ortowearLogin.username,
           ortowearLogin.password,
-          true,
           false,
+          true,
         );
 
       processStepList = [
@@ -158,77 +158,6 @@ export class OrderRegistrationGateway
       const logs = await this.logService.createAll(orders.logEntries);
 
       clientSocket.emit('orderLogEvent', logs);
-
-      /*const processSteps: Array<ProcessStepDto> = [
-        { processStep: ProcessStepEnum.GETORDERINFO, error: false },
-        { processStep: ProcessStepEnum.REGISTERORDER, error: false },
-        { processStep: ProcessStepEnum.ALOCATEORDER, error: false },
-      ];
-
-      const observable = new Observable<ProcessStepDto>((subscriber) => {
-        for (let i = 0; i < processSteps.length; i++) {
-          setTimeout(() => {
-            subscriber.next(processSteps[i]);
-            if (i === processSteps.length - 1) {
-              subscriber.complete();
-            }
-          }, 5000 * (i + 1));
-        }
-      });
-
-      //Emit logEntries
-      const orderNumbers = orderReg.orderNumbers;
-      let logIdNum = 1;
-      let orderIdNum = 1;
-      const logEntries: Array<LogEntryDto> = [];
-
-      for (let i = 0; i <= orderNumbers.length; i++) {
-        let logEntryDto: LogEntryDto = {
-          id: logIdNum++,
-          process: ProcessStepEnum.REGISTERORDER,
-          status: true,
-          timestamp: new Date(),
-          order: {
-            id: orderIdNum++,
-            orderNr: Math.floor(Math.random() * (10000 - 100) + 100).toString(),
-            completed: false,
-          },
-        };
-
-        if (i == orderNumbers.length) {
-          logEntryDto = {
-            id: logIdNum++,
-            process: ProcessStepEnum.REGISTERORDER,
-            status: true,
-            timestamp: new Date(),
-            order: {
-              id: orderIdNum++,
-              orderNr: Math.floor(
-                Math.random() * (10000 - 100) + 100,
-              ).toString(),
-              completed: true,
-            },
-            error: {
-              id: orderIdNum++,
-              errorMessage: 'could not determine order-registration type ',
-            },
-          };
-        }
-
-        logEntries.push(logEntryDto);
-      }
-
-      observable.pipe(take(processSteps.length)).subscribe(
-        (processStep) => {
-          clientSocket.emit('processStepEvent', processStep);
-        },
-        (error) => {
-          console.log(error);
-        },
-        () => {
-          clientSocket.emit('orderLogEvent', logEntries);
-        },
-      );*/
     } catch (err) {
       clientSocket.error(err.message);
     }

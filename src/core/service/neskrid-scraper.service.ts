@@ -235,6 +235,7 @@ export class NeskridScraperService implements NeskridScraperInterface {
           '.color-primary',
           (el) => el.textContent,
         );
+
         let articleNo;
         articleNo = await article
           .$eval('small', (el) => el.textContent)

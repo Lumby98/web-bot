@@ -13,7 +13,8 @@ import { LogEntryDto } from '../../ui.api/dto/log/logEntry/log-entry.dto';
 import { CreateLogDto } from '../../ui.api/dto/log/logEntry/create-log.dto';
 import { ProcessStepEnum } from '../enums/processStep.enum';
 import { transformException } from '@nestjs/platform-express/multer/multer/multer.utils';
-import { OrderList } from "../models/order-list";
+import { OrderList } from '../models/order-list';
+import { OrderInfoModel } from '../models/order-info.model';
 
 @Injectable()
 export class OrderRegistrationService implements OrderRegistrationInterface {
@@ -28,10 +29,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
    * @param orderNumber
    * @param login
    */
-  async handleOrders(
-    orderNumber: string,
-    login: LoginDto,
-  ): Promise<OrderList> {
+  async handleOrders(orderNumber: string, login: LoginDto): Promise<OrderList> {
     let STSOrder: STSOrderModel = null;
     let INSOrder: INSSOrderModel = null;
     const OSAOrder = null;
@@ -288,39 +286,85 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       throw new Error('This order-registration is delivered so it cannot be allocated');
     }*/
 
-    const order: STSOrderModel = await this.orderPuppeteer.readSTSOrder(
+    const order: OrderInfoModel = await this.orderPuppeteer.readOrder(
       orderNumber,
     );
-    if (!order) {
+
+    const stsOrder: STSOrderModel = await this.orderPuppeteer.readSTSOrder(
+      order,
+    );
+    if (!stsOrder) {
       throw new Error('failed getting order-registration information');
-    } else if (!order.toeCap || order.toeCap == '') {
+    }
+
+    if (!stsOrder.toeCap || stsOrder.toeCap == '') {
       throw new Error('failed getting toe cap');
-    } else if (order.orderNr != orderNumber) {
+    }
+
+    if (stsOrder.orderNr != orderNumber) {
       throw new Error('failed getting correct order-registration');
-    } else if (!order.sole || order.sole == '') {
+    }
+
+    if (!stsOrder.sole || stsOrder.sole == '') {
       throw new Error('failed getting sole');
-    } else if (!order.widthR || order.widthR == '') {
-      throw new Error('failled getting width for right shoe');
-    } else if (!order.widthL || order.widthL == '') {
-      throw new Error('failed getting width for left shoe');
-    } else if (!order.sizeR || order.sizeR == '') {
-      throw new Error('failed getting size for right shoe');
-    } else if (!order.sizeL || order.sizeL == '') {
-      throw new Error('failed getting size for left shoe');
-    } else if (!order.model || order.model == '') {
+    }
+
+    if (
+      (stsOrder.widthR || stsOrder.widthR != '') &&
+      (!stsOrder.widthL || stsOrder.widthL == '')
+    ) {
+      stsOrder.widthL = stsOrder.widthR;
+    } else if (
+      (!stsOrder.widthR || stsOrder.widthR == '') &&
+      (stsOrder.widthL || stsOrder.widthL != '')
+    ) {
+      stsOrder.widthR = stsOrder.widthL;
+    } else if (
+      (!stsOrder.widthR || stsOrder.widthR == '') &&
+      (!stsOrder.widthL || stsOrder.widthL == '')
+    ) {
+      throw new Error(
+        'Both widths are empty. Please amend the order entry on the site',
+      );
+    }
+
+    if (
+      (stsOrder.sizeR || stsOrder.sizeR != '') &&
+      (!stsOrder.sizeL || stsOrder.sizeL == '')
+    ) {
+      stsOrder.sizeL = stsOrder.sizeR;
+    } else if (
+      (!stsOrder.sizeR || stsOrder.sizeR == '') &&
+      (stsOrder.sizeL || stsOrder.sizeL != '')
+    ) {
+      stsOrder.sizeR = stsOrder.sizeL;
+    } else if (
+      (!stsOrder.sizeR || stsOrder.sizeR == '') &&
+      (!stsOrder.sizeL || stsOrder.sizeL == '')
+    ) {
+      throw new Error(
+        'Both sizes are empty. Please amend the order entry on the site',
+      );
+    }
+
+    if (!stsOrder.model || stsOrder.model == '') {
       throw new Error('failed getting model');
-    } else if (!order.deliveryAddress || order.deliveryAddress.length < 3) {
+    }
+
+    if (!stsOrder.deliveryAddress || stsOrder.deliveryAddress.length < 3) {
       throw new Error('failed getting delivery address');
-    } else if (!order.customerName || order.customerName == '') {
+    }
+
+    if (!stsOrder.customerName || stsOrder.customerName == '') {
       throw new Error('failed getting customer');
     }
 
     const substring = 'Norway';
-    if (order.deliveryAddress.includes(substring)) {
-      order.EU = false;
+    if (stsOrder.deliveryAddress.includes(substring)) {
+      stsOrder.EU = false;
     }
 
-    return order;
+    return stsOrder;
   }
 
   /**

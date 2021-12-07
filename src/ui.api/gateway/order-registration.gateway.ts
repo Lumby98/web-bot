@@ -25,6 +25,7 @@ import {
   logInterfaceProvider,
 } from '../../core/interfaces/log.interface';
 import { OrderLists } from '../../core/models/order-lists';
+import { OrderList } from '../../core/models/order-list';
 
 @WebSocketGateway()
 export class OrderRegistrationGateway
@@ -63,11 +64,11 @@ export class OrderRegistrationGateway
       );
 
       const orders = await this.orderRegistrationService.handleOrders(
-        orderReg.orderNumbers,
+        orderReg.orderNumbers[0],
         { username: ortowearLogin.username, password: ortowearLogin.password },
       );
 
-      let processStepList: ProcessStepDto[] = [
+      /* let processStepList: ProcessStepDto[] = [
         {
           processStep: ProcessStepEnum.GETORDERINFO,
           error: true,
@@ -84,8 +85,8 @@ export class OrderRegistrationGateway
           errorMessage: 'Previous step failed',
         },
       ];
-
-      let stepCheck = await this.handleStep(
+*/
+      /* let stepCheck = await this.handleStep(
         orders,
         ProcessStepEnum.GETORDERINFO,
         processStepList,
@@ -93,7 +94,8 @@ export class OrderRegistrationGateway
       );
       if (!stepCheck) {
         return;
-      }
+      }*/
+      /*
 
       const regOrders = await this.orderRegistrationService.createOrder(
         orders,
@@ -158,6 +160,7 @@ export class OrderRegistrationGateway
       const logs = await this.logService.createAll(orders.logEntries);
 
       clientSocket.emit('orderLogEvent', logs);
+*/
 
       /*const processSteps: Array<ProcessStepDto> = [
         { processStep: ProcessStepEnum.GETORDERINFO, error: false },
@@ -235,12 +238,12 @@ export class OrderRegistrationGateway
   }
 
   async handleStep(
-    orders: OrderLists,
+    orders: OrderList,
     processStepEnum: ProcessStepEnum,
     processStepList: ProcessStepDto[],
     clientSocket: Socket,
   ): Promise<boolean> {
-    if (orders.STSOrders.length === 0 && orders.INSOrders.length === 0) {
+    if (orders.STSOrder === null && orders.INSOrder === null) {
       const logs = await this.logService.createAll(orders.logEntries);
 
       for (const processStep of processStepList) {

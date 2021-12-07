@@ -13,6 +13,7 @@ import { LogEntryDto } from '../../ui.api/dto/log/logEntry/log-entry.dto';
 import { CreateLogDto } from '../../ui.api/dto/log/logEntry/create-log.dto';
 import { ProcessStepEnum } from '../enums/processStep.enum';
 import { transformException } from '@nestjs/platform-express/multer/multer/multer.utils';
+import { OrderList } from "../models/order-list";
 
 @Injectable()
 export class OrderRegistrationService implements OrderRegistrationInterface {
@@ -24,17 +25,17 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
   /**
    * Takes a list of order-registration-numbers and then calls the appropriate puppeteer methods,
    * in order-registration to retrieve and return a complete list og order-registration object with all the correct data.
-   * @param orderNumbers
+   * @param orderNumber
    * @param login
    */
   async handleOrders(
-    orderNumbers: string[],
+    orderNumber: string,
     login: LoginDto,
-  ): Promise<OrderLists> {
-    const STSOrders: STSOrderModel[] = [];
-    const INSOrders: INSSOrderModel[] = [];
-    const OSAOrders: [] = [];
-    const SOSOrders: [] = [];
+  ): Promise<OrderList> {
+    let STSOrder: STSOrderModel = null;
+    let INSOrder: INSSOrderModel = null;
+    const OSAOrder = null;
+    const SOSOrder = null;
     const logEntries: Array<CreateLogDto> = [];
     try {
       await this.startPuppeteer('https://www.google.com/');
@@ -55,74 +56,69 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       };
       logEntries.push(log);
       return {
-        STSOrders: STSOrders,
-        INSOrders: INSOrders,
+        STSOrder: STSOrder,
+        INSOrder: INSOrder,
         logEntries: logEntries,
       };
     }
-    for (const orderNumber of orderNumbers) {
-      try {
-        const type = await this.getOrderType(orderNumber);
-        let order;
-        switch (type) {
-          case OrderTypeEnum.STS:
-            order = await this.handleSTSOrder(orderNumber);
-            order.insole = await this.checkForInsole();
-            STSOrders.push(order);
-            break;
-          case OrderTypeEnum.INSS:
-            const INSS: INSSOrderModel = {
-              orderNr: '123123',
-              EU: true,
-              deliveryAddress: [
-                'Borgervaenget 5',
-                '2100 Koebenhavn',
-                'Kobenhavn, Denmark',
-              ],
-              sizeL: '40',
-              sizeR: '42',
-              customerName: 'Klaus Riftbjerg',
-              model: 'Bunka',
-            };
-            INSOrders.push(INSS);
-            break;
-          case OrderTypeEnum.OSA:
-            //todo
-            break;
-          case OrderTypeEnum.SOS:
-            //todo
-            break;
-          default:
-            throw new Error('could not determine order-registration type');
-        }
-        const log: CreateLogDto = {
-          status: true,
-          process: ProcessStepEnum.GETORDERINFO,
-          timestamp: new Date(),
-          order: { orderNr: orderNumber, completed: false },
-        };
-        logEntries.push(log);
-        await this.goToURL(
-          'https://beta.ortowear.com/administration/ordersAdmin/',
-        );
-      } catch (err) {
-        const log: CreateLogDto = {
-          error: { errorMessage: err.message },
-          status: false,
-          process: ProcessStepEnum.GETORDERINFO,
-          timestamp: new Date(),
-          order: { orderNr: orderNumber, completed: false },
-        };
-        logEntries.push(log);
-        await this.goToURL(
-          'https://beta.ortowear.com/administration/ordersAdmin/',
-        );
+    try {
+      const type = await this.getOrderType(orderNumber);
+      let order;
+      switch (type) {
+        case OrderTypeEnum.STS:
+          order = await this.handleSTSOrder(orderNumber);
+          order.insole = await this.checkForInsole();
+          STSOrder = order;
+          break;
+        case OrderTypeEnum.INSS:
+          const INSS: INSSOrderModel = {
+            orderNr: '123123',
+            EU: true,
+            deliveryAddress: [
+              'Borgervaenget 5',
+              '2100 Koebenhavn',
+              'Kobenhavn, Denmark',
+            ],
+            sizeL: '40',
+            sizeR: '42',
+            customerName: 'Klaus Riftbjerg',
+            model: 'Bunka',
+          };
+          INSOrder = INSS;
+          break;
+        case OrderTypeEnum.OSA:
+          //todo
+          break;
+        case OrderTypeEnum.SOS:
+          //todo
+          break;
+        default:
+          throw new Error('could not determine order-registration type');
       }
+      const log: CreateLogDto = {
+        status: true,
+        process: ProcessStepEnum.GETORDERINFO,
+        timestamp: new Date(),
+        order: { orderNr: orderNumber, completed: false },
+      };
+      logEntries.push(log);
+      await this.goToURL(
+        'https://beta.ortowear.com/administration/ordersAdmin/',
+      );
+    } catch (err) {
+      const log: CreateLogDto = {
+        error: { errorMessage: err.message },
+        status: false,
+        process: ProcessStepEnum.GETORDERINFO,
+        timestamp: new Date(),
+        order: { orderNr: orderNumber, completed: false },
+      };
+      logEntries.push(log);
     }
     await this.stopPuppeteer();
     return {
-      STSOrders: STSOrders,
-      INSOrders: INSOrders,
+      STSOrder: STSOrder,
+      INSOrder: INSOrder,
       logEntries: logEntries,
     };
   }

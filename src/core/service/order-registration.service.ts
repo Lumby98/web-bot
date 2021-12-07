@@ -9,10 +9,8 @@ import { OrderTypeEnum } from '../enums/type.enum';
 import { LoginDto } from '../../ui.api/dto/user/login.dto';
 import { INSSOrderModel } from '../models/ins-s-order.model';
 import { OrderLists } from '../models/order-lists';
-import { LogEntryDto } from '../../ui.api/dto/log/logEntry/log-entry.dto';
 import { CreateLogDto } from '../../ui.api/dto/log/logEntry/create-log.dto';
 import { ProcessStepEnum } from '../enums/processStep.enum';
-import { transformException } from '@nestjs/platform-express/multer/multer/multer.utils';
 import { OrderList } from '../models/order-list';
 import { OrderInfoModel } from '../models/order-info.model';
 
@@ -69,7 +67,8 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
           STSOrder = order;
           break;
         case OrderTypeEnum.INSS:
-          const INSS: INSSOrderModel = {
+
+/*          const INSS: INSSOrderModel = {
             orderNr: '123123',
             EU: true,
             deliveryAddress: [
@@ -82,7 +81,10 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
             customerName: 'Klaus Riftbjerg',
             model: 'Bunka',
           };
-          INSOrder = INSS;
+          INSOrder = INSS;*/
+
+
+
           break;
         case OrderTypeEnum.OSA:
           //todo

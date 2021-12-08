@@ -3,6 +3,7 @@ import { OrderTypeEnum } from '../enums/type.enum';
 import { LoginDto } from '../../ui.api/dto/user/login.dto';
 import { OrderLists } from '../models/order-lists';
 import { OrderList } from '../models/order-list';
+import { OrderWithLogs } from "../models/orderWithLogs";
 export const orderRegistrationInterfaceProvider =
   'orderRegistrationInterfaceProvider';
 export interface OrderRegistrationInterface {
@@ -14,17 +15,17 @@ export interface OrderRegistrationInterface {
   getNextDayOfWeek(date: Date, dayOfWeek: number): Date;
   getMonthFromString(month: string): number;
   createOrder(
-    orders: OrderLists,
+    orders: OrderList,
     username: string,
     password: string,
     dev: boolean,
     completeOrder: boolean,
-  ): Promise<OrderLists>;
+  ): Promise<OrderList>;
   handleAllocations(
-    orders: OrderLists,
+    orderWithLogs: OrderWithLogs,
     username: string,
     password: string,
     dev: boolean,
     completeOrder: boolean,
-  ): Promise<OrderLists>;
+  ): Promise<OrderWithLogs>;
 }

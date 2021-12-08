@@ -162,7 +162,8 @@ export class LogErrorService implements LogErrorInterface {
     if (updateError) {
       if (
         updatedError.errorMessage == updateError.errorMessage &&
-        updatedError.id == updateError.id
+        updatedError.id == updateError.id &&
+        updatedError.displayErrorMessage == updateError.displayErrorMessage
       ) {
         return updatedError;
       } else {

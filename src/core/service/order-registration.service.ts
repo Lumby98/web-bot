@@ -9,10 +9,10 @@ import { OrderTypeEnum } from '../enums/type.enum';
 import { LoginDto } from '../../ui.api/dto/user/login.dto';
 import { INSSOrderModel } from '../models/ins-s-order.model';
 import { OrderLists } from '../models/order-lists';
-import { LogEntryDto } from '../../ui.api/dto/log/logEntry/log-entry.dto';
 import { CreateLogDto } from '../../ui.api/dto/log/logEntry/create-log.dto';
 import { ProcessStepEnum } from '../enums/processStep.enum';
-import { transformException } from '@nestjs/platform-express/multer/multer/multer.utils';
+import { OrderList } from '../models/order-list';
+import { OrderInfoModel } from '../models/order-info.model';
 
 @Injectable()
 export class OrderRegistrationService implements OrderRegistrationInterface {
@@ -24,17 +24,14 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
   /**
    * Takes a list of order-registration-numbers and then calls the appropriate puppeteer methods,
    * in order-registration to retrieve and return a complete list og order-registration object with all the correct data.
-   * @param orderNumbers
+   * @param orderNumber
    * @param login
    */
-  async handleOrders(
-    orderNumbers: string[],
-    login: LoginDto,
-  ): Promise<OrderLists> {
-    const STSOrders: STSOrderModel[] = [];
-    const INSOrders: INSSOrderModel[] = [];
-    const OSAOrders: [] = [];
-    const SOSOrders: [] = [];
+  async handleOrders(orderNumber: string, login: LoginDto): Promise<OrderList> {
+    let STSOrder: STSOrderModel = null;
+    const INSOrder: INSSOrderModel = null;
+    const OSAOrder = null;
+    const SOSOrder = null;
     const logEntries: Array<CreateLogDto> = [];
     try {
       await this.startPuppeteer('https://www.google.com/');
@@ -55,74 +52,70 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       };
       logEntries.push(log);
       return {
-        STSOrders: STSOrders,
-        INSOrders: INSOrders,
+        STSOrder: STSOrder,
+        INSOrder: INSOrder,
         logEntries: logEntries,
       };
     }
-    for (const orderNumber of orderNumbers) {
-      try {
-        const type = await this.getOrderType(orderNumber);
-        let order;
-        switch (type) {
-          case OrderTypeEnum.STS:
-            order = await this.handleSTSOrder(orderNumber);
-            order.insole = await this.checkForInsole();
-            STSOrders.push(order);
-            break;
-          case OrderTypeEnum.INSS:
-            const INSS: INSSOrderModel = {
-              orderNr: '123123',
-              EU: true,
-              deliveryAddress: [
-                'Borgervaenget 5',
-                '2100 Koebenhavn',
-                'Kobenhavn, Denmark',
-              ],
-              sizeL: '40',
-              sizeR: '42',
-              customerName: 'Klaus Riftbjerg',
-              model: 'Bunka',
-            };
-            INSOrders.push(INSS);
-            break;
-          case OrderTypeEnum.OSA:
-            //todo
-            break;
-          case OrderTypeEnum.SOS:
-            //todo
-            break;
-          default:
-            throw new Error('could not determine order-registration type');
-        }
-        const log: CreateLogDto = {
-          status: true,
-          process: ProcessStepEnum.GETORDERINFO,
-          timestamp: new Date(),
-          order: { orderNr: orderNumber, completed: false },
-        };
-        logEntries.push(log);
-        await this.goToURL(
-          'https://order.ortowear.com/administration/ordersAdmin/',
-        );
-      } catch (err) {
-        const log: CreateLogDto = {
-          error: { errorMessage: err.message },
-          status: false,
-          process: ProcessStepEnum.GETORDERINFO,
-          timestamp: new Date(),
-          order: { orderNr: orderNumber, completed: false },
-        };
-        logEntries.push(log);
-        await this.goToURL(
-          'https://order.ortowear.com/administration/ordersAdmin/',
-        );
+    try {
+      const type = await this.getOrderType(orderNumber);
+      let order;
+      switch (type) {
+        case OrderTypeEnum.STS:
+          order = await this.handleSTSOrder(orderNumber);
+          order.insole = await this.checkForInsole();
+          STSOrder = order;
+          break;
+        case OrderTypeEnum.INSS:
+          /*          const INSS: INSSOrderModel = {
+            orderNr: '123123',
+            EU: true,
+            deliveryAddress: [
+              'Borgervaenget 5',
+              '2100 Koebenhavn',
+              'Kobenhavn, Denmark',
+            ],
+            sizeL: '40',
+            sizeR: '42',
+            customerName: 'Klaus Riftbjerg',
+            model: 'Bunka',
+          };
+          INSOrder = INSS;*/
+
+          break;
+        case OrderTypeEnum.OSA:
+          //todo
+          break;
+        case OrderTypeEnum.SOS:
+          //todo
+          break;
+        default:
+          throw new Error('could not determine order-registration type');
       }
+      const log: CreateLogDto = {
+        status: true,
+        process: ProcessStepEnum.GETORDERINFO,
+        timestamp: new Date(),
+        order: { orderNr: orderNumber, completed: false },
+      };
+      logEntries.push(log);
+      await this.goToURL(
+        'https://beta.ortowear.com/administration/ordersAdmin/',
+      );
+    } catch (err) {
+      const log: CreateLogDto = {
+        error: { errorMessage: err.message },
+        status: false,
+        process: ProcessStepEnum.GETORDERINFO,
+        timestamp: new Date(),
+        order: { orderNr: orderNumber, completed: false },
+      };
+      logEntries.push(log);
     }
     await this.stopPuppeteer();
     return {
-      STSOrders: STSOrders,
-      INSOrders: INSOrders,
+      STSOrder: STSOrder,
+      INSOrder: INSOrder,
       logEntries: logEntries,
     };
   }
@@ -292,39 +285,85 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       throw new Error('This order-registration is delivered so it cannot be allocated');
     }*/
 
-    const order: STSOrderModel = await this.orderPuppeteer.readSTSOrder(
+    const order: OrderInfoModel = await this.orderPuppeteer.readOrder(
       orderNumber,
     );
-    if (!order) {
+
+    const stsOrder: STSOrderModel = await this.orderPuppeteer.readSTSOrder(
+      order,
+    );
+    if (!stsOrder) {
       throw new Error('failed getting order-registration information');
-    } else if (!order.toeCap || order.toeCap == '') {
+    }
+
+    if (!stsOrder.toeCap || stsOrder.toeCap == '') {
       throw new Error('failed getting toe cap');
-    } else if (order.orderNr != orderNumber) {
+    }
+
+    if (stsOrder.orderNr != orderNumber) {
       throw new Error('failed getting correct order-registration');
-    } else if (!order.sole || order.sole == '') {
+    }
+
+    if (!stsOrder.sole || stsOrder.sole == '') {
       throw new Error('failed getting sole');
-    } else if (!order.widthR || order.widthR == '') {
-      throw new Error('failled getting width for right shoe');
-    } else if (!order.widthL || order.widthL == '') {
-      throw new Error('failed getting width for left shoe');
-    } else if (!order.sizeR || order.sizeR == '') {
-      throw new Error('failed getting size for right shoe');
-    } else if (!order.sizeL || order.sizeL == '') {
-      throw new Error('failed getting size for left shoe');
-    } else if (!order.model || order.model == '') {
+    }
+
+    if (
+      (stsOrder.widthR || stsOrder.widthR != '') &&
+      (!stsOrder.widthL || stsOrder.widthL == '')
+    ) {
+      stsOrder.widthL = stsOrder.widthR;
+    } else if (
+      (!stsOrder.widthR || stsOrder.widthR == '') &&
+      (stsOrder.widthL || stsOrder.widthL != '')
+    ) {
+      stsOrder.widthR = stsOrder.widthL;
+    } else if (
+      (!stsOrder.widthR || stsOrder.widthR == '') &&
+      (!stsOrder.widthL || stsOrder.widthL == '')
+    ) {
+      throw new Error(
+        'Both widths are empty. Please amend the order entry on the site',
+      );
+    }
+
+    if (
+      (stsOrder.sizeR || stsOrder.sizeR != '') &&
+      (!stsOrder.sizeL || stsOrder.sizeL == '')
+    ) {
+      stsOrder.sizeL = stsOrder.sizeR;
+    } else if (
+      (!stsOrder.sizeR || stsOrder.sizeR == '') &&
+      (stsOrder.sizeL || stsOrder.sizeL != '')
+    ) {
+      stsOrder.sizeR = stsOrder.sizeL;
+    } else if (
+      (!stsOrder.sizeR || stsOrder.sizeR == '') &&
+      (!stsOrder.sizeL || stsOrder.sizeL == '')
+    ) {
+      throw new Error(
+        'Both sizes are empty. Please amend the order entry on the site',
+      );
+    }
+
+    if (!stsOrder.model || stsOrder.model == '') {
       throw new Error('failed getting model');
-    } else if (!order.deliveryAddress || order.deliveryAddress.length < 3) {
+    }
+
+    if (!stsOrder.deliveryAddress || stsOrder.deliveryAddress.length < 3) {
       throw new Error('failed getting delivery address');
-    } else if (!order.customerName || order.customerName == '') {
+    }
+
+    if (!stsOrder.customerName || stsOrder.customerName == '') {
       throw new Error('failed getting customer');
     }
 
     const substring = 'Norway';
-    if (order.deliveryAddress.includes(substring)) {
-      order.EU = false;
+    if (stsOrder.deliveryAddress.includes(substring)) {
+      stsOrder.EU = false;
     }
 
-    return order;
+    return stsOrder;
   }
 
   /**

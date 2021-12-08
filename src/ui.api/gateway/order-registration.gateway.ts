@@ -25,6 +25,7 @@ import {
   logInterfaceProvider,
 } from '../../core/interfaces/log.interface';
 import { OrderLists } from '../../core/models/order-lists';
+import { OrderList } from '../../core/models/order-list';
 
 @WebSocketGateway()
 export class OrderRegistrationGateway
@@ -63,11 +64,11 @@ export class OrderRegistrationGateway
       );
 
       const orders = await this.orderRegistrationService.handleOrders(
-        orderReg.orderNumbers,
+        orderReg.orderNumbers[0],
         { username: ortowearLogin.username, password: ortowearLogin.password },
       );
 
-      let processStepList: ProcessStepDto[] = [
+      /* let processStepList: ProcessStepDto[] = [
         {
           processStep: ProcessStepEnum.GETORDERINFO,
           error: true,
@@ -84,8 +85,8 @@ export class OrderRegistrationGateway
           errorMessage: 'Previous step failed',
         },
       ];
-
-      let stepCheck = await this.handleStep(
+*/
+      /* let stepCheck = await this.handleStep(
         orders,
         ProcessStepEnum.GETORDERINFO,
         processStepList,
@@ -93,7 +94,8 @@ export class OrderRegistrationGateway
       );
       if (!stepCheck) {
         return;
-      }
+      }*/
+      /*
 
       const regOrders = await this.orderRegistrationService.createOrder(
         orders,
@@ -158,18 +160,90 @@ export class OrderRegistrationGateway
       const logs = await this.logService.createAll(orders.logEntries);
 
       clientSocket.emit('orderLogEvent', logs);
+*/
+
+      /*const processSteps: Array<ProcessStepDto> = [
+        { processStep: ProcessStepEnum.GETORDERINFO, error: false },
+        { processStep: ProcessStepEnum.REGISTERORDER, error: false },
+        { processStep: ProcessStepEnum.ALOCATEORDER, error: false },
+      ];
+
+      const observable = new Observable<ProcessStepDto>((subscriber) => {
+        for (let i = 0; i < processSteps.length; i++) {
+          setTimeout(() => {
+            subscriber.next(processSteps[i]);
+            if (i === processSteps.length - 1) {
+              subscriber.complete();
+            }
+          }, 5000 * (i + 1));
+        }
+      });
+
+      //Emit logEntries
+      const orderNumbers = orderReg.orderNumbers;
+      let logIdNum = 1;
+      let orderIdNum = 1;
+      const logEntries: Array<LogEntryDto> = [];
+
+      for (let i = 0; i <= orderNumbers.length; i++) {
+        let logEntryDto: LogEntryDto = {
+          id: logIdNum++,
+          process: ProcessStepEnum.REGISTERORDER,
+          status: true,
+          timestamp: new Date(),
+          order: {
+            id: orderIdNum++,
+            orderNr: Math.floor(Math.random() * (10000 - 100) + 100).toString(),
+            completed: false,
+          },
+        };
+
+        if (i == orderNumbers.length) {
+          logEntryDto = {
+            id: logIdNum++,
+            process: ProcessStepEnum.REGISTERORDER,
+            status: true,
+            timestamp: new Date(),
+            order: {
+              id: orderIdNum++,
+              orderNr: Math.floor(
+                Math.random() * (10000 - 100) + 100,
+              ).toString(),
+              completed: true,
+            },
+            error: {
+              id: orderIdNum++,
+              errorMessage: 'could not determine order-registration type ',
+            },
+          };
+        }
+
+        logEntries.push(logEntryDto);
+      }
+
+      observable.pipe(take(processSteps.length)).subscribe(
+        (processStep) => {
+          clientSocket.emit('processStepEvent', processStep);
+        },
+        (error) => {
+          console.log(error);
+        },
+        () => {
+          clientSocket.emit('orderLogEvent', logEntries);
+        },
+      );*/
     } catch (err) {
       clientSocket.error(err.message);
     }
   }
 
   async handleStep(
-    orders: OrderLists,
+    orders: OrderList,
     processStepEnum: ProcessStepEnum,
     processStepList: ProcessStepDto[],
     clientSocket: Socket,
   ): Promise<boolean> {
-    if (orders.STSOrders.length === 0 && orders.INSOrders.length === 0) {
+    if (orders.STSOrder === null && orders.INSOrder === null) {
       const logs = await this.logService.createAll(orders.logEntries);
 
       for (const processStep of processStepList) {

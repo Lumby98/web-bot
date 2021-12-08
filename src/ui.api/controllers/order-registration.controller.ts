@@ -20,7 +20,7 @@ export class OrderRegistrationController {
     await this.orderRegistrationService.startPuppeteer('https://pptr.dev/');
   }
 
-  @Post('handleOrders')
+  /*@Post('handleOrders')
   async handleOrders(@Body() order: OrderRegistrationDto) {
     const orders = await this.orderRegistrationService.handleOrders(
       order.orderNumbers,
@@ -48,12 +48,12 @@ export class OrderRegistrationController {
       );
 
     return completedOrders;
-  }
+  }*/
 
   @Post('getOrderInfo')
   async getOrderInfo(@Body() order: OrderRegistrationDto) {
     const orders = await this.orderRegistrationService.handleOrders(
-      order.orderNumbers,
+      order.orderNumbers[0],
       {
         username: order.username,
         password: order.password,

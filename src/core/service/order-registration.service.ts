@@ -29,7 +29,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
    */
   async handleOrders(orderNumber: string, login: LoginDto): Promise<OrderList> {
     let STSOrder: STSOrderModel = null;
-    let INSOrder: INSSOrderModel = null;
+    const INSOrder: INSSOrderModel = null;
     const OSAOrder = null;
     const SOSOrder = null;
     const logEntries: Array<CreateLogDto> = [];
@@ -67,8 +67,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
           STSOrder = order;
           break;
         case OrderTypeEnum.INSS:
-
-/*          const INSS: INSSOrderModel = {
+          /*          const INSS: INSSOrderModel = {
             orderNr: '123123',
             EU: true,
             deliveryAddress: [
@@ -82,8 +81,6 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
             model: 'Bunka',
           };
           INSOrder = INSS;*/
-
-
 
           break;
         case OrderTypeEnum.OSA:

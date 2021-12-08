@@ -253,11 +253,35 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     }
   }
 
-  /* handleINSSOrder(orderNumber: string): Promise<INSSOrderModel> {
+  async handleINSSOrder(orderNumber: string): Promise<INSSOrderModel> {
     if (orderNumber.length < 1) {
       throw new Error('missing order-registration number');
     }
-  }*/
+
+    const targetAndSelector =
+      await this.orderPuppeteer.getTableTargetandSelector(orderNumber);
+
+    await this.waitClick(targetAndSelector.selector);
+    await this.waitClick(
+      '#topBtns > div > div > button.btn.btn-sm.btn-warning',
+    );
+
+    const check = await this.orderPuppeteer.checkLocation(
+      'body > div.wrapper > div.content-wrapper > section.content-header > h1',
+      false,
+      false,
+    );
+
+    if (!check) {
+      throw new Error('Could not find order-registration page');
+    };
+
+    const order: OrderInfoModel = await this.orderPuppeteer.readOrder(
+      orderNumber,
+    );
+
+
+  }
 
   /**
    * get order-registration information for an STS order-registration

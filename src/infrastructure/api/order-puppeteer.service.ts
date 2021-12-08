@@ -4,6 +4,7 @@ import { STSOrderModel } from '../../core/models/sts-order.model';
 import { Browser, KeyInput, Page } from 'puppeteer';
 import { TargetAndSelector } from '../../core/models/target-and-selector';
 import { OrderInfoModel } from '../../core/models/order-info.model';
+import { INSSOrderModel } from 'src/core/models/ins-s-order.model';
 
 @Injectable()
 export class OrderPuppeteerService implements OrderPuppeteerInterface {
@@ -104,6 +105,24 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
     };
 
     return stsOrder;
+  }
+
+  async readINSSOrder(order: OrderInfoModel): Promise<INSSOrderModel> {
+    const iNSSOrder: INSSOrderModel = {
+      orderNr: order.orderNr,
+      deliveryAddress: order.deliveryAddress,
+      customerName: order.customerName,
+      EU: order.EU,
+      model: await this.readSelectorText(
+        'body > div.wrapper > div.content-wrapper > section.content > div:nth-child(3) > div > div > div > div.box-body > form > div:nth-child(3) > div > div > div:nth-child(2) > div > div > table > tbody > tr:nth-child(2) > td:nth-child(2)',
+      ),
+      sizeL: await this.readSelectorText(
+        'body > div.wrapper > div.content-wrapper > section.content > div:nth-child(3) > div > div > div > div.box-body > form > div:nth-child(3) > div > div > div:nth-child(2) > div > div > table > tbody > tr:nth-child(6) > td:nth-child(2) ',
+      ),
+      sizeR: await this.readSelectorText(
+        'body > div.wrapper > div.content-wrapper > section.content > div:nth-child(3) > div > div > div > div.box-body > form > div:nth-child(3) > div > div > div:nth-child(2) > div > div > table > tbody > tr:nth-child(6) > td:nth-child(3)',
+      ),
+    };
   }
 
   async readOrder(orderNumber: string): Promise<OrderInfoModel> {

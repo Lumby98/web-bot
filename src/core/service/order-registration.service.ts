@@ -8,18 +8,19 @@ import { STSOrderModel } from '../models/sts-order.model';
 import { OrderTypeEnum } from '../enums/type.enum';
 import { LoginDto } from '../../ui.api/dto/user/login.dto';
 import { INSSOrderModel } from '../models/ins-s-order.model';
-import { OrderLists } from '../models/order-lists';
 import { CreateLogDto } from '../../ui.api/dto/log/logEntry/create-log.dto';
 import { ProcessStepEnum } from '../enums/processStep.enum';
 import { OrderList } from '../models/order-list';
 import { OrderInfoModel } from '../models/order-info.model';
 import { OrderWithLogs } from '../models/orderWithLogs';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class OrderRegistrationService implements OrderRegistrationInterface {
   constructor(
     @Inject(orderPuppeteerInterfaceProvider)
     private readonly orderPuppeteer: OrderPuppeteerInterface,
+    private configService: ConfigService,
   ) {}
 
   /**
@@ -38,7 +39,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       await this.startPuppeteer('https://www.google.com/');
       await this.handleOrtowearNavigation(login.username, login.password);
       await this.goToURL(
-        'https://order.ortowear.com/administration/ordersAdmin/',
+        this.configService.get('ORTOWEARURL') + 'administration/ordersAdmin/',
       );
     } catch (err) {
       const log: CreateLogDto = {
@@ -101,7 +102,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       };
       logEntries.push(log);
       await this.goToURL(
-        'https://beta.ortowear.com/administration/ordersAdmin/',
+        this.configService.get('ORTOWEARURL') + 'administration/ordersAdmin/',
       );
     } catch (err) {
       const log: CreateLogDto = {
@@ -166,7 +167,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       throw new Error('Wrong username or password');
     }
 
-    await this.goToURL('https://order.ortowear.com/');
+    await this.goToURL(this.configService.get('ORTOWEARURL'));
 
     await this.orderPuppeteer.loginOrtowear(username, password);
 
@@ -195,7 +196,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       }
     }
 
-    const myPageURL = 'https://order.ortowear.com/my_page';
+    const myPageURL = this.configService.get('ORTOWEARURL') + 'my_page';
     const currentURL = await this.orderPuppeteer.getCurrentURL();
     if (myPageURL != currentURL) {
       if (
@@ -999,7 +1000,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       await this.startPuppeteer('https://www.google.com/');
       await this.handleOrtowearNavigation(username, password);
       await this.goToURL(
-        'https://order.ortowear.com/administration/ordersAdmin/',
+        this.configService.get('ORTOWEARURL') + 'administration/ordersAdmin/',
       );
     } catch (err) {
       const log: CreateLogDto = {
@@ -1200,7 +1201,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       };
       orderWithLogs.logEntries.push(log);
       await this.goToURL(
-        'https://beta.ortowear.com/administration/ordersAdmin/',
+        this.configService.get('ORTOWEARURL') + 'administration/ordersAdmin/',
       );
     } catch (err) {
       const log: CreateLogDto = {
@@ -1215,7 +1216,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       };
       orderWithLogs.logEntries.push(log);
       await this.goToURL(
-        'https://beta.ortowear.com/administration/ordersAdmin/',
+        this.configService.get('ORTOWEARURL') + 'administration/ordersAdmin/',
       );
     }
 

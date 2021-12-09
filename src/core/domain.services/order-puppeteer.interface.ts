@@ -2,6 +2,7 @@ import { STSOrderModel } from '../models/sts-order.model';
 import { KeyInput } from 'puppeteer';
 import { string } from '@hapi/joi';
 import { TargetAndSelector } from '../models/target-and-selector';
+import { OrderInfoModel } from '../models/order-info.model';
 export const orderPuppeteerInterfaceProvider =
   'orderPuppeteerInterfaceProvider';
 export interface OrderPuppeteerInterface {
@@ -11,7 +12,8 @@ export interface OrderPuppeteerInterface {
   navigateToURL(url: string);
   loginOrtowear(username: string, password: string);
   stop();
-  readSTSOrder(orderNumber: string): Promise<STSOrderModel>;
+  readSTSOrder(order: OrderInfoModel): Promise<STSOrderModel>;
+  readOrder(orderNumber: string): Promise<OrderInfoModel>;
   checkLocation(
     selector: string,
     hidden: boolean,

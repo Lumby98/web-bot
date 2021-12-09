@@ -12,10 +12,11 @@ import { OrderInfoModel } from '../models/order-info.model';
 import { STSOrderModel } from '../models/sts-order.model';
 import { OrderTypeEnum } from '../enums/type.enum';
 import exp from 'constants';
-import { StsOrderStub } from './stubs/sts-order.stub';
+import { stsOrderStub } from './stubs/sts-order.stub';
 import { TargetAndSelectorStub } from './stubs/target-and-selector';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
-jest.mock('src/infrastructure/api/order-registration-puppeteer.service.ts');
+jest.mock('src/infrastructure/api/order-puppeteer.service.ts');
 
 describe('OrderRegistrationService', () => {
   let orderRegistrationService: OrderRegistrationService;
@@ -29,6 +30,18 @@ describe('OrderRegistrationService', () => {
         {
           provide: orderPuppeteerInterfaceProvider,
           useClass: OrderPuppeteerService,
+        },
+        {
+          provide: ConfigService,
+          useValue: {
+            get: jest.fn((key: string) => {
+              // this is being super extra, in the case that you need multiple keys with the `get` method
+              if (key === 'ORTOWEARURL') {
+                return 'https://beta.ortowear.com/';
+              }
+              return null;
+            }),
+          },
         },
       ],
     }).compile();
@@ -287,7 +300,7 @@ describe('OrderRegistrationService', () => {
         expected = await orderRegistrationService.handleSTSOrder(orderNumber);
       });
       it('should return an STS order-registration', () => {
-        expect(expected).toEqual(StsOrderStub());
+        expect(expected).toEqual(stsOrderStub());
       });
     });
   });

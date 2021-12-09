@@ -30,7 +30,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
    */
   async handleOrders(orderNumber: string, login: LoginDto): Promise<OrderList> {
     let STSOrder: STSOrderModel = null;
-    const INSOrder: INSSOrderModel = null;
+    let INSOrder: INSSOrderModel = null;
     const OSAOrder = null;
     const SOSOrder = null;
     const logEntries: Array<CreateLogDto> = [];
@@ -82,6 +82,9 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
             model: 'Bunka',
           };
           INSOrder = INSS;*/
+
+          order = await this.handleINSSOrder(orderNumber);
+          INSOrder = order;
 
           break;
         case OrderTypeEnum.OSA:
@@ -279,6 +282,56 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     const order: OrderInfoModel = await this.orderPuppeteer.readOrder(
       orderNumber,
     );
+
+    const inssOrder: INSSOrderModel = await this.orderPuppeteer.readINSSOrder(
+      order,
+    );
+
+    if (!inssOrder) {
+      throw new Error('failed getting order-registration information');
+    }
+
+    if (inssOrder.orderNr != orderNumber) {
+      throw new Error('failed getting correct order-registration');
+    }
+
+    if (
+      (inssOrder.sizeR || inssOrder.sizeR != '') &&
+      (!inssOrder.sizeL || inssOrder.sizeL == '')
+    ) {
+      inssOrder.sizeL = inssOrder.sizeR;
+    } else if (
+      (!inssOrder.sizeR || inssOrder.sizeR == '') &&
+      (inssOrder.sizeL || inssOrder.sizeL != '')
+    ) {
+      inssOrder.sizeR = inssOrder.sizeL;
+    } else if (
+      (!inssOrder.sizeR || inssOrder.sizeR == '') &&
+      (!inssOrder.sizeL || inssOrder.sizeL == '')
+    ) {
+      throw new Error(
+        'Both sizes are empty. Please amend the order entry on the site',
+      );
+    }
+
+    if (!inssOrder.model || inssOrder.model == '') {
+      throw new Error('failed getting model');
+    }
+
+    if (!inssOrder.deliveryAddress || inssOrder.deliveryAddress.length < 3) {
+      throw new Error('failed getting delivery address');
+    }
+
+    if (!inssOrder.customerName || inssOrder.customerName == '') {
+      throw new Error('failed getting customer');
+    }
+
+    const substring = 'Norway';
+    if (inssOrder.deliveryAddress.includes(substring)) {
+      inssOrder.EU = false;
+    }
+
+    return inssOrder;
   }
 
   /**

@@ -563,6 +563,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
         await this.waitClick(
           '#page-content-wrapper > div > div > div > section > div.panel-body > div > div:nth-child(3) > div',
         );
+
         await this.InputOrderInformation(
           orders.STSOrder.orderNr,
           orders.STSOrder.deliveryAddress,

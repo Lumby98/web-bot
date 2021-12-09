@@ -1,10 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { OrderPuppeteerInterface } from '../../core/domain.services/order-puppeteer.interface';
-import { STSOrderModel } from '../../core/models/sts-order.model';
-import { Browser, KeyInput, Page } from 'puppeteer';
-import { TargetAndSelector } from '../../core/models/target-and-selector';
-import { OrderInfoModel } from '../../core/models/order-info.model';
-import { INSSOrderModel } from 'src/core/models/ins-s-order.model';
+import { Injectable } from "@nestjs/common";
+import { OrderPuppeteerInterface } from "../../core/domain.services/order-puppeteer.interface";
+import { STSOrderModel } from "../../core/models/sts-order.model";
+import { Browser, KeyInput, Page } from "puppeteer";
+import { TargetAndSelector } from "../../core/models/target-and-selector";
+import { OrderInfoModel } from "../../core/models/order-info.model";
+import { INSSOrderModel } from "src/core/models/ins-s-order.model";
 
 @Injectable()
 export class OrderPuppeteerService implements OrderPuppeteerInterface {
@@ -108,7 +108,7 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
   }
 
   async readINSSOrder(order: OrderInfoModel): Promise<INSSOrderModel> {
-    const iNSSOrder: INSSOrderModel = {
+    return {
       orderNr: order.orderNr,
       deliveryAddress: order.deliveryAddress,
       customerName: order.customerName,

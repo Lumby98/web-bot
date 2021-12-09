@@ -13,7 +13,7 @@ import { CreateLogDto } from '../../ui.api/dto/log/logEntry/create-log.dto';
 import { ProcessStepEnum } from '../enums/processStep.enum';
 import { OrderList } from '../models/order-list';
 import { OrderInfoModel } from '../models/order-info.model';
-import { OrderWithLogs } from "../models/orderWithLogs";
+import { OrderWithLogs } from '../models/orderWithLogs';
 
 @Injectable()
 export class OrderRegistrationService implements OrderRegistrationInterface {
@@ -82,8 +82,6 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
             model: 'Bunka',
           };
           INSOrder = INSS;*/
-
-
 
           break;
         case OrderTypeEnum.OSA:
@@ -276,13 +274,11 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
 
     if (!check) {
       throw new Error('Could not find order-registration page');
-    };
+    }
 
     const order: OrderInfoModel = await this.orderPuppeteer.readOrder(
       orderNumber,
     );
-
-
   }
 
   /**

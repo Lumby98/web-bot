@@ -624,6 +624,27 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     }
 
     if (orders.INSOrder) {
+      await this.waitClick(
+        '#page-content-wrapper > div > div > div > section > div.panel-body > div > div:nth-child(4) > div',
+      );
+      await this.InputOrderInformation(
+        orders.INSOrder.orderNr,
+        orders.INSOrder.deliveryAddress,
+        true,
+        orders.INSOrder.EU,
+        orders.INSOrder.customerName,
+      );
+
+      const isInUsageEnvoPage = await this.orderPuppeteer.checkLocation(
+        '#page-content-wrapper > div > div > h1',
+        false,
+        false,
+      );
+
+      if (!isInUsageEnvoPage) {
+        throw new Error('Could not load usage environment page.');
+      }
+      await this.INSsInputUsageEnvironment(orders.INSOrder);
       return;
     }
     await this.stopPuppeteer();
@@ -715,6 +736,29 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
         '#scrollrbody > div.wizard_navigation > button.btn.btn-default.wizard_button_next',
         0,
       );
+    }
+  }
+
+  private async INSsInputUsageEnvironment(order: INSSOrderModel){
+    const endUserIsLoaded = await this.orderPuppeteer.checkLocation(
+      '#order_enduser',
+      false,
+      false,
+    );
+
+    if (!endUserIsLoaded) {
+      throw new Error('Could not load end user input');
+    }
+    await this.orderPuppeteer.input('#order_enduser', order.orderNr);
+
+    let endUserText = await this.orderPuppeteer.getInputValue('#order_enduser');
+    if (endUserText !== order.orderNr) {
+      await this.orderPuppeteer.input('#order_enduser', order.orderNr);
+    }
+
+    endUserText = await this.orderPuppeteer.getInputValue('#order_enduser');
+    if (endUserText !== order.orderNr) {
+      throw new Error('Failed to input orderNr to end user input');
     }
   }
 

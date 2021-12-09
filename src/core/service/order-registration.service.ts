@@ -8,7 +8,6 @@ import { STSOrderModel } from '../models/sts-order.model';
 import { OrderTypeEnum } from '../enums/type.enum';
 import { LoginDto } from '../../ui.api/dto/user/login.dto';
 import { INSSOrderModel } from '../models/ins-s-order.model';
-import { OrderLists } from '../models/order-lists';
 import { CreateLogDto } from '../../ui.api/dto/log/logEntry/create-log.dto';
 import { ProcessStepEnum } from '../enums/processStep.enum';
 import { OrderList } from '../models/order-list';

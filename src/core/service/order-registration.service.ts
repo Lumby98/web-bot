@@ -740,7 +740,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     }
   }
 
-  private async INSsInputUsageEnvironment(order: INSSOrderModel){
+  private async INSsInputUsageEnvironment(order: INSSOrderModel) {
     const endUserIsLoaded = await this.orderPuppeteer.checkLocation(
       '#order_enduser',
       false,
@@ -750,6 +750,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     if (!endUserIsLoaded) {
       throw new Error('Could not load end user input');
     }
+
     await this.orderPuppeteer.input('#order_enduser', order.orderNr);
 
     let endUserText = await this.orderPuppeteer.getInputValue('#order_enduser');

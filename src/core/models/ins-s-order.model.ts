@@ -9,6 +9,7 @@ export interface INSSOrderModel extends OrderInfoModel {
 }
 
 /*
+#order_agb
 id?: number;
   orderNr: string;
   customerName: string;

@@ -625,28 +625,42 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     }
 
     if (orders.INSOrder) {
-      await this.waitClick(
-        '#page-content-wrapper > div > div > div > section > div.panel-body > div > div:nth-child(4) > div',
-      );
-      await this.InputOrderInformation(
-        orders.INSOrder.orderNr,
-        orders.INSOrder.deliveryAddress,
-        true,
-        orders.INSOrder.EU,
-        orders.INSOrder.customerName,
-      );
+      try {
+        await this.waitClick(
+          '#page-content-wrapper > div > div > div > section > div.panel-body > div > div:nth-child(4) > div',
+        );
+        await this.InputOrderInformation(
+          orders.INSOrder.orderNr,
+          orders.INSOrder.deliveryAddress,
+          true,
+          orders.INSOrder.EU,
+          orders.INSOrder.customerName,
+        );
 
-      const isInUsageEnvoPage = await this.orderPuppeteer.checkLocation(
-        '#page-content-wrapper > div > div > h1',
-        false,
-        false,
-      );
+        const isInUsageEnvoPage = await this.orderPuppeteer.checkLocation(
+          '#page-content-wrapper > div > div > h1',
+          false,
+          false,
+        );
 
-      if (!isInUsageEnvoPage) {
-        throw new Error('Could not load usage environment page.');
+        if (!isInUsageEnvoPage) {
+          throw new Error('Could not load usage environment page.');
+        }
+        await this.INSsInputUsageEnvironment(orders.INSOrder);
+        return;
+      } catch (err) {
+        const log: CreateLogDto = {
+          error: { errorMessage: err.message },
+          status: false,
+          process: ProcessStepEnum.REGISTERORDER,
+          timestamp: new Date(),
+          order: { orderNr: orders.INSOrder.orderNr, completed: false },
+        };
+        orders.logEntries.push(log);
+        await this.goToURL(
+          'https://www.neskrid.com/plugins/neskrid/myneskrid_new.aspx',
+        );
       }
-      await this.INSsInputUsageEnvironment(orders.INSOrder);
-      return;
     }
     await this.stopPuppeteer();
     return {
@@ -741,6 +755,34 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
   }
 
   private async INSsInputUsageEnvironment(order: INSSOrderModel) {
+    //Input Registration no. medical specialist
+    const regNoIsLoaded = await this.orderPuppeteer.checkLocation(
+      '#order_agb',
+      false,
+      false,
+    );
+
+    if (!regNoIsLoaded) {
+      throw new Error(
+        'Could not load Registration no. medical specialist input',
+      );
+    }
+
+    await this.orderPuppeteer.input('#order_agb', order.customerName);
+
+    let regNoText = await this.orderPuppeteer.getInputValue('#order_agb');
+    if (regNoText !== order.customerName) {
+      await this.orderPuppeteer.input('#order_agb', order.customerName);
+    }
+
+    regNoText = await this.orderPuppeteer.getInputValue('#order_agb');
+    if (regNoText !== order.customerName) {
+      throw new Error(
+        'Failed to input Registration no. medical specialist input',
+      );
+    }
+
+    //Input end user.
     const endUserIsLoaded = await this.orderPuppeteer.checkLocation(
       '#order_enduser',
       false,
@@ -761,6 +803,31 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     endUserText = await this.orderPuppeteer.getInputValue('#order_enduser');
     if (endUserText !== order.orderNr) {
       throw new Error('Failed to input orderNr to end user input');
+    }
+
+    //Check dropdown value.
+    await this.orderPuppeteer.dropdownSelect(
+      '#order_opt_104',
+      'Safety (S-classification)',
+    );
+
+    //Go to brand and model page.
+
+    await this.waitClick(
+      '#scrollrbody > div.wizard_navigation > button.btn.btn-default.wizard_button_next',
+    );
+
+    const isModelLoaded = await this.orderPuppeteer.checkLocation(
+      '#insoleForm',
+      false,
+      false,
+    );
+
+    if (!isModelLoaded) {
+      console.log('Clicked next again');
+      await this.waitClick(
+        '#scrollrbody > div.wizard_navigation > button.btn.btn-default.wizard_button_next',
+      );
     }
   }
 

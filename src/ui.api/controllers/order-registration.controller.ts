@@ -7,7 +7,7 @@ import { OrderRegistrationDto } from '../dto/order-registration/order-registrati
 import { OrderLists } from '../../core/models/order-lists';
 import { STSOrderModel } from '../../core/models/sts-order.model';
 import { AllocationDto } from '../dto/order-registration/allocation-dto';
-import { AllocationTestDto } from "../dto/order-registration/allocationTest.dto";
+import { AllocationTestDto } from '../dto/order-registration/allocationTest.dto';
 
 @Controller('orderRegistration')
 export class OrderRegistrationController {
@@ -66,12 +66,9 @@ export class OrderRegistrationController {
 
   @Post('allocateOrders')
   async allocateOrders(@Body() allocationTestDto: AllocationTestDto) {
-
-
     const newDate = new Date();
     newDate.setDate(newDate.getDate() + 90);
     allocationTestDto.orderWithLogs.order.timeOfDelivery = newDate;
-
 
     const completedOrders =
       await this.orderRegistrationService.handleAllocations(

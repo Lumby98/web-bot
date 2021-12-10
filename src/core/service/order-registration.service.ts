@@ -1026,18 +1026,24 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       await this.waitClick(targetAndSelector.selector);
       await this.waitClick('#topBtns > div > div > button:nth-child(4)');
 
-      const isInAlocation = this.orderPuppeteer.checkLocation(
+      let isInAlocation = await this.orderPuppeteer.checkLocation(
         '#delivery',
         false,
         false,
       );
 
       if (!isInAlocation) {
-        await this.tryAgain(
-          '#delivery',
-          '#topBtns > div > div > button:nth-child(4)',
-          0,
-        );
+        await this.waitClick('#topBtns > div > div > button:nth-child(4)');
+      }
+
+      isInAlocation = await this.orderPuppeteer.checkLocation(
+        '#delivery',
+        false,
+        false,
+      );
+
+      if (!isInAlocation) {
+        throw new Error('Failed to allocate, order is already allocated');
       }
 
       if (orderWithLogs.insole) {
@@ -1215,6 +1221,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
         },
       };
       orderWithLogs.logEntries.push(log);
+      orderWithLogs.order = undefined;
       await this.goToURL(
         this.configService.get('ORTOWEARURL') + 'administration/ordersAdmin/',
       );

@@ -26,6 +26,8 @@ import {
 } from '../../core/interfaces/log.interface';
 import { OrderList } from '../../core/models/order-list';
 import { OrderWithLogs } from '../../core/models/orderWithLogs';
+import { ConfigService } from '@nestjs/config';
+import { CreateLogDto } from '../dto/log/logEntry/create-log.dto';
 
 @WebSocketGateway()
 export class OrderRegistrationGateway
@@ -38,6 +40,7 @@ export class OrderRegistrationGateway
     private readonly savedLoginService: savedLoginServiceInterface,
     @Inject(logInterfaceProvider)
     private readonly logService: LogInterface,
+    private configService: ConfigService,
   ) {}
   handleConnection(client: any, ...args: any[]): any {
     console.log('client connected order-registration gateway ' + client.id);
@@ -63,7 +66,7 @@ export class OrderRegistrationGateway
         orderReg.key,
       );
 
-      let allocatedOrders: OrderWithLogs = undefined;
+      const listLogEntries: CreateLogDto[] = [];
       for (const orderNumber of orderReg.orderNumbers) {
         const orders = await this.orderRegistrationService.handleOrders(
           orderNumber,
@@ -106,8 +109,8 @@ export class OrderRegistrationGateway
           orders,
           neskridLogin.username,
           neskridLogin.password,
-          false,
-          true,
+          this.configService.get('DEV'),
+          this.configService.get('COMPLETEORDER'),
         );
 
         const regOrderWithLogs = this.orderListToOrderWithLogs(regOrders);
@@ -136,13 +139,14 @@ export class OrderRegistrationGateway
           break;
         }
 
-        allocatedOrders = await this.orderRegistrationService.handleAllocations(
-          regOrderWithLogs,
-          ortowearLogin.username,
-          ortowearLogin.password,
-          false,
-          true,
-        );
+        const allocatedOrders =
+          await this.orderRegistrationService.handleAllocations(
+            regOrderWithLogs,
+            ortowearLogin.username,
+            ortowearLogin.password,
+            this.configService.get('DEV'),
+            this.configService.get('COMPLETEORDER'),
+          );
 
         processStepList = [
           {
@@ -159,12 +163,14 @@ export class OrderRegistrationGateway
           clientSocket,
         );
 
+        listLogEntries.push(...allocatedOrders.logEntries);
+
         if (!stepCheck) {
           break;
         }
       }
 
-      const logs = await this.logService.createAll(allocatedOrders.logEntries);
+      const logs = await this.logService.createAll(listLogEntries);
 
       clientSocket.emit('orderLogEvent', logs);
     } catch (err) {
@@ -214,13 +220,10 @@ export class OrderRegistrationGateway
     processStepList: ProcessStepDto[],
     clientSocket: Socket,
   ): Promise<boolean> {
-    if (orders.order === null) {
-      const logs = await this.logService.createAll(orders.logEntries);
-
+    if (!orders.order) {
       for (const processStep of processStepList) {
         clientSocket.emit('processStepEvent', processStep);
       }
-      clientSocket.emit('orderLogEvent', logs);
 
       return false;
     } else {

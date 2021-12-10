@@ -893,7 +893,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       false,
     );
 
-    await this.orderPuppeteer.wait('#insoleForm', 5000);
+    await this.orderPuppeteer.wait('#insoleForm', 2000);
 
     if (!isModelLoaded) {
       throw new Error('failed to load model page');
@@ -924,7 +924,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     );
     console.log('click');
 
-    await this.orderPuppeteer.wait('#choiceinvalidLabel', 5000);
+    await this.orderPuppeteer.wait('#choiceinvalidLabel', 2000);
 
     const IsModelModal = await this.orderPuppeteer.checkLocation(
       '#choiceinvalidLabel',
@@ -933,13 +933,14 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     );
 
     if (!IsModelModal) {
-      await this.orderPuppeteer.wait('#choiceinvalidLabel', 5000);
+      await this.orderPuppeteer.wait('#choiceinvalidLabel', 2000);
       console.log('click');
       await this.orderPuppeteer.click(
         '#page-content-wrapper > div > div > div > form > div:nth-child(2) > div > div > span',
         true,
       );
     }
+
   }
 
   private async inputModel(model: string, size: string, width: string) {

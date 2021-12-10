@@ -479,6 +479,10 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
     await this.page.select(selector, dataValue);
   }
 
+  searchableSelect(selector: string, value: string): Promise<boolean> {
+    throw new Error('Method not implemented.');
+  }
+
   async selectDate(date: number): Promise<string> {
     for (let tr = 1; tr <= 6; tr++) {
       for (let td = 1; td <= 7; td++) {

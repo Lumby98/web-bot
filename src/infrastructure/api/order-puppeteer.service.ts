@@ -409,15 +409,13 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
    * gets texts based on selector
    * @param selector
    */
-  async getModelText(selector: string): Promise<string[]> {
+  async getTextsForAll(selector: string): Promise<string[]> {
     return await this.page.$$eval(selector, (el) => {
-      const modelTextArray = el.map((e) => e.textContent);
-      if (modelTextArray.length < 1) {
-        throw new Error(
-          'Failed to find model names: ' + modelTextArray.length.toString(),
-        );
+      const textArray = el.map((e) => e.textContent);
+      if (textArray.length < 1) {
+        throw new Error('Failed to find text: ' + textArray.length.toString());
       }
-      return modelTextArray;
+      return textArray;
     });
   }
 
@@ -479,7 +477,9 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
     await this.page.select(selector, dataValue);
   }
 
-  searchableSelect(selector: string, value: string): Promise<boolean> {
+  async searchableSelect(selector: string, value: string): Promise<boolean> {
+    const brandnames = await this.getTextsForAll('.searchable-select-item');
+
     throw new Error('Method not implemented.');
   }
 

@@ -31,7 +31,7 @@ export interface OrderPuppeteerInterface {
   click(selector: string, hover: boolean);
   dropdownSelect(selector: string, textValue: string);
   selectByTexts(selector: string, textValue: string);
-  getModelText(selector: string): Promise<string[]>;
+  getTextsForAll(selector: string): Promise<string[]>;
   getInputValue(selector: string): Promise<string>;
   getTableTargetandSelector(orderNumber: string): Promise<TargetAndSelector>;
   selectDate(date: number): Promise<string>;

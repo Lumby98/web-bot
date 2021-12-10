@@ -958,7 +958,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     if (!isModelLoaded) {
       throw new Error('failed to load model page');
     }
-    const models: string[] = await this.orderPuppeteer.getModelText(
+    const models: string[] = await this.orderPuppeteer.getTextsForAll(
       'div.col-md-7 > div.row > div > h3',
     );
     console.log(models);

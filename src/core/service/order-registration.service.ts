@@ -884,6 +884,34 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     }
   }
 
+  private async inssInputModel(order: INSSOrderModel) {
+    const isModelLoaded = await this.orderPuppeteer.checkLocation(
+      '#insoleForm',
+      false,
+      false,
+    );
+
+    await this.orderPuppeteer.wait('#insoleForm', 5000);
+
+    if (!isModelLoaded) {
+      throw new Error('failed to load model page');
+    }
+
+    const isModelDropdown = '#page-content-wrapper > div > div > div > form > div:nth-child(2)';
+
+    const modelDropdownResult = await this.orderPuppeteer.checkLocation(
+      isModelDropdown,
+      false,
+      false,
+    );
+
+    if (!modelDropdownResult) {
+      throw new Error('Cannot load dropdown!');
+    }
+
+    await this.waitClick(isModelDropdown);
+  }
+
   private async inputModel(model: string, size: string, width: string) {
     const isModelLoaded = await this.orderPuppeteer.checkLocation(
       '#page-content-wrapper > div > div > div > div.col-md-7 > div',

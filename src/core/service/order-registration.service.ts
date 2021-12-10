@@ -647,6 +647,8 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
           throw new Error('Could not load usage environment page.');
         }
         await this.INSsInputUsageEnvironment(orders.INSOrder);
+
+        await this.inssInputModel(orders.INSOrder);
         return;
       } catch (err) {
         const log: CreateLogDto = {
@@ -897,7 +899,8 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       throw new Error('failed to load model page');
     }
 
-    const isModelDropdown = '#page-content-wrapper > div > div > div > form > div:nth-child(2)';
+    const isModelDropdown =
+      '#page-content-wrapper > div > div > div > form > div:nth-child(2) > div > div';
 
     const modelDropdownResult = await this.orderPuppeteer.checkLocation(
       isModelDropdown,
@@ -909,7 +912,34 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       throw new Error('Cannot load dropdown!');
     }
 
-    await this.waitClick(isModelDropdown);
+    // await this.waitClick(isModelDropdown);
+
+    /* await this.waitClick(
+      '#page-content-wrapper > div > div > div > form > div:nth-child(2) > div > div > span',
+    );*/
+
+    await this.orderPuppeteer.click(
+      '#page-content-wrapper > div > div > div > form > div:nth-child(2) > div > div > span',
+      true,
+    );
+    console.log('click');
+
+    await this.orderPuppeteer.wait('#choiceinvalidLabel', 5000);
+
+    const IsModelModal = await this.orderPuppeteer.checkLocation(
+      '#choiceinvalidLabel',
+      false,
+      true,
+    );
+
+    if (!IsModelModal) {
+      await this.orderPuppeteer.wait('#choiceinvalidLabel', 5000);
+      console.log('click');
+      await this.orderPuppeteer.click(
+        '#page-content-wrapper > div > div > div > form > div:nth-child(2) > div > div > span',
+        true,
+      );
+    }
   }
 
   private async inputModel(model: string, size: string, width: string) {

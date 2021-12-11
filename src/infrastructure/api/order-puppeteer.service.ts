@@ -479,8 +479,20 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
     await this.page.select(selector, dataValue);
   }
 
-  async selectInputContainerByArticleName(name: string) {
-    throw new Error('Not implemented method');
+  async selectInputContainerByArticleName(
+    name: string,
+    selectorForContainingElement: string,
+  ) {
+    await this.page.waitForSelector('.input-container');
+    const formGroup = await this.page.$(selectorForContainingElement);
+    const articles = await formGroup.$$('.input-container');
+
+    for (const article of articles) {
+      const articleName = await article.$eval(
+        '.color-primary',
+        (el) => el.textContent,
+      ); 
+    }
   }
 
   async searchableSelect(value: string) {

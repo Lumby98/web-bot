@@ -38,5 +38,5 @@ export interface OrderPuppeteerInterface {
   selectDropdownByValue(selector: string, value: string);
   getSelectedValue(selector: string): Promise<string>;
   searchableSelect(value: string);
-  selectInputContainerByArticleName(name: string);
+  selectInputContainerByArticleName(name: string, selectorForContainingElement: string);
 }

@@ -486,13 +486,28 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
     await this.page.waitForSelector('.input-container');
     const formGroup = await this.page.$(selectorForContainingElement);
     const articles = await formGroup.$$('.input-container');
+    const lowerCaseName = name.toLowerCase();
+    let foundArticle = null;
 
     for (const article of articles) {
       const articleName = await article.$eval(
         '.color-primary',
         (el) => el.textContent,
-      ); 
+      );
+      const lowerCaseArticleName = articleName.toLowerCase();
+
+      if (lowerCaseName.includes(lowerCaseArticleName)) {
+        if (!foundArticle) {
+          foundArticle = article;
+        } else {
+          throw new Error('More than one container matches the name');
+        }
+      }
     }
+    if (!foundArticle) {
+      throw new Error('Did not find matching container!');
+    }
+    foundArticle.click();
   }
 
   async searchableSelect(value: string) {

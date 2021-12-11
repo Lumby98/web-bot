@@ -482,11 +482,14 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
   async selectInputContainerByArticleName(
     name: string,
     selectorForContainingElement: string,
+    brandName: string,
   ) {
     await this.page.waitForSelector('.input-container');
     const formGroup = await this.page.$(selectorForContainingElement);
     const articles = await formGroup.$$('.input-container');
     const lowerCaseName = name.toLowerCase();
+    const brandCount = brandName.trim().length;
+    const editedLowerCaseName = lowerCaseName.substring(brandCount).trim();
     let foundArticle = null;
 
     for (const article of articles) {
@@ -496,7 +499,7 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
       );
       const lowerCaseArticleName = articleName.toLowerCase();
 
-      if (lowerCaseName.includes(lowerCaseArticleName)) {
+      if (lowerCaseArticleName.includes(editedLowerCaseName)) {
         if (!foundArticle) {
           foundArticle = article;
         } else {
@@ -510,7 +513,7 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
     foundArticle.click();
   }
 
-  async searchableSelect(value: string) {
+  async searchableSelect(value: string): Promise<string> {
     const brandNames = await this.getTextsForAll('.searchable-select-item');
 
     let brandName = null;
@@ -545,6 +548,8 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
     //search for the current brand and selects it
     await this.page.type('.searchable-select-input', brandName);
     await this.page.keyboard.press('Enter');
+
+    return brandName;
   }
 
   async selectDate(date: number): Promise<string> {

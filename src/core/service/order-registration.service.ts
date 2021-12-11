@@ -939,7 +939,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
         true,
       );
     }
-    await this.orderPuppeteer.searchableSelect(order.model);
+    const brandName = await this.orderPuppeteer.searchableSelect(order.model);
 
     await this.orderPuppeteer.wait(
       '#scrollrbody > div.modal.fade.modal-choiceinvalid.in > div > div > div.modal-body > div > div.form > form > div:nth-child(3)',
@@ -949,6 +949,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     await this.orderPuppeteer.selectInputContainerByArticleName(
       order.model,
       '#scrollrbody > div.modal.fade.modal-choiceinvalid.in > div > div > div.modal-body > div > div.form > form > div:nth-child(3)',
+      brandName,
     );
   }
 

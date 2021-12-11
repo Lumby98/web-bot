@@ -5,6 +5,7 @@ import { Browser, KeyInput, Page } from 'puppeteer';
 import { TargetAndSelector } from '../../core/models/target-and-selector';
 import { OrderInfoModel } from '../../core/models/order-info.model';
 import { INSSOrderModel } from 'src/core/models/ins-s-order.model';
+import { string } from '@hapi/joi';
 
 @Injectable()
 export class OrderPuppeteerService implements OrderPuppeteerInterface {
@@ -410,6 +411,7 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
    * @param selector
    */
   async getTextsForAll(selector: string): Promise<string[]> {
+    await this.page.waitForTimeout(2000);
     return await this.page.$$eval(selector, (el) => {
       const textArray = el.map((e) => e.textContent);
       if (textArray.length < 1) {
@@ -477,10 +479,45 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
     await this.page.select(selector, dataValue);
   }
 
-  async searchableSelect(selector: string, value: string): Promise<boolean> {
-    const brandnames = await this.getTextsForAll('.searchable-select-item');
+  async selectInputContainerByArticleName(name: string) {
+    throw new Error('Not implemented method');
+  }
 
-    throw new Error('Method not implemented.');
+  async searchableSelect(value: string) {
+    const brandNames = await this.getTextsForAll('.searchable-select-item');
+
+    let brandName = null;
+    const lowerCaseValue = value.toLowerCase();
+
+    for (const brand of brandNames) {
+      const lowerCaseBrand = brand.toLowerCase();
+
+      if (lowerCaseValue.includes(lowerCaseBrand)) {
+        if (!brandName) {
+          brandName = brand;
+        } else {
+          throw new Error(
+            'More than one brand name matches the model' +
+              brandName +
+              'and' +
+              brand,
+          );
+        }
+      }
+    }
+
+    if (!brandName) {
+      throw new Error('No brand name matches the model');
+    }
+
+    //opens dropdown menu
+    await this.page.waitForSelector('.searchable-select-holder');
+    await this.page.click('.searchable-select-holder');
+    await this.page.waitForTimeout(500);
+
+    //search for the current brand and selects it
+    await this.page.type('.searchable-select-input', brandName);
+    await this.page.keyboard.press('Enter');
   }
 
   async selectDate(date: number): Promise<string> {

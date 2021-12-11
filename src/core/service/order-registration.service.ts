@@ -922,7 +922,6 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       '#page-content-wrapper > div > div > div > form > div:nth-child(2) > div > div > span',
       true,
     );
-    console.log('click');
 
     await this.orderPuppeteer.wait('#choiceinvalidLabel', 2000);
 
@@ -940,7 +939,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
         true,
       );
     }
-
+    await this.orderPuppeteer.searchableSelect(order.model);
   }
 
   private async inputModel(model: string, size: string, width: string) {

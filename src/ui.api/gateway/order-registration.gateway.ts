@@ -102,7 +102,7 @@ export class OrderRegistrationGateway
           clientSocket,
         );
         if (!stepCheck) {
-          break;
+          continue;
         }
 
         const regOrders = await this.orderRegistrationService.createOrder(
@@ -136,7 +136,7 @@ export class OrderRegistrationGateway
         );
 
         if (!stepCheck) {
-          break;
+          continue;
         }
 
         const allocatedOrders =
@@ -164,10 +164,6 @@ export class OrderRegistrationGateway
         );
 
         listLogEntries.push(...allocatedOrders.logEntries);
-
-        if (!stepCheck) {
-          break;
-        }
       }
 
       const logs = await this.logService.createAll(listLogEntries);

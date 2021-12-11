@@ -48,7 +48,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
         process: ProcessStepEnum.GETORDERINFO,
         timestamp: new Date(),
         order: {
-          orderNr: 'No Order number: failed to navigate to ortowear',
+          orderNr: orderNumber,
           completed: false,
         },
       };
@@ -468,13 +468,23 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       );
       console.log(orders.STSOrder);
     } catch (err) {
+      let orderNr;
+
+      if (orders.STSOrder) {
+        orderNr = orders.STSOrder.orderNr;
+      }
+
+      if (orders.INSOrder) {
+        orderNr = orders.INSOrder.orderNr;
+      }
+
       const log: CreateLogDto = {
         error: { errorMessage: err.message },
         status: false,
         process: ProcessStepEnum.REGISTERORDER,
         timestamp: new Date(),
         order: {
-          orderNr: 'No Order number: failed to navigate to neskrid',
+          orderNr: orderNr,
           completed: false,
         },
       };
@@ -1009,11 +1019,12 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
         process: ProcessStepEnum.ALOCATEORDER,
         timestamp: new Date(),
         order: {
-          orderNr: 'No Order number: failed to navigate to ortowear',
+          orderNr: orderWithLogs.order.orderNr,
           completed: false,
         },
       };
       orderWithLogs.logEntries.push(log);
+      orderWithLogs.order = undefined;
       return orderWithLogs;
     }
 

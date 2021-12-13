@@ -102,6 +102,7 @@ export class OrderRegistrationGateway
           clientSocket,
         );
         if (!stepCheck) {
+          listLogEntries.push(...orderWithLogs.logEntries);
           continue;
         }
 
@@ -136,6 +137,7 @@ export class OrderRegistrationGateway
         );
 
         if (!stepCheck) {
+          listLogEntries.push(...regOrderWithLogs.logEntries);
           continue;
         }
 

@@ -620,6 +620,13 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
       return stylesObject.backgroundColor;
     });
   }
+
+  async clickRadioButton(selector: string) {
+    //find radioButton, just clicking it won't work
+    await this.page.waitForSelector(selector);
+    const checkbox = await this.page.$(selector);
+    await this.page.evaluate((cb) => cb.click(), checkbox);
+  }
   /*//I have tried.
   async selectByTexts(selector: string, textValue: string) {
     const elements = await this.page.$$(selector);

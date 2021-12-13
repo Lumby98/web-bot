@@ -39,6 +39,7 @@ export interface OrderPuppeteerInterface {
   getSelectedValue(selector: string): Promise<string>;
   getSelectedText(selector: string): Promise<string>;
   searchableSelect(value: string): Promise<string>;
+  clickRadioButton(selector: string);
   selectInputContainerByArticleName(
     name: string,
     selectorForContainingElement: string,

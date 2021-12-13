@@ -974,8 +974,43 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     );
 
     //select left size.
-    /*await this.orderPuppeteer.dropdownSelect('#order_opt_left15', order.sizeL);
-    console.log(await this.orderPuppeteer.getSelectedText('#order_opt_left15'));*/
+    await this.orderPuppeteer.dropdownSelect(
+      '#order_opt_left15',
+      sizeLSplit[0],
+    );
+
+    //select right size.
+    await this.orderPuppeteer.dropdownSelect(
+      '#order_opt_right15',
+      sizeRSplit[0],
+    );
+
+    await this.orderPuppeteer.wait('#model_thumb9', 3000);
+    const isCoverSafety = await this.orderPuppeteer.checkLocation(
+      '#model_thumb9',
+      false,
+      true,
+    );
+
+    if (!isCoverSafety) {
+      await this.orderPuppeteer.wait('#model_thumb9', 3000);
+
+      const coverSafetyNotGone = await this.orderPuppeteer.checkLocation(
+        '#model_thumb9',
+        false,
+        true,
+      );
+
+      //checks again if the selector is there
+      if (!coverSafetyNotGone) {
+        throw new Error('Cannot find cover safety selector!');
+      }
+      //click the selector
+      await this.orderPuppeteer.clickRadioButton('#model_thumb9');
+    } else {
+      //click the selector
+      await this.orderPuppeteer.clickRadioButton('#model_thumb9');
+    }
   }
 
   private async inputModel(model: string, size: string, width: string) {

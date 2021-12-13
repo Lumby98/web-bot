@@ -967,6 +967,12 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     const sizeLSplit = order.sizeL.split(' ');
     const sizeRSplit = order.sizeR.split(' ');
 
+    await this.orderPuppeteer.click('#model_thumb9', true);
+    await this.orderPuppeteer.click(
+      '#insoleForm > div:nth-child(3) > div > div:nth-child(3)',
+      true,
+    );
+
     //select left size.
     /*await this.orderPuppeteer.dropdownSelect('#order_opt_left15', order.sizeL);
     console.log(await this.orderPuppeteer.getSelectedText('#order_opt_left15'));*/

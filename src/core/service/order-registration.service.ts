@@ -951,6 +951,25 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       '#scrollrbody > div.modal.fade.modal-choiceinvalid.in > div > div > div.modal-body > div > div.form > form > div:nth-child(3)',
       brandName,
     );
+
+    /*
+    Click on Orthotic card.
+     */
+    //wait for the button to load.
+    await this.orderPuppeteer.wait('#cemod_1', 5000);
+
+    //Click on the button
+    await this.orderPuppeteer.click('#cemod_1', true);
+
+    /*
+    Select size
+    */
+    const sizeLSplit = order.sizeL.split(' ');
+    const sizeRSplit = order.sizeR.split(' ');
+
+    //select left size.
+    /*await this.orderPuppeteer.dropdownSelect('#order_opt_left15', order.sizeL);
+    console.log(await this.orderPuppeteer.getSelectedText('#order_opt_left15'));*/
   }
 
   private async inputModel(model: string, size: string, width: string) {

@@ -607,6 +607,13 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
     );
   }
 
+  async getSelectedText(selector: string): Promise<string> {
+    return await this.page.$eval(
+      selector,
+      (selectedValue: HTMLInputElement) => selectedValue.textContent,
+    );
+  }
+
   async getCSSofElement(selector: string, property: string): Promise<string> {
     return await this.page.$eval(selector, (el) => {
       const stylesObject = getComputedStyle(el);

@@ -142,6 +142,7 @@ export class LogService implements LogInterface {
         log.error = {
           id: logError.id,
           errorMessage: logError.errorMessage,
+          displayErrorMessage: logError.displayErrorMessage,
           logs: [],
         };
       } else {
@@ -239,5 +240,79 @@ export class LogService implements LogInterface {
 
   async removeAll() {
     await this.logRepository.clear();
+  }
+
+  async update(updateLogDto: UpdateLogDto): Promise<LogModel> {
+    const logFromDatabase = await this.logRepository.findOne({
+      where: { id: updateLogDto.id },
+      relations: ['order', 'error'],
+    });
+
+    if (!logFromDatabase) {
+      throw new Error(
+        'This log does not exist, cant update a non existing log',
+      );
+    }
+
+    const orderCheck = await this.orderService.checkOrder(
+      updateLogDto.order.orderNr,
+    );
+
+    let order;
+    if (!orderCheck) {
+      order = await this.orderService.create(updateLogDto.order);
+      logFromDatabase.order = {
+        id: order.id,
+        orderNr: order.orderNr,
+        completed: order.completed,
+        logs: [],
+      };
+    } else {
+      order = await this.orderService.findByOrderNumber(
+        updateLogDto.order.orderNr,
+      );
+      logFromDatabase.order = order;
+      logFromDatabase.order.completed = updateLogDto.order.completed;
+      await this.orderService.update(
+        logFromDatabase.order.id,
+        logFromDatabase.order,
+      );
+    }
+
+    if (updateLogDto.error) {
+      const errorCheck = await this.logErrorService.errorCheck(
+        updateLogDto.error.errorMessage,
+      );
+
+      let logError;
+      if (!errorCheck) {
+        logError = await this.logErrorService.create(updateLogDto.error);
+        logFromDatabase.error = {
+          id: logError.id,
+          errorMessage: logError.errorMessage,
+          displayErrorMessage: logError.displayErrorMessage,
+          logs: [],
+        };
+      } else {
+        logError = await this.logErrorService.findByMessage(
+          updateLogDto.error.errorMessage,
+        );
+        logFromDatabase.error = logError;
+        logFromDatabase.error.displayErrorMessage =
+          updateLogDto.error.displayErrorMessage;
+        await this.logErrorService.update(
+          logFromDatabase.error.id,
+          logFromDatabase.error,
+        );
+      }
+    }
+
+    logFromDatabase.status = updateLogDto.status;
+    logFromDatabase.process = updateLogDto.process;
+    logFromDatabase.timestamp = updateLogDto.timestamp;
+
+    return JSON.parse(
+      JSON.stringify(await this.logRepository.save(logFromDatabase)),
+    );
   }
 }

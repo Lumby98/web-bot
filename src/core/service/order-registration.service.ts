@@ -13,12 +13,14 @@ import { ProcessStepEnum } from '../enums/processStep.enum';
 import { OrderList } from '../models/order-list';
 import { OrderInfoModel } from '../models/order-info.model';
 import { OrderWithLogs } from '../models/orderWithLogs';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class OrderRegistrationService implements OrderRegistrationInterface {
   constructor(
     @Inject(orderPuppeteerInterfaceProvider)
     private readonly orderPuppeteer: OrderPuppeteerInterface,
+    private configService: ConfigService,
   ) {}
 
   /**
@@ -37,7 +39,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       await this.startPuppeteer('https://www.google.com/');
       await this.handleOrtowearNavigation(login.username, login.password);
       await this.goToURL(
-        'https://beta.ortowear.com/administration/ordersAdmin/',
+        this.configService.get('ORTOWEARURL') + 'administration/ordersAdmin/',
       );
     } catch (err) {
       const log: CreateLogDto = {
@@ -46,7 +48,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
         process: ProcessStepEnum.GETORDERINFO,
         timestamp: new Date(),
         order: {
-          orderNr: 'No Order number: failed to navigate to ortowear',
+          orderNr: orderNumber,
           completed: false,
         },
       };
@@ -103,7 +105,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       };
       logEntries.push(log);
       await this.goToURL(
-        'https://beta.ortowear.com/administration/ordersAdmin/',
+        this.configService.get('ORTOWEARURL') + 'administration/ordersAdmin/',
       );
     } catch (err) {
       const log: CreateLogDto = {
@@ -168,7 +170,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       throw new Error('Wrong username or password');
     }
 
-    await this.goToURL('https://beta.ortowear.com/');
+    await this.goToURL(this.configService.get('ORTOWEARURL'));
 
     await this.orderPuppeteer.loginOrtowear(username, password);
 
@@ -197,7 +199,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       }
     }
 
-    const myPageURL = 'https://beta.ortowear.com/my_page';
+    const myPageURL = this.configService.get('ORTOWEARURL') + 'my_page';
     const currentURL = await this.orderPuppeteer.getCurrentURL();
     if (myPageURL != currentURL) {
       if (
@@ -541,13 +543,23 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       );
       console.log(orders.STSOrder);
     } catch (err) {
+      let orderNr;
+
+      if (orders.STSOrder) {
+        orderNr = orders.STSOrder.orderNr;
+      }
+
+      if (orders.INSOrder) {
+        orderNr = orders.INSOrder.orderNr;
+      }
+
       const log: CreateLogDto = {
         error: { errorMessage: err.message },
         status: false,
         process: ProcessStepEnum.REGISTERORDER,
         timestamp: new Date(),
         order: {
-          orderNr: 'No Order number: failed to navigate to neskrid',
+          orderNr: orderNr,
           completed: false,
         },
       };
@@ -1220,12 +1232,12 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       }/${newDate.getFullYear()}`;
     }
     await this.orderPuppeteer.click('#wizard_button_save', true);
-    const loginBtn = await this.orderPuppeteer.checkLocation(
+    const pageCheck = await this.orderPuppeteer.checkLocation(
       '#page-content-wrapper > div > div:nth-child(3) > div > section > div.panel-footer > a.btn.btn-success',
       false,
       false,
     );
-    if (!loginBtn) {
+    if (!pageCheck) {
       await this.tryAgain(
         '#page-content-wrapper > div > div:nth-child(3) > div > section > div.panel-footer > a.btn.btn-success',
         '#wizard_button_save',
@@ -1269,6 +1281,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
         '#choiceinvalid-footer > button.btn.btn-success',
         true,
       );
+      await this.orderPuppeteer.wait(null, 5000);
     } else {
       //cancel btn
       await this.orderPuppeteer.click(
@@ -1285,16 +1298,16 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
 
   /**
    * Formats strings to a format that the javascript Date class will accept.
-   * Formats from this: '26-11-2021'
-   * Formats to this format: '2011-04-11T10:20:30Z'
+   * Formats from this: 'mm/dd/yyyy'
+   * Formats to this format: 'yyyy-mm-ddThh:mm:ssZ'
    * @param deliveryDateString
    */
   formatDeliveryDate(deliveryDateString: string): Date {
     console.log(deliveryDateString);
     const splitDate = deliveryDateString.split('/');
     const year = Number.parseInt(splitDate[2]);
-    const month = Number.parseInt(splitDate[1]) - 1;
-    const date = Number.parseInt(splitDate[0]);
+    const month = Number.parseInt(splitDate[0]) - 1;
+    const date = Number.parseInt(splitDate[1]);
     const formattedDate = new Date(year, month, date);
     console.log(
       `Year: ${year}, Month: ${month}, Date: ${date}, formatedDate: ${formattedDate}`,
@@ -1314,7 +1327,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       await this.startPuppeteer('https://www.google.com/');
       await this.handleOrtowearNavigation(username, password);
       await this.goToURL(
-        'https://beta.ortowear.com/administration/ordersAdmin/',
+        this.configService.get('ORTOWEARURL') + 'administration/ordersAdmin/',
       );
     } catch (err) {
       const log: CreateLogDto = {
@@ -1323,11 +1336,12 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
         process: ProcessStepEnum.ALOCATEORDER,
         timestamp: new Date(),
         order: {
-          orderNr: 'No Order number: failed to navigate to ortowear',
+          orderNr: orderWithLogs.order.orderNr,
           completed: false,
         },
       };
       orderWithLogs.logEntries.push(log);
+      orderWithLogs.order = undefined;
       return orderWithLogs;
     }
 
@@ -1340,18 +1354,24 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       await this.waitClick(targetAndSelector.selector);
       await this.waitClick('#topBtns > div > div > button:nth-child(4)');
 
-      const isInAlocation = this.orderPuppeteer.checkLocation(
+      let isInAlocation = await this.orderPuppeteer.checkLocation(
         '#delivery',
         false,
         false,
       );
 
       if (!isInAlocation) {
-        await this.tryAgain(
-          '#delivery',
-          '#topBtns > div > div > button:nth-child(4)',
-          0,
-        );
+        await this.waitClick('#topBtns > div > div > button:nth-child(4)');
+      }
+
+      isInAlocation = await this.orderPuppeteer.checkLocation(
+        '#delivery',
+        false,
+        false,
+      );
+
+      if (!isInAlocation) {
+        throw new Error('Failed to allocate, order is already allocated');
       }
 
       if (orderWithLogs.insole) {
@@ -1515,7 +1535,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       };
       orderWithLogs.logEntries.push(log);
       await this.goToURL(
-        'https://beta.ortowear.com/administration/ordersAdmin/',
+        this.configService.get('ORTOWEARURL') + 'administration/ordersAdmin/',
       );
     } catch (err) {
       const log: CreateLogDto = {
@@ -1529,8 +1549,9 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
         },
       };
       orderWithLogs.logEntries.push(log);
+      orderWithLogs.order = undefined;
       await this.goToURL(
-        'https://beta.ortowear.com/administration/ordersAdmin/',
+        this.configService.get('ORTOWEARURL') + 'administration/ordersAdmin/',
       );
     }
 

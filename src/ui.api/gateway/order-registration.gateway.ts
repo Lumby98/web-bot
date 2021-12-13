@@ -24,8 +24,10 @@ import {
   LogInterface,
   logInterfaceProvider,
 } from '../../core/interfaces/log.interface';
-import { OrderLists } from '../../core/models/order-lists';
 import { OrderList } from '../../core/models/order-list';
+import { OrderWithLogs } from '../../core/models/orderWithLogs';
+import { ConfigService } from '@nestjs/config';
+import { CreateLogDto } from '../dto/log/logEntry/create-log.dto';
 
 @WebSocketGateway()
 export class OrderRegistrationGateway
@@ -38,6 +40,7 @@ export class OrderRegistrationGateway
     private readonly savedLoginService: savedLoginServiceInterface,
     @Inject(logInterfaceProvider)
     private readonly logService: LogInterface,
+    private configService: ConfigService,
   ) {}
   handleConnection(client: any, ...args: any[]): any {
     console.log('client connected order-registration gateway ' + client.id);
@@ -63,193 +66,162 @@ export class OrderRegistrationGateway
         orderReg.key,
       );
 
-      const orders = await this.orderRegistrationService.handleOrders(
-        orderReg.orderNumbers[0],
-        { username: ortowearLogin.username, password: ortowearLogin.password },
-      );
-
-      /* let processStepList: ProcessStepDto[] = [
-        {
-          processStep: ProcessStepEnum.GETORDERINFO,
-          error: true,
-          errorMessage: 'Failed to get order info',
-        },
-        {
-          processStep: ProcessStepEnum.REGISTERORDER,
-          error: true,
-          errorMessage: 'Previous step failed',
-        },
-        {
-          processStep: ProcessStepEnum.ALOCATEORDER,
-          error: true,
-          errorMessage: 'Previous step failed',
-        },
-      ];
-*/
-      /* let stepCheck = await this.handleStep(
-        orders,
-        ProcessStepEnum.GETORDERINFO,
-        processStepList,
-        clientSocket,
-      );
-      if (!stepCheck) {
-        return;
-      }*/
-      /*
-
-      const regOrders = await this.orderRegistrationService.createOrder(
-        orders,
-        neskridLogin.username,
-        neskridLogin.password,
-        true,
-        false,
-      );
-
-      processStepList = [
-        {
-          processStep: ProcessStepEnum.REGISTERORDER,
-          error: true,
-          errorMessage: 'Register orders failed',
-        },
-        {
-          processStep: ProcessStepEnum.ALOCATEORDER,
-          error: true,
-          errorMessage: 'Previous step failed',
-        },
-      ];
-
-      stepCheck = await this.handleStep(
-        regOrders,
-        ProcessStepEnum.REGISTERORDER,
-        processStepList,
-        clientSocket,
-      );
-
-      if (!stepCheck) {
-        return;
-      }
-
-      const allocatedOrders =
-        await this.orderRegistrationService.handleAllocations(
-          regOrders,
-          ortowearLogin.username,
-          ortowearLogin.password,
-          true,
-          false,
+      const listLogEntries: CreateLogDto[] = [];
+      for (const orderNumber of orderReg.orderNumbers) {
+        const orders = await this.orderRegistrationService.handleOrders(
+          orderNumber,
+          {
+            username: ortowearLogin.username,
+            password: ortowearLogin.password,
+          },
         );
 
-      processStepList = [
-        {
-          processStep: ProcessStepEnum.ALOCATEORDER,
-          error: true,
-          errorMessage: 'Failed to allocate orders',
-        },
-      ];
+        const orderWithLogs = this.orderListToOrderWithLogs(orders);
 
-      stepCheck = await this.handleStep(
-        allocatedOrders,
-        ProcessStepEnum.ALOCATEORDER,
-        processStepList,
-        clientSocket,
-      );
+        let processStepList: ProcessStepDto[] = [
+          {
+            processStep: ProcessStepEnum.GETORDERINFO,
+            error: true,
+            errorMessage: 'Failed to get order info',
+          },
+          {
+            processStep: ProcessStepEnum.REGISTERORDER,
+            error: true,
+            errorMessage: 'Previous step failed',
+          },
+          {
+            processStep: ProcessStepEnum.ALOCATEORDER,
+            error: true,
+            errorMessage: 'Previous step failed',
+          },
+        ];
+        let stepCheck = await this.handleStep(
+          orderWithLogs,
+          ProcessStepEnum.GETORDERINFO,
+          processStepList,
+          clientSocket,
+        );
+        if (!stepCheck) {
+          listLogEntries.push(...orderWithLogs.logEntries);
+          continue;
+        }
 
-      if (!stepCheck) {
-        return;
+        const regOrders = await this.orderRegistrationService.createOrder(
+          orders,
+          neskridLogin.username,
+          neskridLogin.password,
+          this.configService.get('DEV'),
+          this.configService.get('COMPLETEORDER'),
+        );
+
+        const regOrderWithLogs = this.orderListToOrderWithLogs(regOrders);
+
+        processStepList = [
+          {
+            processStep: ProcessStepEnum.REGISTERORDER,
+            error: true,
+            errorMessage: 'Register orders failed',
+          },
+          {
+            processStep: ProcessStepEnum.ALOCATEORDER,
+            error: true,
+            errorMessage: 'Previous step failed',
+          },
+        ];
+
+        stepCheck = await this.handleStep(
+          regOrderWithLogs,
+          ProcessStepEnum.REGISTERORDER,
+          processStepList,
+          clientSocket,
+        );
+
+        if (!stepCheck) {
+          listLogEntries.push(...regOrderWithLogs.logEntries);
+          continue;
+        }
+
+        const allocatedOrders =
+          await this.orderRegistrationService.handleAllocations(
+            regOrderWithLogs,
+            ortowearLogin.username,
+            ortowearLogin.password,
+            this.configService.get('DEV'),
+            this.configService.get('COMPLETEORDER'),
+          );
+
+        processStepList = [
+          {
+            processStep: ProcessStepEnum.ALOCATEORDER,
+            error: true,
+            errorMessage: 'Failed to allocate orders',
+          },
+        ];
+
+        stepCheck = await this.handleStep(
+          allocatedOrders,
+          ProcessStepEnum.ALOCATEORDER,
+          processStepList,
+          clientSocket,
+        );
+
+        listLogEntries.push(...allocatedOrders.logEntries);
       }
 
-      const logs = await this.logService.createAll(orders.logEntries);
+      const logs = await this.logService.createAll(listLogEntries);
 
       clientSocket.emit('orderLogEvent', logs);
-*/
-
-      /*const processSteps: Array<ProcessStepDto> = [
-        { processStep: ProcessStepEnum.GETORDERINFO, error: false },
-        { processStep: ProcessStepEnum.REGISTERORDER, error: false },
-        { processStep: ProcessStepEnum.ALOCATEORDER, error: false },
-      ];
-
-      const observable = new Observable<ProcessStepDto>((subscriber) => {
-        for (let i = 0; i < processSteps.length; i++) {
-          setTimeout(() => {
-            subscriber.next(processSteps[i]);
-            if (i === processSteps.length - 1) {
-              subscriber.complete();
-            }
-          }, 5000 * (i + 1));
-        }
-      });
-
-      //Emit logEntries
-      const orderNumbers = orderReg.orderNumbers;
-      let logIdNum = 1;
-      let orderIdNum = 1;
-      const logEntries: Array<LogEntryDto> = [];
-
-      for (let i = 0; i <= orderNumbers.length; i++) {
-        let logEntryDto: LogEntryDto = {
-          id: logIdNum++,
-          process: ProcessStepEnum.REGISTERORDER,
-          status: true,
-          timestamp: new Date(),
-          order: {
-            id: orderIdNum++,
-            orderNr: Math.floor(Math.random() * (10000 - 100) + 100).toString(),
-            completed: false,
-          },
-        };
-
-        if (i == orderNumbers.length) {
-          logEntryDto = {
-            id: logIdNum++,
-            process: ProcessStepEnum.REGISTERORDER,
-            status: true,
-            timestamp: new Date(),
-            order: {
-              id: orderIdNum++,
-              orderNr: Math.floor(
-                Math.random() * (10000 - 100) + 100,
-              ).toString(),
-              completed: true,
-            },
-            error: {
-              id: orderIdNum++,
-              errorMessage: 'could not determine order-registration type ',
-            },
-          };
-        }
-
-        logEntries.push(logEntryDto);
-      }
-
-      observable.pipe(take(processSteps.length)).subscribe(
-        (processStep) => {
-          clientSocket.emit('processStepEvent', processStep);
-        },
-        (error) => {
-          console.log(error);
-        },
-        () => {
-          clientSocket.emit('orderLogEvent', logEntries);
-        },
-      );*/
     } catch (err) {
       clientSocket.error(err.message);
     }
   }
 
+  orderListToOrderWithLogs(orders: OrderList): OrderWithLogs {
+    if (orders.STSOrder) {
+      return {
+        order: {
+          orderNr: orders.STSOrder.orderNr,
+          id: orders.STSOrder.id,
+          EU: orders.STSOrder.EU,
+          customerName: orders.STSOrder.customerName,
+          deliveryAddress: orders.STSOrder.deliveryAddress,
+          timeOfDelivery: orders.STSOrder.timeOfDelivery,
+        },
+        logEntries: orders.logEntries,
+        insole: orders.STSOrder.insole,
+      };
+    } else if (orders.INSOrder) {
+      return {
+        order: {
+          orderNr: orders.INSOrder.orderNr,
+          id: orders.INSOrder.id,
+          EU: orders.INSOrder.EU,
+          customerName: orders.INSOrder.customerName,
+          deliveryAddress: orders.INSOrder.deliveryAddress,
+          timeOfDelivery: orders.INSOrder.timeOfDelivery,
+        },
+        logEntries: orders.logEntries,
+        insole: true,
+      };
+    } else {
+      return {
+        order: undefined,
+        logEntries: orders.logEntries,
+        insole: false,
+      };
+    }
+  }
+
   async handleStep(
-    orders: OrderList,
+    orders: OrderWithLogs,
     processStepEnum: ProcessStepEnum,
     processStepList: ProcessStepDto[],
     clientSocket: Socket,
   ): Promise<boolean> {
-    if (orders.STSOrder === null && orders.INSOrder === null) {
-      const logs = await this.logService.createAll(orders.logEntries);
-
+    if (!orders.order) {
       for (const processStep of processStepList) {
         clientSocket.emit('processStepEvent', processStep);
       }
-      clientSocket.emit('orderLogEvent', logs);
 
       return false;
     } else {

@@ -6,8 +6,11 @@ export class ErrorEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ unique: true })
   errorMessage: string;
+
+  @Column({ type: 'text', nullable: true })
+  displayErrorMessage?: string;
 
   @OneToMany(() => LogEntity, (log) => log.error)
   logs: LogEntity[];

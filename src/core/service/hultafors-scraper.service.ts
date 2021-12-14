@@ -47,6 +47,14 @@ export class HultaforsScraperService implements HultaforsScraperInterface {
           throw new Error('could not reach Hultafors');
         });
 
+      //Get rid of cookie notification
+      await page.waitForSelector(
+        '#cookieNotification > div:nth-child(2) > div > div > a',
+      );
+      const checkbox = await page.$(
+        '#cookieNotification > div:nth-child(2) > div > div > a',
+      );
+      await page.evaluate((cb) => cb.click(), checkbox);
       await this.handleLogin(page, username, password);
 
       //waiting for page after login to load, if 8 seconds passes throw an error indicating login failed
@@ -313,9 +321,15 @@ export class HultaforsScraperService implements HultaforsScraperInterface {
       await page.type('#User_Password', password).catch(() => {
         throw new Error('could not reach login');
       });
-      await page.click(
+
+      //Get rid of cookie notification
+      await page.waitForSelector(
         '#loginform > div > div.col-md-10.center-col > div.col-md-12.top30 > button',
       );
+      const checkbox = await page.$(
+        '#loginform > div > div.col-md-10.center-col > div.col-md-12.top30 > button',
+      );
+      await page.evaluate((cb) => cb.click(), checkbox);
     } catch (err) {
       throw err;
     }

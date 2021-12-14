@@ -17,10 +17,12 @@ import { hultaforsScraperInterfaceProvider } from '../../core/interfaces/hultafo
 import { hultaforsInterfaceProvider } from '../../core/interfaces/hultafors.interface';
 import { siteInterfaceProvider } from '../../core/interfaces/site.interface';
 import { Puppeteer } from 'puppeteer';
+import { AuthenticationModule } from './authentication.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([NeskridProduct, HultaforsProduct, Size, Site]),
+    AuthenticationModule,
   ],
   controllers: [ScraperController],
   providers: [

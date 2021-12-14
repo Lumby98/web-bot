@@ -1,12 +1,21 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { InsoleFromSheetDto } from '../../ui.api/dto/insole-upload/insole-from-sheet.dto';
 import { Page } from 'puppeteer';
 import { InsoleModel } from '../models/insole.model';
 import { RegisterInsoleDto } from '../../ui.api/dto/insole-upload/register-insole.dto';
 import { InsoleInterface } from '../interfaces/insole.interface';
+import {
+  savedLoginServiceInterface,
+  savedLoginServiceInterfaceProvider,
+} from '../interfaces/savedLoginService.interface';
+import { LoginTypeEnum } from '../enums/loginType.enum';
 
 @Injectable()
 export class InsoleService implements InsoleInterface {
+  constructor(
+    @Inject(savedLoginServiceInterfaceProvider)
+    private readonly savedLoginService: savedLoginServiceInterface,
+  ) {}
   puppeteer = require('puppeteer');
 
   /**
@@ -30,11 +39,17 @@ export class InsoleService implements InsoleInterface {
           throw new Error('could not reach Ortowear');
         });
 
+      //Get the ortowearLogin from saveLoginService using the key provided in the dto
+      const ortowearLogin = await this.savedLoginService.getLogin(
+        LoginTypeEnum.ORTOWEAR,
+        insoleDto.key,
+      );
+
       //logs in to the site
       await InsoleService.handleLogin(
         page,
-        insoleDto.username,
-        insoleDto.password,
+        ortowearLogin.username,
+        ortowearLogin.password,
       );
 
       //wait for elements on the frontpage after login for 8 seconds to ensure the user is logged in
@@ -133,7 +148,8 @@ export class InsoleService implements InsoleInterface {
       //if any insoles where not created add the order-registration number of the insole to the message
       console.log(couldNotFind.length + ' arr');
       if (couldNotFind.length > 0) {
-        returnString += ', but failed to register insoles with order-registration number: ';
+        returnString +=
+          ', but failed to register insoles with order-registration number: ';
         for (const failed of couldNotFind) {
           returnString += failed.orderNumber + ', ';
         }

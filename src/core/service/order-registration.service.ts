@@ -661,6 +661,9 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
         await this.INSsInputUsageEnvironment(orders.INSOrder);
 
         await this.inssInputModel(orders.INSOrder);
+
+        await this.orthotics();
+
         return;
       } catch (err) {
         const log: CreateLogDto = {
@@ -1023,6 +1026,25 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       //click the selector
       await this.orderPuppeteer.clickRadioButton('#model_thumb9');
     }
+
+    await this.waitClick(
+      '#scrollrbody > div.wizard_navigation > button.btn.btn-default.wizard_button_next',
+    );
+
+    const isOrthoticsLoaded = await this.orderPuppeteer.checkLocation(
+      '#order_opt_107',
+      false,
+      true,
+    );
+
+    if (!isOrthoticsLoaded) {
+      console.log('Clicked next again: orthotics');
+      await this.tryAgain(
+        '#order_opt_107',
+        '#scrollrbody > div.wizard_navigation > button.btn.btn-default.wizard_button_next',
+        0,
+      );
+    }
   }
 
   private async inputModel(model: string, size: string, width: string) {
@@ -1130,6 +1152,76 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       console.log('Clicked next again: supplement');
       await this.tryAgain(
         '#order_info_14',
+        '#scrollrbody > div.wizard_navigation > button.btn.btn-default.wizard_button_next',
+        0,
+      );
+    }
+  }
+  async orthotics() {
+    this.orderPuppeteer.wait('#order_opt_107', 5000);
+    const isOrthoticsLoaded = await this.orderPuppeteer.checkLocation(
+      '#order_opt_107',
+      false,
+      true,
+    );
+
+    if (!isOrthoticsLoaded) {
+      throw new Error('Could not get to supplement page');
+    }
+
+    this.orderPuppeteer.dropdownSelect('#order_opt_107', '4/4');
+
+    await this.orderPuppeteer.wait(
+      '#page-content-wrapper > div > div > div > form > div:nth-child(2) > div > div',
+      2000,
+    );
+    console.log('click');
+    await this.orderPuppeteer.click(
+      '#page-content-wrapper > div > div > div > form > div:nth-child(2) > div > div',
+      true,
+    );
+
+    await this.orderPuppeteer.wait('#choice_401', 3000);
+    const isCoverModal = await this.orderPuppeteer.checkLocation(
+      '#choice_401',
+      false,
+      true,
+    );
+
+    if (!isCoverModal) {
+      await this.orderPuppeteer.wait('#choice_401', 3000);
+
+      const coverNotGone = await this.orderPuppeteer.checkLocation(
+        '#choice_401',
+        false,
+        true,
+      );
+
+      //checks again if the selector is there
+      if (!coverNotGone) {
+        throw new Error('Cannot find cover selector!');
+      }
+      //click the selector
+      await this.orderPuppeteer.clickRadioButton('#choice_401');
+    } else {
+      //click the selector
+      await this.orderPuppeteer.clickRadioButton('#choice_401');
+    }
+
+    await this.waitClick(
+      '#scrollrbody > div.wizard_navigation > button.btn.btn-default.wizard_button_next',
+    );
+
+    const isConfirmationLoaded = await this.orderPuppeteer.checkLocation(
+      '#order_quantity',
+      false,
+      true,
+    );
+
+    if (!isConfirmationLoaded) {
+      console.log('Clicked next again: confirmation');
+      await this.tryAgain(
+        '#order_quantity',
         '#scrollrbody > div.wizard_navigation > button.btn.btn-default.wizard_button_next',
         0,
       );

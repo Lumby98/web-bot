@@ -14,6 +14,7 @@ import { OrderList } from '../models/order-list';
 import { OrderInfoModel } from '../models/order-info.model';
 import { OrderWithLogs } from '../models/orderWithLogs';
 import { ConfigService } from '@nestjs/config';
+import { date } from '@hapi/joi';
 
 @Injectable()
 export class OrderRegistrationService implements OrderRegistrationInterface {
@@ -529,7 +530,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     completeOrder: boolean,
   ): Promise<OrderList> {
     let STSOrder: STSOrderModel = null;
-    const INSOrder: INSSOrderModel = null;
+    let INSOrder: INSSOrderModel = null;
     const OSAOrder = null;
     const SOSOrder = null;
     try {
@@ -664,7 +665,33 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
 
         await this.orthotics();
 
-        return;
+        await this.confirmation();
+
+        const dateString = await this.handleOrderCompletion(dev, completeOrder);
+
+        if (!dateString) {
+          throw new Error('Failed to get delivery date! ' + dateString);
+        }
+
+        orders.INSOrder.timeOfDelivery = this.formatDeliveryDate(dateString);
+
+        if (orders.INSOrder.timeOfDelivery.toString() === 'Invalid Date') {
+          throw new Error('Could not find delivery date. Date is invalid!');
+        }
+
+        const log: CreateLogDto = {
+          status: true,
+          process: ProcessStepEnum.REGISTERORDER,
+          timestamp: new Date(),
+          order: { orderNr: orders.INSOrder.orderNr, completed: false },
+        };
+
+        INSOrder = orders.INSOrder;
+        orders.logEntries.push(log);
+
+        await this.goToURL(
+          'https://www.neskrid.com/plugins/neskrid/myneskrid_new.aspx',
+        );
       } catch (err) {
         const log: CreateLogDto = {
           error: { errorMessage: err.message },
@@ -1228,6 +1255,22 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     }
   }
 
+  async confirmation() {
+    const quantity = await this.orderPuppeteer.readSelectorText(
+      '#order_quantity',
+    );
+    if (quantity != '1') {
+      await this.orderPuppeteer.dropdownSelect('#order_quantity', '1');
+    }
+
+    const deliveryTime = await this.orderPuppeteer.readSelectorText(
+      '#order_opt_32',
+    );
+    if (deliveryTime != 'Standard') {
+      await this.orderPuppeteer.dropdownSelect('#order_opt_32', 'Standard');
+    }
+  }
+
   async supplement(insole: boolean, dev: boolean) {
     const isSupplementlLoaded = await this.orderPuppeteer.checkLocation(
       '#order_info_14',
@@ -1254,7 +1297,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       }
 
       if (isSupplementlLoaded) {
-        console.log('nani');
+        console.log('Supplement is loaded');
       }
 
       await this.orderPuppeteer.wait(null, 5000);

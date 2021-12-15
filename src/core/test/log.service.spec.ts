@@ -1,14 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { LogService } from '../service/log/log.service';
+import { LogService } from '../application.services/implementations/log/log.service';
 import { getConnectionToken, getRepositoryToken } from '@nestjs/typeorm';
 import { HultaforsProduct } from '../../infrastructure/entities/hultafors.product.entity';
 import { Connection, Repository } from 'typeorm';
 import { LogEntity } from '../../infrastructure/entities/log.entity';
-import { orderInterfaceProvider } from '../interfaces/order.interface';
-import { OrderService } from '../service/log/order.service';
-import { logErrorInterfaceProvider } from '../interfaces/log-error.interface';
-import { LogErrorService } from '../service/log/log-error.service';
-import { logInterfaceProvider } from '../interfaces/log.interface';
+import { orderInterfaceProvider } from '../application.services/interfaces/log/order.interface';
+import { OrderService } from '../application.services/implementations/log/order.service';
+import { logErrorInterfaceProvider } from '../application.services/interfaces/log/log-error.interface';
+import { LogErrorService } from '../application.services/implementations/log/log-error.service';
+import { logInterfaceProvider } from '../application.services/interfaces/log/log.interface';
 import { OrderEntity } from '../../infrastructure/entities/order.entity';
 import { ErrorEntity } from '../../infrastructure/entities/error.entity';
 

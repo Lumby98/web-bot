@@ -1,11 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NeskridScraperService } from '../service/neskrid-scraper.service';
+import { NeskridScraperService } from '../application.services/implementations/scraper/neskrid-scraper.service';
 import {
   NeskridScraperInterface,
   neskridScraperInterfaceProvider,
-} from '../interfaces/neskrid-scraper.interface';
-import { neskridInterfaceProvider } from '../interfaces/neskrid.interface';
-import { NeskridService } from '../service/neskrid.service';
+} from '../application.services/interfaces/scraper/neskrid-scraper.interface';
+import { neskridInterfaceProvider } from '../application.services/interfaces/data-collection/neskrid.interface';
+import { NeskridService } from '../application.services/implementations/data-collection/neskrid.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Connection, Repository } from 'typeorm';
 import { NeskridProduct } from '../../infrastructure/entities/neskrid.product.entity';

@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { HultaforsScraperService } from '../service/hultafors-scraper.service';
-import { hultaforsScraperInterfaceProvider } from '../interfaces/hultafors-scraper.interface';
-import { hultaforsInterfaceProvider } from '../interfaces/hultafors.interface';
-import { HultaforsService } from '../service/hultafors.service';
+import { HultaforsScraperService } from '../application.services/implementations/scraper/hultafors-scraper.service';
+import { hultaforsScraperInterfaceProvider } from '../application.services/interfaces/scraper/hultafors-scraper.interface';
+import { hultaforsInterfaceProvider } from '../application.services/interfaces/data-collection/hultafors.interface';
+import { HultaforsService } from '../application.services/implementations/data-collection/hultafors.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { NeskridProduct } from '../../infrastructure/entities/neskrid.product.entity';
 import { Repository } from 'typeorm';

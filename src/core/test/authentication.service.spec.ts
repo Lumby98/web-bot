@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AuthenticationService } from '../service/authentication.service';
-import { userInterfaceProvider } from '../interfaces/user.interface';
-import { UserService } from '../service/user.service';
+import { AuthenticationService } from '../application.services/implementations/auth/authentication.service';
+import { userInterfaceProvider } from '../application.services/interfaces/auth/user.interface';
+import { UserService } from '../application.services/implementations/auth/user.service';
 import { jwtStrategy } from '../strategy/jwt.strategy';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';

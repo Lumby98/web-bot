@@ -17,30 +17,30 @@ import { SiteDto } from '../dto/site/site.dto';
 import {
   NeskridScraperInterface,
   neskridScraperInterfaceProvider,
-} from '../../core/interfaces/neskrid-scraper.interface';
+} from '../../core/application.services/interfaces/scraper/neskrid-scraper.interface';
 import {
   HultaforsScraperInterface,
   hultaforsScraperInterfaceProvider,
-} from '../../core/interfaces/hultafors-scraper.interface';
+} from '../../core/application.services/interfaces/scraper/hultafors-scraper.interface';
 import {
   HultaforsInterface,
   hultaforsInterfaceProvider,
-} from '../../core/interfaces/hultafors.interface';
+} from '../../core/application.services/interfaces/data-collection/hultafors.interface';
 import {
   SiteInterface,
   siteInterfaceProvider,
-} from '../../core/interfaces/site.interface';
+} from '../../core/application.services/interfaces/data-collection/site.interface';
 import {
   NeskridInterface,
   neskridInterfaceProvider,
-} from '../../core/interfaces/neskrid.interface';
+} from '../../core/application.services/interfaces/data-collection/neskrid.interface';
 import { NeskridProduct } from '../../infrastructure/entities/neskrid.product.entity';
 import { NeskridModel } from '../../core/models/neskrid.model';
 import { LoginTypeEnum } from '../../core/enums/loginType.enum';
 import {
   savedLoginServiceInterface,
   savedLoginServiceInterfaceProvider,
-} from '../../core/interfaces/savedLoginService.interface';
+} from '../../core/application.services/interfaces/auth/savedLoginService.interface';
 
 @Controller('scraper')
 export class ScraperController {

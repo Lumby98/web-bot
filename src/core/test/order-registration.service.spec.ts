@@ -1,35 +1,32 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { OrderRegistrationService } from '../service/order-registration.service';
+import { OrderRegistrationFacade } from '../facades/implementations/order-registration.facade';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { HultaforsProduct } from '../../infrastructure/entities/hultafors.product.entity';
 import { Repository } from 'typeorm';
 import {
-  OrderPuppeteerInterface,
-  orderPuppeteerInterfaceProvider,
-} from '../domain.services/order-puppeteer.interface';
-import { OrderPuppeteerService } from '../../infrastructure/api/order-puppeteer.service';
-import { OrderInfoModel } from '../models/order-info.model';
-import { STSOrderModel } from '../models/sts-order.model';
+  PuppeteerUtilityInterface,
+  puppeteerUtilityInterfaceProvider,
+} from '../domain.services/puppeteer-utility.interface';
+import { PuppeteerUtility } from '../../infrastructure/api/puppeteer.utility';
 import { OrderTypeEnum } from '../enums/type.enum';
-import exp from 'constants';
 import { stsOrderStub } from './stubs/sts-order.stub';
 import { TargetAndSelectorStub } from './stubs/target-and-selector';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
-jest.mock('src/infrastructure/api/order-puppeteer.service.ts');
+jest.mock('src/infrastructure/api/order-puppeteer.application.services.ts');
 
 describe('OrderRegistrationService', () => {
-  let orderRegistrationService: OrderRegistrationService;
-  let orderPuppeteerService: OrderPuppeteerInterface;
+  let orderRegistrationService: OrderRegistrationFacade;
+  let orderPuppeteerService: PuppeteerUtilityInterface;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        OrderRegistrationService,
-        OrderPuppeteerService,
+        OrderRegistrationFacade,
+        PuppeteerUtility,
         {
-          provide: orderPuppeteerInterfaceProvider,
-          useClass: OrderPuppeteerService,
+          provide: puppeteerUtilityInterfaceProvider,
+          useClass: PuppeteerUtility,
         },
         {
           provide: ConfigService,
@@ -46,11 +43,11 @@ describe('OrderRegistrationService', () => {
       ],
     }).compile();
 
-    orderRegistrationService = module.get<OrderRegistrationService>(
-      OrderRegistrationService,
+    orderRegistrationService = module.get<OrderRegistrationFacade>(
+      OrderRegistrationFacade,
     );
-    orderPuppeteerService = module.get<OrderPuppeteerService>(
-      OrderPuppeteerService,
+    orderPuppeteerService = module.get<PuppeteerUtility>(
+      PuppeteerUtility,
     );
     jest.clearAllMocks();
   });
@@ -67,7 +64,7 @@ describe('OrderRegistrationService', () => {
         await orderRegistrationService.startPuppeteer(validURL);
       });
 
-      it('should call the order-registration-puppeteer.service start method with the right arguments', async () => {
+      it('should call the order-registration-puppeteer.application.services start method with the right arguments', async () => {
         expect(orderPuppeteerService.start).toBeCalledWith(false, validURL);
       });
     });
@@ -99,7 +96,7 @@ describe('OrderRegistrationService', () => {
         await orderRegistrationService.stopPuppeteer();
       });
 
-      it('should call the order-registration-puppeteer.service stop method', async () => {
+      it('should call the order-registration-puppeteer.application.services stop method', async () => {
         expect(orderPuppeteerService.stop).toBeCalled();
       });
     });
@@ -121,7 +118,7 @@ describe('OrderRegistrationService', () => {
         );
       });
 
-      it('should call order-registration-puppeter.service loginOrtowear method with the right arguments', async () => {
+      it('should call order-registration-puppeter.application.services loginOrtowear method with the right arguments', async () => {
         expect(orderPuppeteerService.loginOrtowear).toBeCalledWith(
           validUsername,
           validPassword,

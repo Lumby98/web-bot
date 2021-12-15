@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { HultaforsService } from '../service/hultafors.service';
+import { HultaforsService } from '../application.services/implementations/data-collection/hultafors.service';
 import { Repository } from 'typeorm';
 import { HultaforsProduct } from '../../infrastructure/entities/hultafors.product.entity';
 import { Size } from '../../infrastructure/entities/size.entity';

@@ -14,7 +14,7 @@ import { EditUserDto } from '../dto/user/edit-user.dot';
 import {
   UserInterface,
   userInterfaceProvider,
-} from '../../core/interfaces/user.interface';
+} from '../../core/application.services/interfaces/auth/user.interface';
 
 @UseGuards(jwtAuthenticationGuard)
 @Controller('user')

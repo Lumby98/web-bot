@@ -13,20 +13,20 @@ import { Inject, UseGuards } from '@nestjs/common';
 import {
   NeskridScraperInterface,
   neskridScraperInterfaceProvider,
-} from '../../core/interfaces/neskrid-scraper.interface';
+} from '../../core/application.services/interfaces/scraper/neskrid-scraper.interface';
 import {
   HultaforsScraperInterface,
   hultaforsScraperInterfaceProvider,
-} from '../../core/interfaces/hultafors-scraper.interface';
+} from '../../core/application.services/interfaces/scraper/hultafors-scraper.interface';
 import {
   SiteInterface,
   siteInterfaceProvider,
-} from '../../core/interfaces/site.interface';
+} from '../../core/application.services/interfaces/data-collection/site.interface';
 import { LoginTypeEnum } from '../../core/enums/loginType.enum';
 import {
   savedLoginServiceInterface,
   savedLoginServiceInterfaceProvider,
-} from '../../core/interfaces/savedLoginService.interface';
+} from '../../core/application.services/interfaces/auth/savedLoginService.interface';
 
 @WebSocketGateway()
 export class ScrapeGateway implements OnGatewayConnection, OnGatewayDisconnect {

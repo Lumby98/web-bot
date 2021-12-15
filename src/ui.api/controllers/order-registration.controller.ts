@@ -1,8 +1,8 @@
 import { Body, Controller, Get, Inject, Post, Query } from '@nestjs/common';
 import {
-  OrderRegistrationInterface,
-  orderRegistrationInterfaceProvider,
-} from '../../core/interfaces/order-registration.interface';
+  OrderRegistrationFacadeInterface,
+  orderRegistrationFacadeInterfaceProvider,
+} from '../../core/facades/interfaces/order-registration-facade.interface';
 import { OrderRegistrationDto } from '../dto/order-registration/order-registration.dto';
 import { OrderLists } from '../../core/models/order-lists';
 import { STSOrderModel } from '../../core/models/sts-order.model';
@@ -12,8 +12,8 @@ import { AllocationTestDto } from '../dto/order-registration/allocationTest.dto'
 @Controller('orderRegistration')
 export class OrderRegistrationController {
   constructor(
-    @Inject(orderRegistrationInterfaceProvider)
-    private readonly orderRegistrationService: OrderRegistrationInterface,
+    @Inject(orderRegistrationFacadeInterfaceProvider)
+    private readonly orderRegistrationService: OrderRegistrationFacadeInterface,
   ) {}
 
   @Get('start')
@@ -53,7 +53,7 @@ export class OrderRegistrationController {
 
   @Post('getOrderInfo')
   async getOrderInfo(@Body() order: OrderRegistrationDto) {
-    const orders = await this.orderRegistrationService.handleOrders(
+    const orders = await this.orderRegistrationService.getOrderInfo(
       order.orderNumbers[0],
       {
         username: order.username,

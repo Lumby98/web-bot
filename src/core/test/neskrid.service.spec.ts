@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NeskridService } from '../service/neskrid.service';
+import { NeskridService } from '../application.services/implementations/data-collection/neskrid.service';
 import { NeskridProduct } from '../../infrastructure/entities/neskrid.product.entity';
 import { Connection, Repository, UpdateResult } from 'typeorm';
 import { getConnectionToken, getRepositoryToken } from '@nestjs/typeorm';

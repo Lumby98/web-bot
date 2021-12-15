@@ -37,7 +37,6 @@ export interface OrderPuppeteerInterface {
   selectDate(date: number): Promise<string>;
   selectDropdownByValue(selector: string, value: string);
   getSelectedValue(selector: string): Promise<string>;
-  getSelectedText(selector: string): Promise<string>;
   searchableSelect(value: string): Promise<string>;
   clickRadioButton(selector: string);
   selectInputContainerByArticleName(

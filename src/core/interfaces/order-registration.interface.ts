@@ -3,7 +3,7 @@ import { OrderTypeEnum } from '../enums/type.enum';
 import { LoginDto } from '../../ui.api/dto/user/login.dto';
 import { OrderLists } from '../models/order-lists';
 import { OrderList } from '../models/order-list';
-import { OrderWithLogs } from "../models/orderWithLogs";
+import { OrderWithLogs } from '../models/orderWithLogs';
 export const orderRegistrationInterfaceProvider =
   'orderRegistrationInterfaceProvider';
 export interface OrderRegistrationInterface {

@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { HultaforsModel } from '../models/hultafors.model';
-import { Page } from 'puppeteer';
+import { ElementHandle, Page } from 'puppeteer';
 import { SizeModel } from '../models/size.model';
 import { HultaforsService } from './hultafors.service';
 import {
@@ -342,13 +342,25 @@ export class HultaforsScraperService implements HultaforsScraperInterface {
       await page.waitForSelector('.toggle-item.mainmenuproducts');
       await page.click('.toggle-item.mainmenuproducts');
 
-      //selects emma safety footwear
       await page.waitForSelector(
-        '#searchboxform > div > div:nth-child(3) > div > div > div:nth-child(3) > a',
+        '#searchboxform > div > div:nth-child(3) > div > div > div > a',
       );
-      await page.click(
-        '#searchboxform > div > div:nth-child(3) > div > div > div:nth-child(3) > a',
+
+      const selector = await page.$$eval(
+        '#searchboxform > div > div:nth-child(3) > div > div > div > a',
+        (el: Element[], text: string) => {
+          for (let i = 0; i < el.length; i++) {
+            if (el[i].textContent === text) {
+              return `#searchboxform > div > div:nth-child(3) > div > div > div:nth-child(${
+                i + 1
+              }) > a`;
+            }
+          }
+        },
+        'Emma Safety Footwear ',
       );
+
+      await page.click(selector);
 
       //selects shoes to only be displayed on the page
       await page.waitForTimeout(1000);

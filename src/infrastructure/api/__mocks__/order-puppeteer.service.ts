@@ -23,11 +23,14 @@ export const OrderPuppeteerService = jest.fn().mockReturnValue({
   click: jest.fn().mockResolvedValue(undefined),
   dropdownSelect: jest.fn().mockResolvedValue(undefined),
   selectByTexts: jest.fn().mockResolvedValue(undefined),
-  getTextsForAll: jest.fn().mockResolvedValue([]),
+  getTextsForAll: jest
+    .fn()
+    .mockResolvedValue(['mockText1', 'mockText2', 'mockText3']),
   getInputValue: jest.fn().mockResolvedValue(undefined),
   getTableTargetandSelector: jest
     .fn()
     .mockResolvedValue(TargetAndSelectorStub()),
+  selectDate: jest.fn().mockResolvedValue(undefined),
   goToOrder: jest.fn().mockResolvedValue(undefined),
   clickRadioButton: jest.fn().mockResolvedValue(undefined),
 });

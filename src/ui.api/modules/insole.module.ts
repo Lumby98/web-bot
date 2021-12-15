@@ -3,6 +3,7 @@ import { InsoleService } from '../../core/service/insole.service';
 import { InsoleController } from '../controllers/insole.controller';
 import { InsoleGateway } from '../gateway/insole.gateway';
 import { insoleInterfaceProvider } from '../../core/interfaces/insole.interface';
+import { AuthenticationModule } from './authentication.module';
 
 @Module({
   controllers: [InsoleController],
@@ -10,5 +11,6 @@ import { insoleInterfaceProvider } from '../../core/interfaces/insole.interface'
     { provide: insoleInterfaceProvider, useClass: InsoleService },
     InsoleGateway,
   ],
+  imports: [AuthenticationModule],
 })
 export class InsoleModule {}

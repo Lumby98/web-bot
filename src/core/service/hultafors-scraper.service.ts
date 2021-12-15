@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { HultaforsModel } from '../models/hultafors.model';
-import { Page } from 'puppeteer';
+import { ElementHandle, Page } from 'puppeteer';
 import { SizeModel } from '../models/size.model';
 import { HultaforsService } from './hultafors.service';
 import {
@@ -47,6 +47,14 @@ export class HultaforsScraperService implements HultaforsScraperInterface {
           throw new Error('could not reach Hultafors');
         });
 
+      //Get rid of cookie notification
+      await page.waitForSelector(
+        '#cookieNotification > div:nth-child(2) > div > div > a',
+      );
+      const checkbox = await page.$(
+        '#cookieNotification > div:nth-child(2) > div > div > a',
+      );
+      await page.evaluate((cb) => cb.click(), checkbox);
       await this.handleLogin(page, username, password);
 
       //waiting for page after login to load, if 8 seconds passes throw an error indicating login failed
@@ -313,9 +321,15 @@ export class HultaforsScraperService implements HultaforsScraperInterface {
       await page.type('#User_Password', password).catch(() => {
         throw new Error('could not reach login');
       });
-      await page.click(
+
+      //Get rid of cookie notification
+      await page.waitForSelector(
         '#loginform > div > div.col-md-10.center-col > div.col-md-12.top30 > button',
       );
+      const checkbox = await page.$(
+        '#loginform > div > div.col-md-10.center-col > div.col-md-12.top30 > button',
+      );
+      await page.evaluate((cb) => cb.click(), checkbox);
     } catch (err) {
       throw err;
     }
@@ -328,13 +342,25 @@ export class HultaforsScraperService implements HultaforsScraperInterface {
       await page.waitForSelector('.toggle-item.mainmenuproducts');
       await page.click('.toggle-item.mainmenuproducts');
 
-      //selects emma safety footwear
       await page.waitForSelector(
-        '#searchboxform > div > div:nth-child(3) > div > div > div:nth-child(3) > a',
+        '#searchboxform > div > div:nth-child(3) > div > div > div > a',
       );
-      await page.click(
-        '#searchboxform > div > div:nth-child(3) > div > div > div:nth-child(3) > a',
+
+      const selector = await page.$$eval(
+        '#searchboxform > div > div:nth-child(3) > div > div > div > a',
+        (el: Element[], text: string) => {
+          for (let i = 0; i < el.length; i++) {
+            if (el[i].textContent === text) {
+              return `#searchboxform > div > div:nth-child(3) > div > div > div:nth-child(${
+                i + 1
+              }) > a`;
+            }
+          }
+        },
+        'Emma Safety Footwear ',
       );
+
+      await page.click(selector);
 
       //selects shoes to only be displayed on the page
       await page.waitForTimeout(1000);

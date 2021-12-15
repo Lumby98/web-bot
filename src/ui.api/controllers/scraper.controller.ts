@@ -36,6 +36,11 @@ import {
 } from '../../core/interfaces/neskrid.interface';
 import { NeskridProduct } from '../../infrastructure/entities/neskrid.product.entity';
 import { NeskridModel } from '../../core/models/neskrid.model';
+import { LoginTypeEnum } from '../../core/enums/loginType.enum';
+import {
+  savedLoginServiceInterface,
+  savedLoginServiceInterfaceProvider,
+} from '../../core/interfaces/savedLoginService.interface';
 
 @Controller('scraper')
 export class ScraperController {
@@ -49,6 +54,8 @@ export class ScraperController {
     @Inject(siteInterfaceProvider) private readonly siteService: SiteInterface,
     @Inject(neskridInterfaceProvider)
     private readonly neskridService: NeskridInterface,
+    @Inject(savedLoginServiceInterfaceProvider)
+    private readonly savedLoginService: savedLoginServiceInterface,
   ) {}
 
   /**
@@ -68,19 +75,21 @@ export class ScraperController {
   @Post('scrape')
   async scrape(@Body() scraping: ScrapeDto) {
     try {
-      //checks if username or password is blank if true throw error
-      if (!scraping.username || !scraping.password) {
-        throw new HttpException(
-          'incomplete login information',
-          HttpStatus.NOT_FOUND,
-        );
-      }
+      const neskridLogin = await this.savedLoginService.getLogin(
+        LoginTypeEnum.NESKRID,
+        scraping.key,
+      );
+
+      const hultaforsLogin = await this.savedLoginService.getLogin(
+        LoginTypeEnum.HULTAFORS,
+        scraping.key,
+      );
       let scrapedProducts;
       //switch case determining which site should be scrapped
       switch (scraping.website) {
         case 'Neskrid': {
           scrapedProducts = await this.neskridScraperService
-            .scrapNeskrid(scraping.username, scraping.password)
+            .scrapNeskrid(neskridLogin.username, neskridLogin.password)
             .catch((err) => {
               throw err;
             });
@@ -88,7 +97,7 @@ export class ScraperController {
         }
         case 'Hultafors': {
           scrapedProducts = await this.hultaForsScraperService
-            .scrapeHultafors(scraping.username, scraping.password)
+            .scrapeHultafors(hultaforsLogin.username, hultaforsLogin.password)
             .catch((err) => {
               throw err;
             });

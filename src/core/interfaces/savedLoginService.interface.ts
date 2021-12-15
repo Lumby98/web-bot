@@ -3,7 +3,7 @@ import { SavedLoginModel } from '../models/Savedlogin.model';
 import { KeyModel } from '../models/key.model';
 import { LoginTypeEnum } from '../enums/loginType.enum';
 import { SavedLoginDto } from '../../ui.api/dto/savedLogin/SavedLoginDto';
-import { InsertKeyDto } from "../../ui.api/dto/savedLogin/insert-Key.dto";
+import { InsertKeyDto } from '../../ui.api/dto/savedLogin/insert-Key.dto';
 
 export const savedLoginServiceInterfaceProvider =
   'savedLoginServiceInterfaceProvider';

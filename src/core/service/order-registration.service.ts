@@ -14,6 +14,7 @@ import { OrderList } from '../models/order-list';
 import { OrderInfoModel } from '../models/order-info.model';
 import { OrderWithLogs } from '../models/orderWithLogs';
 import { ConfigService } from '@nestjs/config';
+import { date } from '@hapi/joi';
 
 @Injectable()
 export class OrderRegistrationService implements OrderRegistrationInterface {
@@ -31,7 +32,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
    */
   async handleOrders(orderNumber: string, login: LoginDto): Promise<OrderList> {
     let STSOrder: STSOrderModel = null;
-    const INSOrder: INSSOrderModel = null;
+    let INSOrder: INSSOrderModel = null;
     const OSAOrder = null;
     const SOSOrder = null;
     const logEntries: Array<CreateLogDto> = [];
@@ -83,6 +84,9 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
             model: 'Bunka',
           };
           INSOrder = INSS;*/
+
+          order = await this.handleINSSOrder(orderNumber);
+          INSOrder = order;
 
           break;
         case OrderTypeEnum.OSA:
@@ -254,11 +258,83 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     }
   }
 
-  /* handleINSSOrder(orderNumber: string): Promise<INSSOrderModel> {
+  async handleINSSOrder(orderNumber: string): Promise<INSSOrderModel> {
     if (orderNumber.length < 1) {
       throw new Error('missing order-registration number');
     }
-  }*/
+
+    const targetAndSelector =
+      await this.orderPuppeteer.getTableTargetandSelector(orderNumber);
+
+    await this.waitClick(targetAndSelector.selector);
+    await this.waitClick(
+      '#topBtns > div > div > button.btn.btn-sm.btn-warning',
+    );
+
+    const check = await this.orderPuppeteer.checkLocation(
+      'body > div.wrapper > div.content-wrapper > section.content-header > h1',
+      false,
+      false,
+    );
+
+    if (!check) {
+      throw new Error('Could not find order-registration page');
+    }
+
+    const order: OrderInfoModel = await this.orderPuppeteer.readOrder(
+      orderNumber,
+    );
+
+    const inssOrder: INSSOrderModel = await this.orderPuppeteer.readINSSOrder(
+      order,
+    );
+
+    if (!inssOrder) {
+      throw new Error('failed getting order-registration information');
+    }
+
+    if (inssOrder.orderNr != orderNumber) {
+      throw new Error('failed getting correct order-registration');
+    }
+
+    if (
+      (inssOrder.sizeR || inssOrder.sizeR != '') &&
+      (!inssOrder.sizeL || inssOrder.sizeL == '')
+    ) {
+      inssOrder.sizeL = inssOrder.sizeR;
+    } else if (
+      (!inssOrder.sizeR || inssOrder.sizeR == '') &&
+      (inssOrder.sizeL || inssOrder.sizeL != '')
+    ) {
+      inssOrder.sizeR = inssOrder.sizeL;
+    } else if (
+      (!inssOrder.sizeR || inssOrder.sizeR == '') &&
+      (!inssOrder.sizeL || inssOrder.sizeL == '')
+    ) {
+      throw new Error(
+        'Both sizes are empty. Please amend the order entry on the site',
+      );
+    }
+
+    if (!inssOrder.model || inssOrder.model == '') {
+      throw new Error('failed getting model');
+    }
+
+    if (!inssOrder.deliveryAddress || inssOrder.deliveryAddress.length < 3) {
+      throw new Error('failed getting delivery address');
+    }
+
+    if (!inssOrder.customerName || inssOrder.customerName == '') {
+      throw new Error('failed getting customer');
+    }
+
+    const substring = 'Norway';
+    if (inssOrder.deliveryAddress.includes(substring)) {
+      inssOrder.EU = false;
+    }
+
+    return inssOrder;
+  }
 
   /**
    * get order-registration information for an STS order-registration
@@ -454,7 +530,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     completeOrder: boolean,
   ): Promise<OrderList> {
     let STSOrder: STSOrderModel = null;
-    const INSOrder: INSSOrderModel = null;
+    let INSOrder: INSSOrderModel = null;
     const OSAOrder = null;
     const SOSOrder = null;
     try {
@@ -500,6 +576,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
         await this.waitClick(
           '#page-content-wrapper > div > div > div > section > div.panel-body > div > div:nth-child(3) > div',
         );
+
         await this.InputOrderInformation(
           orders.STSOrder.orderNr,
           orders.STSOrder.deliveryAddress,
@@ -561,7 +638,73 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     }
 
     if (orders.INSOrder) {
-      return;
+      try {
+        await this.waitClick(
+          '#page-content-wrapper > div > div > div > section > div.panel-body > div > div:nth-child(4) > div',
+        );
+        await this.InputOrderInformation(
+          orders.INSOrder.orderNr,
+          orders.INSOrder.deliveryAddress,
+          true,
+          orders.INSOrder.EU,
+          orders.INSOrder.customerName,
+        );
+
+        const isInUsageEnvoPage = await this.orderPuppeteer.checkLocation(
+          '#page-content-wrapper > div > div > h1',
+          false,
+          false,
+        );
+
+        if (!isInUsageEnvoPage) {
+          throw new Error('Could not load usage environment page.');
+        }
+        await this.INSsInputUsageEnvironment(orders.INSOrder);
+
+        await this.inssInputModel(orders.INSOrder);
+
+        await this.orthotics();
+
+        await this.confirmation();
+
+        const dateString = await this.handleOrderCompletion(dev, completeOrder);
+
+        if (!dateString) {
+          throw new Error('Failed to get delivery date! ' + dateString);
+        }
+
+        orders.INSOrder.timeOfDelivery = this.formatDeliveryDate(dateString);
+
+        if (orders.INSOrder.timeOfDelivery.toString() === 'Invalid Date') {
+          throw new Error('Could not find delivery date. Date is invalid!');
+        }
+
+        const log: CreateLogDto = {
+          status: true,
+          process: ProcessStepEnum.REGISTERORDER,
+          timestamp: new Date(),
+          order: { orderNr: orders.INSOrder.orderNr, completed: false },
+        };
+
+        INSOrder = orders.INSOrder;
+        orders.logEntries.push(log);
+
+        await this.goToURL(
+          'https://www.neskrid.com/plugins/neskrid/myneskrid_new.aspx',
+        );
+      } catch (err) {
+        const log: CreateLogDto = {
+          error: { errorMessage: err.message },
+          status: false,
+          process: ProcessStepEnum.REGISTERORDER,
+          timestamp: new Date(),
+          order: { orderNr: orders.INSOrder.orderNr, completed: false },
+        };
+        orders.logEntries.push(log);
+        await this.goToURL(
+          'https://www.neskrid.com/plugins/neskrid/myneskrid_new.aspx',
+        );
+      }
     }
     await this.stopPuppeteer();
     return {
@@ -655,6 +798,83 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     }
   }
 
+  private async INSsInputUsageEnvironment(order: INSSOrderModel) {
+    //Input Registration no. medical specialist
+    const regNoIsLoaded = await this.orderPuppeteer.checkLocation(
+      '#order_agb',
+      false,
+      false,
+    );
+
+    if (!regNoIsLoaded) {
+      throw new Error(
+        'Could not load Registration no. medical specialist input',
+      );
+    }
+
+    await this.orderPuppeteer.input('#order_agb', order.customerName);
+
+    let regNoText = await this.orderPuppeteer.getInputValue('#order_agb');
+    if (regNoText !== order.customerName) {
+      await this.orderPuppeteer.input('#order_agb', order.customerName);
+    }
+
+    regNoText = await this.orderPuppeteer.getInputValue('#order_agb');
+    if (regNoText !== order.customerName) {
+      throw new Error(
+        'Failed to input Registration no. medical specialist input',
+      );
+    }
+
+    //Input end user.
+    const endUserIsLoaded = await this.orderPuppeteer.checkLocation(
+      '#order_enduser',
+      false,
+      false,
+    );
+
+    if (!endUserIsLoaded) {
+      throw new Error('Could not load end user input');
+    }
+
+    await this.orderPuppeteer.input('#order_enduser', order.orderNr);
+
+    let endUserText = await this.orderPuppeteer.getInputValue('#order_enduser');
+    if (endUserText !== order.orderNr) {
+      await this.orderPuppeteer.input('#order_enduser', order.orderNr);
+    }
+
+    endUserText = await this.orderPuppeteer.getInputValue('#order_enduser');
+    if (endUserText !== order.orderNr) {
+      throw new Error('Failed to input orderNr to end user input');
+    }
+
+    //Check dropdown value.
+    await this.orderPuppeteer.dropdownSelect(
+      '#order_opt_104',
+      'Safety (S-classification)',
+    );
+
+    //Go to brand and model page.
+
+    await this.waitClick(
+      '#scrollrbody > div.wizard_navigation > button.btn.btn-default.wizard_button_next',
+    );
+
+    const isModelLoaded = await this.orderPuppeteer.checkLocation(
+      '#insoleForm',
+      false,
+      false,
+    );
+
+    if (!isModelLoaded) {
+      console.log('Clicked next again');
+      await this.waitClick(
+        '#scrollrbody > div.wizard_navigation > button.btn.btn-default.wizard_button_next',
+      );
+    }
+  }
+
   private async inputUsageEnvironment(orderNr: string) {
     const endUserIsLoaded = await this.orderPuppeteer.checkLocation(
       '#order_enduser',
@@ -708,6 +928,152 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     }
   }
 
+  private async inssInputModel(order: INSSOrderModel) {
+    const isModelLoaded = await this.orderPuppeteer.checkLocation(
+      '#insoleForm',
+      false,
+      false,
+    );
+
+    await this.orderPuppeteer.wait('#insoleForm', 2000);
+
+    if (!isModelLoaded) {
+      throw new Error('failed to load model page');
+    }
+
+    const isModelDropdown =
+      '#page-content-wrapper > div > div > div > form > div:nth-child(2) > div > div';
+
+    const modelDropdownResult = await this.orderPuppeteer.checkLocation(
+      isModelDropdown,
+      false,
+      false,
+    );
+
+    if (!modelDropdownResult) {
+      throw new Error('Cannot load dropdown!');
+    }
+
+    // await this.waitClick(isModelDropdown);
+
+    /* await this.waitClick(
+      '#page-content-wrapper > div > div > div > form > div:nth-child(2) > div > div > span',
+    );*/
+
+    await this.orderPuppeteer.click(
+      '#page-content-wrapper > div > div > div > form > div:nth-child(2) > div > div > span',
+      true,
+    );
+
+    await this.orderPuppeteer.wait('#choiceinvalidLabel', 2000);
+
+    const IsModelModal = await this.orderPuppeteer.checkLocation(
+      '#choiceinvalidLabel',
+      false,
+      true,
+    );
+
+    if (!IsModelModal) {
+      await this.orderPuppeteer.wait('#choiceinvalidLabel', 2000);
+      console.log('click');
+      await this.orderPuppeteer.click(
+        '#page-content-wrapper > div > div > div > form > div:nth-child(2) > div > div > span',
+        true,
+      );
+    }
+    const brandName = await this.orderPuppeteer.searchableSelect(order.model);
+
+    await this.orderPuppeteer.wait(
+      '#scrollrbody > div.modal.fade.modal-choiceinvalid.in > div > div > div.modal-body > div > div.form > form > div:nth-child(3)',
+      5000,
+    );
+
+    await this.orderPuppeteer.selectInputContainerByArticleName(
+      order.model,
+      '#scrollrbody > div.modal.fade.modal-choiceinvalid.in > div > div > div.modal-body > div > div.form > form > div:nth-child(3)',
+      brandName,
+    );
+
+    /*
+    Click on Orthotic card.
+     */
+    //wait for the button to load.
+    await this.orderPuppeteer.wait('#cemod_1', 5000);
+
+    //Click on the button
+    await this.orderPuppeteer.click('#cemod_1', true);
+
+    /*
+    Select size
+    */
+    const sizeLSplit = order.sizeL.split(' ');
+    const sizeRSplit = order.sizeR.split(' ');
+
+    await this.orderPuppeteer.click('#model_thumb9', true);
+    await this.orderPuppeteer.click(
+      '#insoleForm > div:nth-child(3) > div > div:nth-child(3)',
+      true,
+    );
+
+    //select left size.
+    await this.orderPuppeteer.dropdownSelect(
+      '#order_opt_left15',
+      sizeLSplit[0],
+    );
+
+    //select right size.
+    await this.orderPuppeteer.dropdownSelect(
+      '#order_opt_right15',
+      sizeRSplit[0],
+    );
+
+    await this.orderPuppeteer.wait('#model_thumb9', 3000);
+    const isCoverSafety = await this.orderPuppeteer.checkLocation(
+      '#model_thumb9',
+      false,
+      true,
+    );
+
+    if (!isCoverSafety) {
+      await this.orderPuppeteer.wait('#model_thumb9', 3000);
+
+      const coverSafetyNotGone = await this.orderPuppeteer.checkLocation(
+        '#model_thumb9',
+        false,
+        true,
+      );
+
+      //checks again if the selector is there
+      if (!coverSafetyNotGone) {
+        throw new Error('Cannot find cover safety selector!');
+      }
+      //click the selector
+      await this.orderPuppeteer.clickRadioButton('#model_thumb9');
+    } else {
+      //click the selector
+      await this.orderPuppeteer.clickRadioButton('#model_thumb9');
+    }
+
+    await this.waitClick(
+      '#scrollrbody > div.wizard_navigation > button.btn.btn-default.wizard_button_next',
+    );
+
+    const isOrthoticsLoaded = await this.orderPuppeteer.checkLocation(
+      '#order_opt_107',
+      false,
+      true,
+    );
+
+    if (!isOrthoticsLoaded) {
+      console.log('Clicked next again: orthotics');
+      await this.tryAgain(
+        '#order_opt_107',
+        '#scrollrbody > div.wizard_navigation > button.btn.btn-default.wizard_button_next',
+        0,
+      );
+    }
+  }
+
   private async inputModel(model: string, size: string, width: string) {
     const isModelLoaded = await this.orderPuppeteer.checkLocation(
       '#page-content-wrapper > div > div > div > div.col-md-7 > div',
@@ -723,7 +1089,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     if (!isModelLoaded) {
       throw new Error('failed to load model page');
     }
-    const models: string[] = await this.orderPuppeteer.getModelText(
+    const models: string[] = await this.orderPuppeteer.getTextsForAll(
       'div.col-md-7 > div.row > div > h3',
     );
     console.log(models);
@@ -818,6 +1184,92 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       );
     }
   }
+  async orthotics() {
+    this.orderPuppeteer.wait('#order_opt_107', 5000);
+    const isOrthoticsLoaded = await this.orderPuppeteer.checkLocation(
+      '#order_opt_107',
+      false,
+      true,
+    );
+
+    if (!isOrthoticsLoaded) {
+      throw new Error('Could not get to supplement page');
+    }
+
+    this.orderPuppeteer.dropdownSelect('#order_opt_107', '4/4');
+
+    await this.orderPuppeteer.wait(
+      '#page-content-wrapper > div > div > div > form > div:nth-child(2) > div > div',
+      2000,
+    );
+    console.log('click');
+    await this.orderPuppeteer.click(
+      '#page-content-wrapper > div > div > div > form > div:nth-child(2) > div > div',
+      true,
+    );
+
+    await this.orderPuppeteer.wait('#choice_401', 3000);
+    const isCoverModal = await this.orderPuppeteer.checkLocation(
+      '#choice_401',
+      false,
+      true,
+    );
+
+    if (!isCoverModal) {
+      await this.orderPuppeteer.wait('#choice_401', 3000);
+
+      const coverNotGone = await this.orderPuppeteer.checkLocation(
+        '#choice_401',
+        false,
+        true,
+      );
+
+      //checks again if the selector is there
+      if (!coverNotGone) {
+        throw new Error('Cannot find cover selector!');
+      }
+      //click the selector
+      await this.orderPuppeteer.clickRadioButton('#choice_401');
+    } else {
+      //click the selector
+      await this.orderPuppeteer.clickRadioButton('#choice_401');
+    }
+
+    await this.waitClick(
+      '#scrollrbody > div.wizard_navigation > button.btn.btn-default.wizard_button_next',
+    );
+
+    const isConfirmationLoaded = await this.orderPuppeteer.checkLocation(
+      '#order_quantity',
+      false,
+      true,
+    );
+
+    if (!isConfirmationLoaded) {
+      console.log('Clicked next again: confirmation');
+      await this.tryAgain(
+        '#order_quantity',
+        '#scrollrbody > div.wizard_navigation > button.btn.btn-default.wizard_button_next',
+        0,
+      );
+    }
+  }
+
+  async confirmation() {
+    const quantity = await this.orderPuppeteer.readSelectorText(
+      '#order_quantity',
+    );
+    if (quantity != '1') {
+      await this.orderPuppeteer.dropdownSelect('#order_quantity', '1');
+    }
+
+    const deliveryTime = await this.orderPuppeteer.readSelectorText(
+      '#order_opt_32',
+    );
+    if (deliveryTime != 'Standard') {
+      await this.orderPuppeteer.dropdownSelect('#order_opt_32', 'Standard');
+    }
+  }
 
   async supplement(insole: boolean, dev: boolean) {
     const isSupplementlLoaded = await this.orderPuppeteer.checkLocation(
@@ -845,7 +1297,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       }
 
       if (isSupplementlLoaded) {
-        console.log('nani');
+        console.log('Supplement is loaded');
       }
 
       await this.orderPuppeteer.wait(null, 5000);

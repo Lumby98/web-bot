@@ -3,6 +3,7 @@ import { KeyInput } from 'puppeteer';
 import { string } from '@hapi/joi';
 import { TargetAndSelector } from '../models/target-and-selector';
 import { OrderInfoModel } from '../models/order-info.model';
+import { INSSOrderModel } from '../models/ins-s-order.model';
 export const orderPuppeteerInterfaceProvider =
   'orderPuppeteerInterfaceProvider';
 export interface OrderPuppeteerInterface {
@@ -13,6 +14,7 @@ export interface OrderPuppeteerInterface {
   loginOrtowear(username: string, password: string);
   stop();
   readSTSOrder(order: OrderInfoModel): Promise<STSOrderModel>;
+  readINSSOrder(order: OrderInfoModel): Promise<INSSOrderModel>;
   readOrder(orderNumber: string): Promise<OrderInfoModel>;
   checkLocation(
     selector: string,
@@ -29,10 +31,17 @@ export interface OrderPuppeteerInterface {
   click(selector: string, hover: boolean);
   dropdownSelect(selector: string, textValue: string);
   selectByTexts(selector: string, textValue: string);
-  getModelText(selector: string): Promise<string[]>;
+  getTextsForAll(selector: string): Promise<string[]>;
   getInputValue(selector: string): Promise<string>;
   getTableTargetandSelector(orderNumber: string): Promise<TargetAndSelector>;
   selectDate(date: number): Promise<string>;
   selectDropdownByValue(selector: string, value: string);
   getSelectedValue(selector: string): Promise<string>;
+  searchableSelect(value: string): Promise<string>;
+  clickRadioButton(selector: string);
+  selectInputContainerByArticleName(
+    name: string,
+    selectorForContainingElement: string,
+    brandName: string,
+  );
 }

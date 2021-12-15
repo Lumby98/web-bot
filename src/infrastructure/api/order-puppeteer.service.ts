@@ -4,6 +4,8 @@ import { STSOrderModel } from '../../core/models/sts-order.model';
 import { Browser, KeyInput, Page } from 'puppeteer';
 import { TargetAndSelector } from '../../core/models/target-and-selector';
 import { OrderInfoModel } from '../../core/models/order-info.model';
+import { INSSOrderModel } from 'src/core/models/ins-s-order.model';
+import { string } from '@hapi/joi';
 
 @Injectable()
 export class OrderPuppeteerService implements OrderPuppeteerInterface {
@@ -104,6 +106,24 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
     };
 
     return stsOrder;
+  }
+
+  async readINSSOrder(order: OrderInfoModel): Promise<INSSOrderModel> {
+    return {
+      orderNr: order.orderNr,
+      deliveryAddress: order.deliveryAddress,
+      customerName: order.customerName,
+      EU: order.EU,
+      model: await this.readSelectorText(
+        'body > div.wrapper > div.content-wrapper > section.content > div:nth-child(3) > div > div > div > div.box-body > form > div:nth-child(3) > div > div > div:nth-child(2) > div > div > table > tbody > tr:nth-child(2) > td:nth-child(2)',
+      ),
+      sizeL: await this.readSelectorText(
+        'body > div.wrapper > div.content-wrapper > section.content > div:nth-child(3) > div > div > div > div.box-body > form > div:nth-child(3) > div > div > div:nth-child(2) > div > div > table > tbody > tr:nth-child(6) > td:nth-child(2) ',
+      ),
+      sizeR: await this.readSelectorText(
+        'body > div.wrapper > div.content-wrapper > section.content > div:nth-child(3) > div > div > div > div.box-body > form > div:nth-child(3) > div > div > div:nth-child(2) > div > div > table > tbody > tr:nth-child(6) > td:nth-child(3)',
+      ),
+    };
   }
 
   async readOrder(orderNumber: string): Promise<OrderInfoModel> {
@@ -390,15 +410,14 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
    * gets texts based on selector
    * @param selector
    */
-  async getModelText(selector: string): Promise<string[]> {
+  async getTextsForAll(selector: string): Promise<string[]> {
+    await this.page.waitForTimeout(2000);
     return await this.page.$$eval(selector, (el) => {
-      const modelTextArray = el.map((e) => e.textContent);
-      if (modelTextArray.length < 1) {
-        throw new Error(
-          'Failed to find model names: ' + modelTextArray.length.toString(),
-        );
+      const textArray = el.map((e) => e.textContent);
+      if (textArray.length < 1) {
+        throw new Error('Failed to find text: ' + textArray.length.toString());
       }
-      return modelTextArray;
+      return textArray;
     });
   }
 
@@ -458,6 +477,79 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
     );
 
     await this.page.select(selector, dataValue);
+  }
+
+  async selectInputContainerByArticleName(
+    name: string,
+    selectorForContainingElement: string,
+    brandName: string,
+  ) {
+    await this.page.waitForSelector('.input-container');
+    const formGroup = await this.page.$(selectorForContainingElement);
+    const articles = await formGroup.$$('.input-container');
+    const lowerCaseName = name.toLowerCase();
+    const brandCount = brandName.trim().length;
+    const editedLowerCaseName = lowerCaseName.substring(brandCount).trim();
+    let foundArticle = null;
+
+    for (const article of articles) {
+      const articleName = await article.$eval(
+        '.color-primary',
+        (el) => el.textContent,
+      );
+      const lowerCaseArticleName = articleName.toLowerCase();
+
+      if (lowerCaseArticleName.includes(editedLowerCaseName)) {
+        if (!foundArticle) {
+          foundArticle = article;
+        } else {
+          throw new Error('More than one container matches the name');
+        }
+      }
+    }
+    if (!foundArticle) {
+      throw new Error('Did not find matching container!');
+    }
+    foundArticle.click();
+  }
+
+  async searchableSelect(value: string): Promise<string> {
+    const brandNames = await this.getTextsForAll('.searchable-select-item');
+
+    let brandName = null;
+    const lowerCaseValue = value.toLowerCase();
+
+    for (const brand of brandNames) {
+      const lowerCaseBrand = brand.toLowerCase();
+
+      if (lowerCaseValue.includes(lowerCaseBrand)) {
+        if (!brandName) {
+          brandName = brand;
+        } else {
+          throw new Error(
+            'More than one brand name matches the model' +
+              brandName +
+              'and' +
+              brand,
+          );
+        }
+      }
+    }
+
+    if (!brandName) {
+      throw new Error('No brand name matches the model');
+    }
+
+    //opens dropdown menu
+    await this.page.waitForSelector('.searchable-select-holder');
+    await this.page.click('.searchable-select-holder');
+    await this.page.waitForTimeout(500);
+
+    //search for the current brand and selects it
+    await this.page.type('.searchable-select-input', brandName);
+    await this.page.keyboard.press('Enter');
+
+    return brandName;
   }
 
   async selectDate(date: number): Promise<string> {
@@ -520,6 +612,13 @@ export class OrderPuppeteerService implements OrderPuppeteerInterface {
       const stylesObject = getComputedStyle(el);
       return stylesObject.backgroundColor;
     });
+  }
+
+  async clickRadioButton(selector: string) {
+    //find radioButton, just clicking it won't work
+    await this.page.waitForSelector(selector);
+    const checkbox = await this.page.$(selector);
+    await this.page.evaluate((cb) => cb.click(), checkbox);
   }
   /*//I have tried.
   async selectByTexts(selector: string, textValue: string) {

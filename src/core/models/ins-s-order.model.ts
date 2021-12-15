@@ -7,3 +7,13 @@ export interface INSSOrderModel extends OrderInfoModel {
   sizeL: string;
   sizeR: string;
 }
+
+/*
+#order_agb
+id?: number;
+  orderNr: string;
+  customerName: string;
+  deliveryAddress: string[];
+  timeOfDelivery?: Date;
+  EU: boolean;
+* */

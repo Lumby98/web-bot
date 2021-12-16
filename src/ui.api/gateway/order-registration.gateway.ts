@@ -35,7 +35,7 @@ export class OrderRegistrationGateway
 {
   constructor(
     @Inject(orderRegistrationFacadeInterfaceProvider)
-    private readonly orderRegistrationService: OrderRegistrationFacadeInterface,
+    private readonly orderRegistrationFacade: OrderRegistrationFacadeInterface,
     @Inject(savedLoginServiceInterfaceProvider)
     private readonly savedLoginService: savedLoginServiceInterface,
     @Inject(logInterfaceProvider)
@@ -68,7 +68,7 @@ export class OrderRegistrationGateway
 
       const listLogEntries: CreateLogDto[] = [];
       for (const orderNumber of orderReg.orderNumbers) {
-        const orders = await this.orderRegistrationService.getOrderInfo(
+        const orders = await this.orderRegistrationFacade.getOrderInfo(
           orderNumber,
           {
             username: ortowearLogin.username,
@@ -106,7 +106,7 @@ export class OrderRegistrationGateway
           continue;
         }
 
-        const regOrders = await this.orderRegistrationService.createOrder(
+        const regOrders = await this.orderRegistrationFacade.createOrder(
           orders,
           neskridLogin.username,
           neskridLogin.password,
@@ -142,7 +142,7 @@ export class OrderRegistrationGateway
         }
 
         const allocatedOrders =
-          await this.orderRegistrationService.handleAllocations(
+          await this.orderRegistrationFacade.handleAllocations(
             regOrderWithLogs,
             ortowearLogin.username,
             ortowearLogin.password,

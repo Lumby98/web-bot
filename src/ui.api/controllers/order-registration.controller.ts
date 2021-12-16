@@ -16,41 +16,6 @@ export class OrderRegistrationController {
     private readonly orderRegistrationService: OrderRegistrationFacadeInterface,
   ) {}
 
-  @Get('start')
-  async startPuppeteer() {
-    await this.orderRegistrationService.startPuppeteer('https://pptr.dev/');
-  }
-
-  /*@Post('handleOrders')
-  async handleOrders(@Body() order: OrderRegistrationDto) {
-    const orders = await this.orderRegistrationService.handleOrders(
-      order.orderNumbers,
-      {
-        username: order.username,
-        password: order.password,
-      },
-    );
-    console.log(orders);
-    const registeredOrders = await this.orderRegistrationService.createOrder(
-      orders,
-      'sales@ortowear.com',
-      'noqczopj',
-      order.dev,
-      order.completeOrder,
-    );
-
-    const completedOrders =
-      await this.orderRegistrationService.handleAllocations(
-        registeredOrders,
-        order.username,
-        order.password,
-        order.dev,
-        order.completeOrder,
-      );
-
-    return completedOrders;
-  }*/
-
   @Post('getOrderInfo')
   async getOrderInfo(@Body() order: OrderRegistrationDto) {
     const orders = await this.orderRegistrationService.getOrderInfo(
@@ -93,23 +58,5 @@ export class OrderRegistrationController {
     );
 
     return createdOrders;
-  }
-
-  @Get('getNextDayOfWeekTest')
-  async getNextDayOfWeekTest(
-    @Query('date') date: string,
-    @Query('dayOfWeek') dayOfWeek: number,
-  ): Promise<Date> {
-    const formatedDate = this.orderRegistrationService.formatDeliveryDate(date);
-
-    return this.orderRegistrationService.getNextDayOfWeek(
-      formatedDate,
-      dayOfWeek,
-    );
-  }
-
-  @Get('stop')
-  async stopPuppeteer() {
-    await this.orderRegistrationService.stopPuppeteer();
   }
 }

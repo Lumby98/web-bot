@@ -28,7 +28,7 @@ export interface PuppeteerUtilityInterface {
   loginNeskrid(username: string, password: string);
   input(selector: string, text: string);
   press(key: KeyInput);
-  click(selector: string, hover: boolean);
+  click(selector: string, hover: boolean, wait: boolean);
   dropdownSelect(selector: string, textValue: string);
   selectByTexts(selector: string, textValue: string);
   getTextsForAll(selector: string): Promise<string[]>;

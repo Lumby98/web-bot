@@ -398,7 +398,10 @@ export class PuppeteerUtility implements PuppeteerUtilityInterface {
     );
   }
 
-  async click(selector: string, hover: boolean) {
+  async click(selector: string, hover: boolean, wait: boolean) {
+    if (wait) {
+      this.wait(selector);
+    }
     if (hover) {
       await this.page.hover(selector);
     }

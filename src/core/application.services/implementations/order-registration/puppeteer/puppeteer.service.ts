@@ -1,12 +1,12 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { PuppeteerInterface } from '../../../interfaces/puppeteer/puppeteer.interface';
+import { PuppeteerServiceInterface } from '../../../interfaces/puppeteer/puppeteerServiceInterface';
 import {
   PuppeteerUtilityInterface,
   puppeteerUtilityInterfaceProvider,
 } from '../../../../domain.services/puppeteer-utility.interface';
 
 @Injectable()
-export class PuppeteerService implements PuppeteerInterface {
+export class PuppeteerService implements PuppeteerServiceInterface {
   constructor(
     @Inject(puppeteerUtilityInterfaceProvider)
     private readonly orderPuppeteer: PuppeteerUtilityInterface,

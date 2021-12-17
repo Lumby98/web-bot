@@ -20,9 +20,9 @@ import {
   orderRegistrationInterfaceProvider,
 } from '../../application.services/interfaces/order-registration/order/order-registration.interface';
 import {
-  PuppeteerInterface,
-  puppeteerInterfaceProvider,
-} from '../../application.services/interfaces/puppeteer/puppeteer.interface';
+  PuppeteerServiceInterface,
+  puppeteerServiceInterfaceProvider,
+} from '../../application.services/interfaces/puppeteer/puppeteerServiceInterface';
 import {
   STSInterface,
   STSInterfaceProvider,
@@ -41,8 +41,8 @@ export class OrderRegistrationFacade
     private readonly puppeteerUtil: PuppeteerUtilityInterface,
     @Inject(orderRegistrationInterfaceProvider)
     private readonly orderRegistrationService: OrderRegistrationInterface,
-    @Inject(puppeteerInterfaceProvider)
-    private readonly puppeteerService: PuppeteerInterface,
+    @Inject(puppeteerServiceInterfaceProvider)
+    private readonly puppeteerService: PuppeteerServiceInterface,
     @Inject(STSInterfaceProvider)
     private readonly stsService: STSInterface,
     @Inject(iNSSInterfaceProvider)

@@ -6,9 +6,9 @@ import {
 } from '../../../../domain.services/puppeteer-utility.interface';
 import { OrderTypeEnum } from '../../../../enums/type.enum';
 import {
-  PuppeteerInterface,
-  puppeteerInterfaceProvider,
-} from '../../../interfaces/puppeteer/puppeteer.interface';
+  PuppeteerServiceInterface,
+  puppeteerServiceInterfaceProvider,
+} from '../../../interfaces/puppeteer/puppeteerServiceInterface';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
@@ -16,8 +16,8 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
   constructor(
     @Inject(puppeteerUtilityInterfaceProvider)
     private readonly puppeteerUtil: PuppeteerUtilityInterface,
-    @Inject(puppeteerInterfaceProvider)
-    private readonly puppeteerService: PuppeteerInterface,
+    @Inject(puppeteerServiceInterfaceProvider)
+    private readonly puppeteerService: PuppeteerServiceInterface,
     private configService: ConfigService,
   ) {}
   async InputOrderInformation(
@@ -380,6 +380,9 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     if (!validateLogin) {
       throw new Error('Wrong username or password');
     }
+    /**
+     * TODO wait for the page to load
+     */
 
     await this.puppeteerService.goToURL(this.configService.get('ORTOWEARURL'));
 
@@ -420,7 +423,12 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
           false,
         )
       ) {
-        throw new Error('Failed to login, but ortowear didnt display error');
+        throw new Error(
+          'Failed to login, but ortowear didnt display error' +
+            myPageURL +
+            ' ' +
+            currentURL,
+        );
       } else {
         const ortowearError = await this.puppeteerService.getElementText(
           '#loginForm > div.form-group.has-error > span > strong',

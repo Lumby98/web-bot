@@ -5,9 +5,9 @@ import {
   puppeteerUtilityInterfaceProvider,
 } from '../../../../domain.services/puppeteer-utility.interface';
 import {
-  PuppeteerInterface,
-  puppeteerInterfaceProvider,
-} from '../../../interfaces/puppeteer/puppeteer.interface';
+  PuppeteerServiceInterface,
+  puppeteerServiceInterfaceProvider,
+} from '../../../interfaces/puppeteer/puppeteerServiceInterface';
 import { INSSOrderModel } from '../../../../models/ins-s-order.model';
 import { OrderInfoModel } from '../../../../models/order-info.model';
 
@@ -16,8 +16,8 @@ export class InssService implements INSSInterface {
   constructor(
     @Inject(puppeteerUtilityInterfaceProvider)
     private readonly puppeteerUtil: PuppeteerUtilityInterface,
-    @Inject(puppeteerInterfaceProvider)
-    private readonly puppeteerService: PuppeteerInterface,
+    @Inject(puppeteerServiceInterfaceProvider)
+    private readonly puppeteerService: PuppeteerServiceInterface,
   ) {}
 
   async confirmation() {

@@ -6,9 +6,9 @@ import {
   puppeteerUtilityInterfaceProvider,
 } from '../../../../domain.services/puppeteer-utility.interface';
 import {
-  PuppeteerInterface,
-  puppeteerInterfaceProvider,
-} from '../../../interfaces/puppeteer/puppeteer.interface';
+  PuppeteerServiceInterface,
+  puppeteerServiceInterfaceProvider,
+} from '../../../interfaces/puppeteer/puppeteerServiceInterface';
 import { OrderInfoModel } from '../../../../models/order-info.model';
 
 @Injectable()
@@ -16,8 +16,8 @@ export class StsService implements STSInterface {
   constructor(
     @Inject(puppeteerUtilityInterfaceProvider)
     private readonly puppeteerUtil: PuppeteerUtilityInterface,
-    @Inject(puppeteerInterfaceProvider)
-    private readonly puppeteerService: PuppeteerInterface,
+    @Inject(puppeteerServiceInterfaceProvider)
+    private readonly puppeteerService: PuppeteerServiceInterface,
   ) {}
 
   /**
@@ -207,7 +207,7 @@ export class StsService implements STSInterface {
 
     const splitter = width.split('-');
     if (splitter.length < 2) {
-      throw new Error('invalied width');
+      throw new Error('invalid width');
     }
 
     const widthSelectorLoaded = await this.puppeteerUtil.checkLocation(

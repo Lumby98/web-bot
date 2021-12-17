@@ -1,12 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AuthenticationService } from '../application.services/implementations/auth/authentication.service';
-import { userInterfaceProvider } from '../application.services/interfaces/auth/user.interface';
-import { UserService } from '../application.services/implementations/auth/user.service';
-import { jwtStrategy } from '../strategy/jwt.strategy';
+import { AuthenticationService } from '../../application.services/implementations/auth/authentication.service';
+import { userInterfaceProvider } from '../../application.services/interfaces/auth/user.interface';
+import { UserService } from '../../application.services/implementations/auth/user.service';
+import { jwtStrategy } from '../../strategy/jwt.strategy';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { User } from '../../infrastructure/entities/user.entity';
+import { User } from '../../../infrastructure/entities/user.entity';
 import { Repository } from 'typeorm';
 
 describe('AuthenticationService', () => {

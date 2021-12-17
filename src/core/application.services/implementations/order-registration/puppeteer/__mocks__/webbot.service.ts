@@ -1,4 +1,4 @@
-export const PuppeteerService = jest.fn().mockReturnValue({
+export const WebbotService = jest.fn().mockReturnValue({
   startPuppeteer: jest.fn().mockResolvedValue(undefined),
   stopPuppeteer: jest.fn().mockResolvedValue(undefined),
   goToURL: jest.fn().mockResolvedValue(undefined),

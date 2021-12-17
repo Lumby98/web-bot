@@ -1,32 +1,43 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { OrderRegistrationFacade } from '../facades/implementations/order-registration.facade';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { HultaforsProduct } from '../../infrastructure/entities/hultafors.product.entity';
-import { Repository } from 'typeorm';
+import { OrderRegistrationService } from '../../../application.services/implementations/order-registration/order/order-registration.service';
 import {
   PuppeteerUtilityInterface,
   puppeteerUtilityInterfaceProvider,
-} from '../domain.services/puppeteer-utility.interface';
-import { PuppeteerUtility } from '../../infrastructure/api/puppeteer.utility';
-import { OrderTypeEnum } from '../enums/type.enum';
-import { stsOrderStub } from './stubs/sts-order.stub';
-import { TargetAndSelectorStub } from './stubs/target-and-selector';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+} from '../../../domain.services/puppeteer-utility.interface';
+import { PuppeteerUtility } from '../../../../infrastructure/api/puppeteer.utility';
+import { ConfigService } from '@nestjs/config';
+import {
+  PuppeteerServiceInterface,
+  puppeteerServiceInterfaceProvider,
+} from '../../../application.services/interfaces/puppeteer/puppeteerServiceInterface';
+import { PuppeteerService } from '../../../application.services/implementations/order-registration/puppeteer/puppeteer.service';
+import { OrderTypeEnum } from '../../../enums/type.enum';
+import { TargetAndSelectorStub } from '../../stubs/target-and-selector';
 
-jest.mock('src/infrastructure/api/order-puppeteer.application.services.ts');
+jest.mock('src/infrastructure/api/puppeteer.utility.ts');
 
 describe('OrderRegistrationService', () => {
-  let orderRegistrationFacade: OrderRegistrationFacade;
+
+  const mockwebbotService = {
+    goToURL: jest.fn().mockResolvedValue(undefined),
+  };
+  let orderRegistrationService: OrderRegistrationService;
   let puppeteerUtil: PuppeteerUtilityInterface;
+  let webbotService: PuppeteerService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        OrderRegistrationFacade,
+        OrderRegistrationService,
         PuppeteerUtility,
         {
           provide: puppeteerUtilityInterfaceProvider,
           useClass: PuppeteerUtility,
+        },
+        PuppeteerService,
+        {
+          provide: puppeteerServiceInterfaceProvider,
+          useClass: PuppeteerService,
         },
         {
           provide: ConfigService,
@@ -41,65 +52,34 @@ describe('OrderRegistrationService', () => {
           },
         },
       ],
-    }).compile();
+    })
+      .overrideProvider({
+        provide: puppeteerServiceInterfaceProvider,
+        useClass: PuppeteerService,
+      })
+      .useValue(mockwebbotService)
+      .compile();
 
-    orderRegistrationFacade = module.get<OrderRegistrationFacade>(
-      OrderRegistrationFacade,
+    orderRegistrationService = module.get<OrderRegistrationService>(
+      OrderRegistrationService,
     );
-    puppeteerUtil = module.get<PuppeteerUtility>(
-      PuppeteerUtility,
-    );
+
+    puppeteerUtil = module.get<PuppeteerUtility>(PuppeteerUtility);
+
+    webbotService = module.get<PuppeteerService>(PuppeteerService);
     jest.clearAllMocks();
   });
 
   it('should be defined', () => {
-    expect(orderRegistrationFacade).toBeDefined();
+    expect(orderRegistrationService).toBeDefined();
   });
 
-  describe('startPuppeteer', () => {
-    const validURL = 'https://www.google.com/';
-
-    describe('when startPuppeteer is called with a valid url', () => {
-      beforeEach(async () => {
-        await orderRegistrationFacade.startPuppeteer(validURL);
-      });
-
-      it('should call the order-registration-puppeteer.application.services start method with the right arguments', async () => {
-        expect(puppeteerUtil.start).toBeCalledWith(false, validURL);
-      });
-    });
-
-    describe('when startPuppeteer is called with an empty string', () => {
-      const emptyURL = '';
-
-      it('should throw an error with the right message', async () => {
-        await expect(
-          async () => await orderRegistrationFacade.startPuppeteer(emptyURL),
-        ).rejects.toThrow('Invalid url, the given url is empty');
-      });
-    });
-
-    describe('when startPuppeteer is called with an invalid url', () => {
-      const invalidURL = 'www.yahoo.com';
-
-      it('should throw an error with the right message', async () => {
-        await expect(
-          async () => await orderRegistrationFacade.startPuppeteer(invalidURL),
-        ).rejects.toThrow('Invalid url, the given url is invalid');
-      });
-    });
+  it('should be defined', () => {
+    expect(puppeteerUtil).toBeDefined();
   });
 
-  describe('stopPuppeteer', () => {
-    describe('when stopPuppeteer is called', () => {
-      beforeEach(async () => {
-        await orderRegistrationFacade.stopPuppeteer();
-      });
-
-      it('should call the order-registration-puppeteer.application.services stop method', async () => {
-        expect(puppeteerUtil.stop).toBeCalled();
-      });
-    });
+  it('should be defined', () => {
+    expect(webbotService).toBeDefined();
   });
 
   describe('handleOrtowearNavigation', () => {
@@ -112,16 +92,27 @@ describe('OrderRegistrationService', () => {
           .mockReturnValueOnce('https://beta.ortowear.com/')
           .mockReturnValueOnce('https://beta.ortowear.com/my_page');
 
-        await orderRegistrationFacade.handleOrtowearNavigation(
+        jest.spyOn(webbotService, 'goToURL').mockResolvedValue(undefined);
+
+        await orderRegistrationService.handleOrtowearNavigation(
           validUsername,
           validPassword,
         );
       });
 
-      it('should call order-registration-puppeter.application.services loginOrtowear method with the right arguments', async () => {
+      it('should call the puppeteer utility loginOrtowear method with the right arguments', async () => {
         expect(puppeteerUtil.loginOrtowear).toBeCalledWith(
           validUsername,
           validPassword,
+        );
+      });
+
+      it('should call the webbot service goToURL method with the right arguments', async () => {
+        jest.mock(
+          'src/core/application.services/implementations/order-registration/webbot.service.ts',
+        );
+        expect(webbotService.goToURL).toBeCalledWith(
+          'https://beta.ortowear.com/',
         );
       });
     });
@@ -132,7 +123,7 @@ describe('OrderRegistrationService', () => {
       it('should throw an error with the right message', async () => {
         await expect(
           async () =>
-            await orderRegistrationFacade.handleOrtowearNavigation(
+            await orderRegistrationService.handleOrtowearNavigation(
               emptyUsername,
               validPassword,
             ),
@@ -146,7 +137,7 @@ describe('OrderRegistrationService', () => {
       it('should throw an error with the right message', () => {
         expect(
           async () =>
-            await orderRegistrationFacade.handleOrtowearNavigation(
+            await orderRegistrationService.handleOrtowearNavigation(
               validUsername,
               emptyPassword,
             ),
@@ -160,7 +151,7 @@ describe('OrderRegistrationService', () => {
       it('should throw an error with the right message', () => {
         expect(
           async () =>
-            await orderRegistrationFacade.handleOrtowearNavigation(
+            await orderRegistrationService.handleOrtowearNavigation(
               invalidUsername,
               validPassword,
             ),
@@ -187,7 +178,7 @@ describe('OrderRegistrationService', () => {
       it('should throw an error with the right message when username and password is correct, but something else happened', () => {
         expect(
           async () =>
-            await orderRegistrationFacade.handleOrtowearNavigation(
+            await orderRegistrationService.handleOrtowearNavigation(
               validUsername,
               validPassword,
             ),
@@ -207,7 +198,7 @@ describe('OrderRegistrationService', () => {
 
       it('should throw error if site could not be reached', () => {
         expect(async () => {
-          await orderRegistrationFacade.handleOrtowearNavigation(
+          await orderRegistrationService.handleOrtowearNavigation(
             validUsername,
             validPassword,
           );
@@ -221,7 +212,7 @@ describe('OrderRegistrationService', () => {
       const validOrderNumber = '155d215-1';
       let expected;
       beforeEach(async () => {
-        expected = await orderRegistrationFacade.getOrderType(
+        expected = await orderRegistrationService.getOrderType(
           validOrderNumber,
         );
       });
@@ -231,16 +222,14 @@ describe('OrderRegistrationService', () => {
       });
 
       it('should call readType', () => {
-        expect(puppeteerUtil.getTableTargetandSelector).toBeCalledTimes(
-          1,
-        );
+        expect(puppeteerUtil.getTableTargetandSelector).toBeCalledTimes(1);
       });
     });
 
     describe('when called with invalid order-registration number', () => {
       it('should throw error if order-registration number is blank', () => {
         expect(async () =>
-          orderRegistrationFacade.getOrderType(''),
+          orderRegistrationService.getOrderType(''),
         ).rejects.toThrow('order-registration number is blank');
       });
     });
@@ -257,7 +246,7 @@ describe('OrderRegistrationService', () => {
       it('should throw error if types does not match enum', () => {
         expect(
           async () =>
-            await orderRegistrationFacade.getOrderType(validOrderNumber),
+            await orderRegistrationService.getOrderType(validOrderNumber),
         ).rejects.toThrow('invalid order-registration type');
       });
     });
@@ -267,7 +256,7 @@ describe('OrderRegistrationService', () => {
     describe('when there is an insole', () => {
       let expected;
       beforeEach(async () => {
-        expected = await orderRegistrationFacade.checkForInsole();
+        expected = await orderRegistrationService.checkForInsole();
       });
 
       it('should return true', () => {
@@ -277,27 +266,12 @@ describe('OrderRegistrationService', () => {
     describe('when there is no insole', () => {
       let expected;
       beforeEach(async () => {
-        jest
-          .spyOn(puppeteerUtil, 'checkLocation')
-          .mockResolvedValueOnce(false);
-        expected = await orderRegistrationFacade.checkForInsole();
+        jest.spyOn(puppeteerUtil, 'checkLocation').mockResolvedValueOnce(false);
+        expected = await orderRegistrationService.checkForInsole();
       });
 
       it('should return false', () => {
         expect(expected).toEqual(false);
-      });
-    });
-  });
-
-  describe('handleSTSOrder', () => {
-    describe('when a sts order-registration is returned', () => {
-      const orderNumber = 'dfxdvcxv';
-      let expected;
-      beforeEach(async () => {
-        expected = await orderRegistrationFacade.handleSTSOrder(orderNumber);
-      });
-      it('should return an STS order-registration', () => {
-        expect(expected).toEqual(stsOrderStub());
       });
     });
   });

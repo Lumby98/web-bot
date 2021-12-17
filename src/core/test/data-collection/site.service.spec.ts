@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { SiteService } from '../application.services/implementations/data-collection/site.service';
+import { SiteService } from '../../application.services/implementations/data-collection/site.service';
 import { Repository, UpdateResult } from 'typeorm';
-import { Site } from '../../infrastructure/entities/site.entity';
+import { Site } from '../../../infrastructure/entities/site.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
 
 describe('SiteService', () => {

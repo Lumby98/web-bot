@@ -1,5 +1,6 @@
-export const puppeteerInterfaceProvider = 'puppeteerInterfaceProvider';
-export interface PuppeteerInterface {
+export const puppeteerServiceInterfaceProvider =
+  'puppeteerServiceInterfaceProvider';
+export interface PuppeteerServiceInterface {
   startPuppeteer(url: string);
   stopPuppeteer();
   goToURL(url: string);

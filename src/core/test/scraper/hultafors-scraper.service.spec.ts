@@ -1,13 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { HultaforsScraperService } from '../application.services/implementations/scraper/hultafors-scraper.service';
-import { hultaforsScraperInterfaceProvider } from '../application.services/interfaces/scraper/hultafors-scraper.interface';
-import { hultaforsInterfaceProvider } from '../application.services/interfaces/data-collection/hultafors.interface';
-import { HultaforsService } from '../application.services/implementations/data-collection/hultafors.service';
+import { HultaforsScraperService } from '../../application.services/implementations/scraper/hultafors-scraper.service';
+import { hultaforsScraperInterfaceProvider } from '../../application.services/interfaces/scraper/hultafors-scraper.interface';
+import { hultaforsInterfaceProvider } from '../../application.services/interfaces/data-collection/hultafors.interface';
+import { HultaforsService } from '../../application.services/implementations/data-collection/hultafors.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { NeskridProduct } from '../../infrastructure/entities/neskrid.product.entity';
+import { NeskridProduct } from '../../../infrastructure/entities/neskrid.product.entity';
 import { Repository } from 'typeorm';
-import { HultaforsProduct } from '../../infrastructure/entities/hultafors.product.entity';
-import { Size } from '../../infrastructure/entities/size.entity';
+import { HultaforsProduct } from '../../../infrastructure/entities/hultafors.product.entity';
+import { Size } from '../../../infrastructure/entities/size.entity';
 
 describe('HultaforsServiceService', () => {
   let service: HultaforsScraperService;

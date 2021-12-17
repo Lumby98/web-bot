@@ -27,7 +27,15 @@ describe('InssService', () => {
     jest.clearAllMocks();
   });
 
-  it('should be defined', () => {
+  it('puppeteerUtil should be defined', () => {
+    expect(puppeteerUtil).toBeDefined();
+  });
+
+  it('puppeteerService should be defined', () => {
+    expect(puppeteerService).toBeDefined();
+  });
+
+  it('inssService should be defined', () => {
     expect(inssService).toBeDefined();
   });
 });

@@ -16,15 +16,15 @@ import { CreateLogDto } from '../dto/log/logEntry/create-log.dto';
 import {
   LogInterface,
   logInterfaceProvider,
-} from '../../core/interfaces/log.interface';
+} from '../../core/application.services/interfaces/log/log.interface';
 import {
   OrderInterface,
   orderInterfaceProvider,
-} from '../../core/interfaces/order.interface';
+} from '../../core/application.services/interfaces/log/order.interface';
 import {
   LogErrorInterface,
   logErrorInterfaceProvider,
-} from '../../core/interfaces/log-error.interface';
+} from '../../core/application.services/interfaces/log/log-error.interface';
 import { QueryDto } from '../dto/filter/query.dto';
 import { LogEntryDto } from '../dto/log/logEntry/log-entry.dto';
 import { PaginationDto } from '../dto/filter/pagination-dto';

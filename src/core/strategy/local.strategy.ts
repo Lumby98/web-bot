@@ -5,7 +5,7 @@ import { UserDto } from '../../ui.api/dto/user/user.dto';
 import {
   AuthenticationInterface,
   authenticationInterfaceProvider,
-} from '../interfaces/authentication.interface';
+} from '../application.services/interfaces/auth/authentication.interface';
 
 @Injectable()
 export class LocalStrategy extends PassportStrategy(Strategy) {

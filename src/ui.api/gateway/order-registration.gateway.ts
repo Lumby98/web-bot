@@ -10,20 +10,20 @@ import { OrderRegistrationDto } from '../dto/order-registration/orderRegistratio
 import { Socket } from 'socket.io';
 import { Inject } from '@nestjs/common';
 import {
-  OrderRegistrationInterface,
-  orderRegistrationInterfaceProvider,
-} from '../../core/interfaces/order-registration.interface';
+  OrderRegistrationFacadeInterface,
+  orderRegistrationFacadeInterfaceProvider,
+} from '../../core/facades/interfaces/order-registration-facade.interface';
 import {
   savedLoginServiceInterface,
   savedLoginServiceInterfaceProvider,
-} from '../../core/interfaces/savedLoginService.interface';
+} from '../../core/application.services/interfaces/auth/savedLoginService.interface';
 import { LoginTypeEnum } from '../../core/enums/loginType.enum';
 import { ProcessStepDto } from '../dto/order-registration/processStep.dto';
 import { ProcessStepEnum } from '../../core/enums/processStep.enum';
 import {
   LogInterface,
   logInterfaceProvider,
-} from '../../core/interfaces/log.interface';
+} from '../../core/application.services/interfaces/log/log.interface';
 import { OrderList } from '../../core/models/order-list';
 import { OrderWithLogs } from '../../core/models/orderWithLogs';
 import { ConfigService } from '@nestjs/config';
@@ -34,8 +34,8 @@ export class OrderRegistrationGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
   constructor(
-    @Inject(orderRegistrationInterfaceProvider)
-    private readonly orderRegistrationService: OrderRegistrationInterface,
+    @Inject(orderRegistrationFacadeInterfaceProvider)
+    private readonly orderRegistrationFacade: OrderRegistrationFacadeInterface,
     @Inject(savedLoginServiceInterfaceProvider)
     private readonly savedLoginService: savedLoginServiceInterface,
     @Inject(logInterfaceProvider)
@@ -68,7 +68,7 @@ export class OrderRegistrationGateway
 
       const listLogEntries: CreateLogDto[] = [];
       for (const orderNumber of orderReg.orderNumbers) {
-        const orders = await this.orderRegistrationService.handleOrders(
+        const orders = await this.orderRegistrationFacade.getOrderInfo(
           orderNumber,
           {
             username: ortowearLogin.username,
@@ -106,7 +106,7 @@ export class OrderRegistrationGateway
           continue;
         }
 
-        const regOrders = await this.orderRegistrationService.createOrder(
+        const regOrders = await this.orderRegistrationFacade.createOrder(
           orders,
           neskridLogin.username,
           neskridLogin.password,
@@ -142,7 +142,7 @@ export class OrderRegistrationGateway
         }
 
         const allocatedOrders =
-          await this.orderRegistrationService.handleAllocations(
+          await this.orderRegistrationFacade.handleAllocations(
             regOrderWithLogs,
             ortowearLogin.username,
             ortowearLogin.password,

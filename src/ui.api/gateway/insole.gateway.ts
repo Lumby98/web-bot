@@ -12,7 +12,7 @@ import { Inject } from '@nestjs/common';
 import {
   InsoleInterface,
   insoleInterfaceProvider,
-} from '../../core/interfaces/insole.interface';
+} from '../../core/application.services/interfaces/insole-registration/insole.interface';
 
 @WebSocketGateway()
 export class InsoleGateway implements OnGatewayConnection, OnGatewayDisconnect {

@@ -22,7 +22,7 @@ import {
 import {
   PuppeteerServiceInterface,
   puppeteerServiceInterfaceProvider,
-} from '../../application.services/interfaces/puppeteer/puppeteerServiceInterface';
+} from '../../application.services/interfaces/puppeteer/puppeteer-service.Interface';
 import {
   STSInterface,
   STSInterfaceProvider,

@@ -2,19 +2,22 @@ import { StsService } from '../../../application.services/implementations/order-
 import { PuppeteerUtility } from '../../../../infrastructure/api/puppeteer.utility';
 import { PuppeteerService } from '../../../application.services/implementations/order-registration/puppeteer/puppeteer.service';
 import { stsOrderStub } from '../../stubs/sts-order.stub';
+import { PuppeteerServiceInterface } from '../../../application.services/interfaces/puppeteer/puppeteer-service.Interface';
+import { PuppeteerUtilityInterface } from '../../../domain.services/puppeteer-utility.interface';
+import { STSInterface } from '../../../application.services/interfaces/order-registration/sts/STS.interface';
 jest.mock('src/infrastructure/api/puppeteer.utility.ts');
 jest.mock(
-  'src/core/application.services/implementations/order-registration/puppeteer/webbot.service.ts',
+  'src/core/application.services/implementations/order-registration/puppeteer/puppeteer.service.ts',
 );
 describe('StsService', () => {
-  let stsService: StsService;
-  let puppeteerUtil: PuppeteerUtility;
-  let webbotService: PuppeteerService;
+  let stsService: STSInterface;
+  let puppeteerUtil: PuppeteerUtilityInterface;
+  let puppeteerService: PuppeteerServiceInterface;
 
   beforeEach(async () => {
     puppeteerUtil = new PuppeteerUtility();
-    webbotService = new PuppeteerService(puppeteerUtil);
-    stsService = new StsService(puppeteerUtil, webbotService);
+    puppeteerService = new PuppeteerService(puppeteerUtil);
+    stsService = new StsService(puppeteerUtil, puppeteerService);
     jest.clearAllMocks();
   });
 
@@ -22,8 +25,8 @@ describe('StsService', () => {
     expect(puppeteerUtil).toBeDefined();
   });
 
-  it('webbotService should be defined', () => {
-    expect(webbotService).toBeDefined();
+  it('puppeteerService should be defined', () => {
+    expect(puppeteerService).toBeDefined();
   });
 
   it('stsService should be defined', () => {
@@ -74,7 +77,7 @@ describe('StsService', () => {
       });
 
       it('should call tryAgain', async () => {
-        expect(webbotService.tryAgain).toBeCalledWith(
+        expect(puppeteerService.tryAgain).toBeCalledWith(
           '#order_info_14',
           '#scrollrbody > div.wizard_navigation > button.btn.btn-default.wizard_button_next',
           0,

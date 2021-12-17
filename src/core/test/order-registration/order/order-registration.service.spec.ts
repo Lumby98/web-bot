@@ -9,24 +9,37 @@ import { ConfigService } from '@nestjs/config';
 import {
   PuppeteerServiceInterface,
   puppeteerServiceInterfaceProvider,
-} from '../../../application.services/interfaces/puppeteer/puppeteerServiceInterface';
+} from '../../../application.services/interfaces/puppeteer/puppeteer-service.Interface';
 import { PuppeteerService } from '../../../application.services/implementations/order-registration/puppeteer/puppeteer.service';
 import { OrderTypeEnum } from '../../../enums/type.enum';
 import { TargetAndSelectorStub } from '../../stubs/target-and-selector';
+import { OrderRegistrationInterface } from '../../../application.services/interfaces/order-registration/order/order-registration.interface';
 
 jest.mock('src/infrastructure/api/puppeteer.utility.ts');
 
-describe('OrderRegistrationService', () => {
-
-  const mockwebbotService = {
-    goToURL: jest.fn().mockResolvedValue(undefined),
+/*jest.mock('@nestjs/config', () => {
+  return {
+    get: jest.fn((key: string) => {
+      // this is being super extra, in the case that you need multiple keys with the `get` method
+      if (key === 'ORTOWEARURL') {
+        return 'https://beta.ortowear.com/';
+      }
+      return null;
+    }),
   };
-  let orderRegistrationService: OrderRegistrationService;
-  let puppeteerUtil: PuppeteerUtilityInterface;
-  let webbotService: PuppeteerService;
+});*/
 
+jest.mock(
+  'src/core/application.services/implementations/order-registration/puppeteer/puppeteer.service.ts',
+);
+
+describe('OrderRegistrationService', () => {
+  let puppeteerUtil: PuppeteerUtilityInterface;
+  let puppeteerService: PuppeteerServiceInterface;
+  let orderRegistrationService: OrderRegistrationInterface;
+  let configService: ConfigService;
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    /*const module: TestingModule = await Test.createTestingModule({
       providers: [
         OrderRegistrationService,
         PuppeteerUtility,
@@ -66,7 +79,24 @@ describe('OrderRegistrationService', () => {
 
     puppeteerUtil = module.get<PuppeteerUtility>(PuppeteerUtility);
 
-    webbotService = module.get<PuppeteerService>(PuppeteerService);
+    webbotService = module.get<PuppeteerService>(PuppeteerService);*/
+    configService = new ConfigService<Record<string, unknown>>();
+    puppeteerUtil = new PuppeteerUtility();
+    puppeteerService = new PuppeteerService(puppeteerUtil);
+    orderRegistrationService = new OrderRegistrationService(
+      puppeteerUtil,
+      puppeteerService,
+      configService,
+    );
+
+    jest.spyOn(configService, 'get').mockImplementation((key: string) => {
+      // this is being super extra, in the case that you need multiple keys with the `get` method
+      if (key === 'ORTOWEARURL') {
+        return 'https://beta.ortowear.com/';
+      }
+      return null;
+    });
+
     jest.clearAllMocks();
   });
 
@@ -79,7 +109,7 @@ describe('OrderRegistrationService', () => {
   });
 
   it('should be defined', () => {
-    expect(webbotService).toBeDefined();
+    expect(puppeteerService).toBeDefined();
   });
 
   describe('handleOrtowearNavigation', () => {
@@ -89,10 +119,9 @@ describe('OrderRegistrationService', () => {
       beforeEach(async () => {
         jest
           .spyOn(puppeteerUtil, 'getCurrentURL')
-          .mockReturnValueOnce('https://beta.ortowear.com/')
           .mockReturnValueOnce('https://beta.ortowear.com/my_page');
 
-        jest.spyOn(webbotService, 'goToURL').mockResolvedValue(undefined);
+        /*jest.spyOn(puppeteerService, 'goToURL').mockResolvedValue(undefined);*/
 
         await orderRegistrationService.handleOrtowearNavigation(
           validUsername,
@@ -108,10 +137,7 @@ describe('OrderRegistrationService', () => {
       });
 
       it('should call the webbot service goToURL method with the right arguments', async () => {
-        jest.mock(
-          'src/core/application.services/implementations/order-registration/webbot.service.ts',
-        );
-        expect(webbotService.goToURL).toBeCalledWith(
+        expect(puppeteerService.goToURL).toBeCalledWith(
           'https://beta.ortowear.com/',
         );
       });
@@ -202,7 +228,9 @@ describe('OrderRegistrationService', () => {
             validUsername,
             validPassword,
           );
-        }).rejects.toThrow('Navigation failed: went to the wrong URL');
+        }).rejects.toThrow(
+          'Failed to login, but ortowear didnt display errorhttps://beta.ortowear.com/my_page ',
+        );
       });
     });
   });

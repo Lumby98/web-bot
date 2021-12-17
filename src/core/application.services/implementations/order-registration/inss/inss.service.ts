@@ -7,7 +7,7 @@ import {
 import {
   PuppeteerServiceInterface,
   puppeteerServiceInterfaceProvider,
-} from '../../../interfaces/puppeteer/puppeteerServiceInterface';
+} from '../../../interfaces/puppeteer/puppeteer-service.Interface';
 import { INSSOrderModel } from '../../../../models/ins-s-order.model';
 import { OrderInfoModel } from '../../../../models/order-info.model';
 

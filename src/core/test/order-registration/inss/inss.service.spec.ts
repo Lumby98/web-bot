@@ -7,41 +7,24 @@ import {
 import {
   PuppeteerServiceInterface,
   puppeteerServiceInterfaceProvider,
-} from '../../../application.services/interfaces/puppeteer/puppeteerServiceInterface';
+} from '../../../application.services/interfaces/puppeteer/puppeteer-service.Interface';
 import { PuppeteerUtility } from '../../../../infrastructure/api/puppeteer.utility';
 import { PuppeteerService } from '../../../application.services/implementations/order-registration/puppeteer/puppeteer.service';
 
 jest.mock('src/infrastructure/api/puppeteer.utility.ts');
 jest.mock(
-  'src/core/application.services/implementations/order-registration/puppeteer/webbot.service.ts',
+  'src/core/application.services/implementations/order-registration/puppeteer/puppeteer.service.ts',
 );
 
 describe('InssService', () => {
-  let inssService: InssService;
   let puppeteerUtil: PuppeteerUtilityInterface;
   let puppeteerService: PuppeteerServiceInterface;
-
+  let inssService: InssService;
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        InssService,
-        {
-          provide: puppeteerUtilityInterfaceProvider,
-          useClass: PuppeteerUtility,
-        },
-        {
-          provide: puppeteerServiceInterfaceProvider,
-          useClass: PuppeteerService,
-        },
-      ],
-    }).compile();
-
-    puppeteerUtil = module.get<PuppeteerUtilityInterface>(PuppeteerUtility);
-
-    puppeteerService = module.get<PuppeteerServiceInterface>(PuppeteerService);
+    puppeteerUtil = new PuppeteerUtility();
+    puppeteerService = new PuppeteerService(puppeteerUtil);
+    inssService = new InssService(puppeteerUtil, puppeteerService);
     jest.clearAllMocks();
-
-    inssService = module.get<InssService>(InssService);
   });
 
   it('should be defined', () => {

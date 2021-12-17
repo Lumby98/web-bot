@@ -5,15 +5,16 @@ import {
   puppeteerUtilityInterfaceProvider,
 } from '../../../domain.services/puppeteer-utility.interface';
 import { PuppeteerUtility } from '../../../../infrastructure/api/puppeteer.utility';
+import { PuppeteerServiceInterface } from '../../../application.services/interfaces/puppeteer/puppeteer-service.Interface';
 
 jest.mock('src/infrastructure/api/puppeteer.utility.ts');
 
 describe('PuppeteerService', () => {
-  let puppeteerService: PuppeteerService;
   let puppeteerUtil: PuppeteerUtilityInterface;
+  let puppeteerService: PuppeteerServiceInterface;
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    /*const module: TestingModule = await Test.createTestingModule({
       providers: [
         PuppeteerService,
         PuppeteerUtility,
@@ -25,7 +26,9 @@ describe('PuppeteerService', () => {
     }).compile();
 
     puppeteerService = module.get<PuppeteerService>(PuppeteerService);
-    puppeteerUtil = module.get<PuppeteerUtilityInterface>(PuppeteerUtility);
+    puppeteerUtil = module.get<PuppeteerUtilityInterface>(PuppeteerUtility);*/
+    puppeteerUtil = new PuppeteerUtility();
+    puppeteerService = new PuppeteerService(puppeteerUtil);
     jest.clearAllMocks();
   });
 

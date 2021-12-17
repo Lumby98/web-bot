@@ -8,7 +8,7 @@ import {
 import {
   PuppeteerServiceInterface,
   puppeteerServiceInterfaceProvider,
-} from '../../../interfaces/puppeteer/puppeteerServiceInterface';
+} from '../../../interfaces/puppeteer/puppeteer-service.Interface';
 import { OrderInfoModel } from '../../../../models/order-info.model';
 
 @Injectable()

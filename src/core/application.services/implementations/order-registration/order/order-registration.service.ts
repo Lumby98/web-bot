@@ -8,7 +8,7 @@ import { OrderTypeEnum } from '../../../../enums/type.enum';
 import {
   PuppeteerServiceInterface,
   puppeteerServiceInterfaceProvider,
-} from '../../../interfaces/puppeteer/puppeteerServiceInterface';
+} from '../../../interfaces/puppeteer/puppeteer-service.Interface';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()

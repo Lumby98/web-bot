@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { PuppeteerServiceInterface } from '../../../interfaces/puppeteer/puppeteerServiceInterface';
+import { PuppeteerServiceInterface } from '../../../interfaces/puppeteer/puppeteer-service.Interface';
 import {
   PuppeteerUtilityInterface,
   puppeteerUtilityInterfaceProvider,

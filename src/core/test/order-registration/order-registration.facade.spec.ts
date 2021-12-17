@@ -13,7 +13,7 @@ import { PuppeteerService } from '../../application.services/implementations/ord
 import {
   PuppeteerServiceInterface,
   puppeteerServiceInterfaceProvider,
-} from '../../application.services/interfaces/puppeteer/puppeteerServiceInterface';
+} from '../../application.services/interfaces/puppeteer/puppeteer-service.Interface';
 import {
   OrderRegistrationInterface,
   orderRegistrationInterfaceProvider,
@@ -32,16 +32,14 @@ import { InssService } from '../../application.services/implementations/order-re
 
 jest.mock('src/infrastructure/api/puppeteer.utility.ts');
 jest.mock(
-  'src/core/application.services/implementations/order-registration/puppeteer/webbot.service.ts',
+  'src/core/application.services/implementations/order-registration/puppeteer/puppeteer.service.ts',
 );
 jest.mock(
-  'src/core/application.services/implementations/order-registration/puppeteer/webbot.service.ts',
+  'src/core/application.services/implementations/order-registration/order/order-registration.service.ts',
 );
-
 jest.mock(
   'src/core/application.services/implementations/order-registration/sts/sts.service.ts',
 );
-
 jest.mock(
   'src/core/application.services/implementations/order-registration/inss/inss.service.ts',
 );
@@ -66,9 +64,9 @@ describe('OrderRegistrationService', () => {
   let orderRegistrationService: OrderRegistrationInterface;
   let stsService: STSInterface;
   let inssService: INSSInterface;
-
+  let configService: ConfigService;
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    /* const module: TestingModule = await Test.createTestingModule({
       providers: [
         OrderRegistrationFacade,
         PuppeteerUtility,
@@ -124,7 +122,31 @@ describe('OrderRegistrationService', () => {
 
     stsService = module.get<STSInterface>(StsService);
 
-    inssService = module.get<INSSInterface>(InssService);
+    inssService = module.get<INSSInterface>(InssService);*/
+    configService = new ConfigService<Record<string, unknown>>();
+    puppeteerUtil = new PuppeteerUtility();
+    puppeteerService = new PuppeteerService(puppeteerUtil);
+    orderRegistrationService = new OrderRegistrationService(
+      puppeteerUtil,
+      puppeteerService,
+      configService,
+    );
+    orderRegistrationFacade = new OrderRegistrationFacade(
+      puppeteerUtil,
+      orderRegistrationService,
+      puppeteerService,
+      stsService,
+      inssService,
+      configService,
+    );
+
+    jest.spyOn(configService, 'get').mockImplementation((key: string) => {
+      // this is being super extra, in the case that you need multiple keys with the `get` method
+      if (key === 'ORTOWEARURL') {
+        return 'https://beta.ortowear.com/';
+      }
+      return null;
+    });
 
     jest.clearAllMocks();
   });

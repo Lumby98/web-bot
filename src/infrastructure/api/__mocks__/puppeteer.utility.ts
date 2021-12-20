@@ -31,6 +31,11 @@ export const PuppeteerUtility = jest.fn().mockReturnValue({
     .fn()
     .mockResolvedValue(TargetAndSelectorStub()),
   selectDate: jest.fn().mockResolvedValue(undefined),
-  goToOrder: jest.fn().mockResolvedValue(undefined),
+  selectDropdownByValue: jest.fn().mockResolvedValue(undefined),
+  getSelectedValue: jest.fn().mockResolvedValue('value'),
+  searchableSelect: jest.fn().mockResolvedValue('value'),
   clickRadioButton: jest.fn().mockResolvedValue(undefined),
+  goToOrder: jest.fn().mockResolvedValue(undefined),
+  selectInputContainerByArticleName: jest.fn().mockResolvedValue(undefined),
+
 });

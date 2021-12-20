@@ -492,8 +492,9 @@ export class PuppeteerUtility implements PuppeteerUtilityInterface {
     const articles = await formGroup.$$('.input-container');
     const lowerCaseName = name.toLowerCase();
     const brandCount = brandName.trim().length;
-    const editedLowerCaseName = lowerCaseName.substring(brandCount).trim();
+    let editedLowerCaseName = lowerCaseName.substring(brandCount).trim();
     let foundArticle = null;
+    const articleNum = '';
 
     for (const article of articles) {
       const articleName = await article.$eval(
@@ -502,7 +503,22 @@ export class PuppeteerUtility implements PuppeteerUtilityInterface {
       );
       const lowerCaseArticleName = articleName.toLowerCase();
 
-      if (lowerCaseArticleName.includes(editedLowerCaseName)) {
+      let articleNum;
+      articleNum = await article
+        .$eval('small', (el) => el.textContent)
+        .catch(() => {
+          articleNum = '';
+        });
+
+      if (articleNum) {
+        articleNum = articleNum.substring(16);
+        editedLowerCaseName = editedLowerCaseName
+          .replace(articleNum, '')
+          .trim();
+      }
+
+      if (editedLowerCaseName.includes(lowerCaseArticleName) ||
+      lowerCaseArticleName.includes(editedLowerCaseName)) {
         if (!foundArticle) {
           foundArticle = article;
         } else {

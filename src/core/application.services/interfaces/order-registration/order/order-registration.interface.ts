@@ -1,10 +1,11 @@
 import { OrderTypeEnum } from '../../../../enums/type.enum';
+import { TargetAndSelector } from '../../../../models/target-and-selector';
 
 export const orderRegistrationInterfaceProvider =
   'orderRegistrationInterfaceProvider';
 export interface OrderRegistrationInterface {
   handleOrtowearNavigation(username: string, password: string);
-  getOrderType(orderNumber: string): Promise<OrderTypeEnum>;
+  getOrderType(type: string): Promise<OrderTypeEnum>;
   checkForInsole(): Promise<boolean>;
   handleNeskridNavigation(username: string, password: string);
   loginValidation(username: string, password: string): boolean;
@@ -34,4 +35,5 @@ export interface OrderRegistrationInterface {
   ): Promise<boolean>;
   getNextDayOfWeek(date: Date, dayOfWeek: number): Date;
   getMonthFromString(month: string): number;
+  getTableInfo(orderNumber: string): Promise<TargetAndSelector>;
 }

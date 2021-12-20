@@ -75,7 +75,7 @@ describe('InssService', () => {
     describe('when handle inss order gets called with invalid order number', async () => {
       it('should throw a missing order registration error', () => {
         expect(
-          async () => await inssService.handleINSSOrder('', 'selector'),
+          async () => await inssService.handleINSSOrder('', 'Selector'),
         ).rejects.toThrow('missing order-registration number'); //expect the unexpected, or the spanish inquisition, either or.
       });
     });

@@ -237,12 +237,10 @@ describe('OrderRegistrationService', () => {
 
   describe('getOrderType', () => {
     describe('when called with valid order-registration number', () => {
-      const validOrderNumber = 'STS';
+      const type = 'STS';
       let expected;
       beforeEach(async () => {
-        expected = await orderRegistrationService.getOrderType(
-          validOrderNumber,
-        );
+        expected = await orderRegistrationService.getOrderType(type);
       });
 
       it('should return STS', () => {

@@ -1,5 +1,6 @@
 import { OrderTypeEnum } from '../../../../../enums/type.enum';
 import { DateStringStub } from '../../../../../test/stubs/date-string.stub';
+import { TargetAndSelectorStub } from '../../../../../test/stubs/target-and-selector';
 
 export const OrderRegistrationService = jest.fn().mockReturnValue({
   handleOrtowearNavigation: jest.fn().mockResolvedValue(undefined),
@@ -15,4 +16,5 @@ export const OrderRegistrationService = jest.fn().mockReturnValue({
   adjustMonth: jest.fn().mockResolvedValue(true),
   getNextDayOfWeek: jest.fn().mockReturnValue(new Date()),
   getMonthFromString: jest.fn().mockReturnValue(5),
+  getTableInfo: jest.fn().mockResolvedValue(TargetAndSelectorStub()),
 });

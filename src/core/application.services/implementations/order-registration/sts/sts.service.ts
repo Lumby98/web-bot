@@ -30,6 +30,10 @@ export class StsService implements STSInterface {
     orderNumber: string,
     selector: string,
   ): Promise<STSOrderModel> {
+    if (orderNumber.length < 1) {
+      throw new Error('missing order-registration number');
+    }
+
     if (selector.length < 1) {
       throw new Error('could not find selector for order in table');
     }

@@ -237,7 +237,7 @@ describe('OrderRegistrationService', () => {
 
   describe('getOrderType', () => {
     describe('when called with valid order-registration number', () => {
-      const validOrderNumber = '155d215-1';
+      const validOrderNumber = 'STS';
       let expected;
       beforeEach(async () => {
         expected = await orderRegistrationService.getOrderType(
@@ -247,10 +247,6 @@ describe('OrderRegistrationService', () => {
 
       it('should return STS', () => {
         expect(expected).toEqual(OrderTypeEnum.STS);
-      });
-
-      it('should call readType', () => {
-        expect(puppeteerUtil.getTableTargetandSelector).toBeCalledTimes(1);
       });
     });
 

@@ -23,17 +23,18 @@ export class StsService implements STSInterface {
   /**
    * get order-registration information for an STS order-registration
    * @param orderNumber
+   * @param selector
    * @private
    */
-  async handleSTSOrder(orderNumber: string): Promise<STSOrderModel> {
-    if (orderNumber.length < 1) {
-      throw new Error('missing order-registration number');
+  async handleSTSOrder(
+    orderNumber: string,
+    selector: string,
+  ): Promise<STSOrderModel> {
+    if (selector.length < 1) {
+      throw new Error('could not find selector for order in table');
     }
 
-    const targetAndSelector =
-      await this.puppeteerUtil.getTableTargetandSelector(orderNumber);
-
-    await this.puppeteerUtil.click(targetAndSelector.selector, true, true);
+    await this.puppeteerUtil.click(selector, true, true);
     await this.puppeteerUtil.click(
       '#topBtns > div > div > button.btn.btn-sm.btn-warning',
       true,

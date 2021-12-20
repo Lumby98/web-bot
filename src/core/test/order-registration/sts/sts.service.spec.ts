@@ -20,7 +20,6 @@ describe('StsService', () => {
     puppeteerService = new PuppeteerService(puppeteerUtil);
     stsService = new StsService(puppeteerUtil, puppeteerService);
     jest.clearAllMocks();
-    console.log('fuckfuckfcukfuck');
   });
 
   it('puppeteerUtil should be defined', () => {
@@ -40,17 +39,11 @@ describe('StsService', () => {
       const orderNumber = 'dfxdvcxv';
       let result;
       beforeEach(async () => {
-        result = await stsService.handleSTSOrder(orderNumber);
+        result = await stsService.handleSTSOrder(orderNumber, 'selector');
       });
 
       it('should return a valid STS order model', () => {
         expect(result).toEqual(stsOrderStub());
-      });
-
-      it('should call get table target and selector method with the given order number', () => {
-        expect(puppeteerUtil.getTableTargetandSelector).toBeCalledWith(
-          orderNumber,
-        );
       });
 
       it('should call read order with the given order number', () => {
@@ -67,7 +60,7 @@ describe('StsService', () => {
 
       it('should throw a missing order reg error', async () => {
         await expect(
-          async () => await stsService.handleSTSOrder(orderNumber),
+          async () => await stsService.handleSTSOrder(orderNumber, 'selector'),
         ).rejects.toThrow('missing order-registration number');
       });
     });
@@ -80,7 +73,7 @@ describe('StsService', () => {
 
       it('should throw a could not find order reg error', async () => {
         await expect(
-          async () => await stsService.handleSTSOrder(orderNumber),
+          async () => await stsService.handleSTSOrder(orderNumber, 'selector'),
         ).rejects.toThrow('Could not find order-registration page');
       });
     });
@@ -93,7 +86,7 @@ describe('StsService', () => {
 
       it('should throw a could not find order reg info', async () => {
         await expect(
-          async () => await stsService.handleSTSOrder(orderNumber),
+          async () => await stsService.handleSTSOrder(orderNumber, 'selector'),
         ).rejects.toThrow('failed getting order-registration information');
       });
     });
@@ -108,7 +101,7 @@ describe('StsService', () => {
 
       it('should throw a could not find sts order reg info', async () => {
         await expect(
-          async () => await stsService.handleSTSOrder(orderNumber),
+          async () => await stsService.handleSTSOrder(orderNumber, 'selector'),
         ).rejects.toThrow('failed getting sts order-registration information');
       });
     });
@@ -125,7 +118,7 @@ describe('StsService', () => {
 
       it('should throw a failed getting the toe cap error', async () => {
         await expect(
-          async () => await stsService.handleSTSOrder(orderNumber),
+          async () => await stsService.handleSTSOrder(orderNumber, 'selector'),
         ).rejects.toThrow('failed getting toe cap');
       });
     });
@@ -142,7 +135,7 @@ describe('StsService', () => {
 
       it('should throw a failed getting the toe cap error', async () => {
         await expect(
-          async () => await stsService.handleSTSOrder(orderNumber),
+          async () => await stsService.handleSTSOrder(orderNumber, 'selector'),
         ).rejects.toThrow('failed getting toe cap');
       });
     });
@@ -159,7 +152,7 @@ describe('StsService', () => {
 
       it('should throw a failed getting correct order-reg error', async () => {
         await expect(
-          async () => await stsService.handleSTSOrder(orderNumber),
+          async () => await stsService.handleSTSOrder(orderNumber, 'selector'),
         ).rejects.toThrow('failed getting correct order-registration');
       });
     });
@@ -176,7 +169,7 @@ describe('StsService', () => {
 
       it('should throw a failed getting the sole error', async () => {
         await expect(
-          async () => await stsService.handleSTSOrder(orderNumber),
+          async () => await stsService.handleSTSOrder(orderNumber, 'selector'),
         ).rejects.toThrow('failed getting sole');
       });
     });
@@ -193,7 +186,7 @@ describe('StsService', () => {
 
       it('should throw a failed getting the sole error', async () => {
         await expect(
-          async () => await stsService.handleSTSOrder(orderNumber),
+          async () => await stsService.handleSTSOrder(orderNumber, 'selector'),
         ).rejects.toThrow('failed getting sole');
       });
     });
@@ -211,7 +204,7 @@ describe('StsService', () => {
 
       it('should throw a widths are empty error', async () => {
         await expect(
-          async () => await stsService.handleSTSOrder(orderNumber),
+          async () => await stsService.handleSTSOrder(orderNumber, 'selector'),
         ).rejects.toThrow(
           'Both widths are empty. Please amend the order entry on the site',
         );
@@ -230,7 +223,7 @@ describe('StsService', () => {
           .mockResolvedValueOnce(stsOrder);
         expected = stsOrder;
         expected.widthR = stsOrder.widthL;
-        result = await stsService.handleSTSOrder(orderNumber);
+        result = await stsService.handleSTSOrder(orderNumber, 'selector');
       });
 
       it('should return a valid STS order model', () => {
@@ -250,7 +243,7 @@ describe('StsService', () => {
           .mockResolvedValueOnce(stsOrder);
         expected = stsOrder;
         expected.widthR = stsOrder.widthL;
-        result = await stsService.handleSTSOrder(orderNumber);
+        result = await stsService.handleSTSOrder(orderNumber, 'selector');
       });
 
       it('should return a valid STS order model', () => {
@@ -270,7 +263,7 @@ describe('StsService', () => {
           .mockResolvedValueOnce(stsOrder);
         expected = stsOrder;
         expected.widthL = stsOrder.widthR;
-        result = await stsService.handleSTSOrder(orderNumber);
+        result = await stsService.handleSTSOrder(orderNumber, 'selector');
       });
 
       it('should return a valid STS order model', () => {
@@ -290,7 +283,7 @@ describe('StsService', () => {
           .mockResolvedValueOnce(stsOrder);
         expected = stsOrder;
         expected.widthL = stsOrder.widthR;
-        result = await stsService.handleSTSOrder(orderNumber);
+        result = await stsService.handleSTSOrder(orderNumber, 'selector');
       });
 
       it('should return a valid STS order model', () => {

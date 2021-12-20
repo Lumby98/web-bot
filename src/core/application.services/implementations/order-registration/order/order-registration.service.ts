@@ -10,7 +10,7 @@ import {
   puppeteerServiceInterfaceProvider,
 } from '../../../interfaces/puppeteer/puppeteer-service.Interface';
 import { ConfigService } from '@nestjs/config';
-import { TargetAndSelector } from "../../../../models/target-and-selector";
+import { TargetAndSelector } from '../../../../models/target-and-selector';
 
 @Injectable()
 export class OrderRegistrationService implements OrderRegistrationInterface {
@@ -227,7 +227,6 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
    * @param type
    */
   async getOrderType(type: string): Promise<OrderTypeEnum> {
-
     switch (type) {
       case 'STS':
         return OrderTypeEnum.STS;
@@ -251,7 +250,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
         throw new Error(
           'invalid order-registration type ' +
             'Order type was ' +
-            orderType +
+            type +
             ' This program supports STS, INS-S, OSA and SOS orders only.',
         );
     }

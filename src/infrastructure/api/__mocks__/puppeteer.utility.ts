@@ -37,5 +37,4 @@ export const PuppeteerUtility = jest.fn().mockReturnValue({
   clickRadioButton: jest.fn().mockResolvedValue(undefined),
   goToOrder: jest.fn().mockResolvedValue(undefined),
   selectInputContainerByArticleName: jest.fn().mockResolvedValue(undefined),
-
 });

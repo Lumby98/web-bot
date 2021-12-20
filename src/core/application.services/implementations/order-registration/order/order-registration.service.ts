@@ -10,7 +10,7 @@ import {
   puppeteerServiceInterfaceProvider,
 } from '../../../interfaces/puppeteer/puppeteer-service.Interface';
 import { ConfigService } from '@nestjs/config';
-import { TargetAndSelector } from "../../../../models/target-and-selector";
+import { TargetAndSelector } from '../../../../models/target-and-selector';
 
 @Injectable()
 export class OrderRegistrationService implements OrderRegistrationInterface {
@@ -21,6 +21,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     private readonly puppeteerService: PuppeteerServiceInterface,
     private configService: ConfigService,
   ) {}
+
   async InputOrderInformation(
     orderNr: string,
     deliveryAddress: string[],
@@ -219,13 +220,13 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
 
     return resultDate;
   }
+
   /**
    * gets order-registration type for the different order-registration numbers given
    * @private
    * @param type
    */
   async getOrderType(type: string): Promise<OrderTypeEnum> {
-
     switch (type) {
       case 'STS':
         return OrderTypeEnum.STS;
@@ -246,7 +247,12 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
         throw new Error('could not find order-registration');
 
       default:
-        throw new Error('invalid order-registration type');
+        throw new Error(
+          'invalid order-registration type ' +
+            'Order type was ' +
+            type +
+            ' This program supports STS, INS-S, OSA and SOS orders only.',
+        );
     }
   }
 
@@ -272,6 +278,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       throw new Error('Failed to login to Neskrid');
     }
   }
+
   /**
    * Handles the completion of the order-registration on neskrid.
    * Should return something like this: '26/11/2021'

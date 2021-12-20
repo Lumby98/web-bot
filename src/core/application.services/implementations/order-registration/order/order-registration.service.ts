@@ -20,6 +20,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     private readonly puppeteerService: PuppeteerServiceInterface,
     private configService: ConfigService,
   ) {}
+
   async InputOrderInformation(
     orderNr: string,
     deliveryAddress: string[],
@@ -218,6 +219,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
 
     return resultDate;
   }
+
   /**
    * gets order-registration type for the different order-registration numbers given
    * @private
@@ -250,7 +252,12 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
         throw new Error('could not find order-registration');
 
       default:
-        throw new Error('invalid order-registration type');
+        throw new Error(
+          'invalid order-registration type ' +
+            'Order type was ' +
+            orderType +
+            ' This program supports STS, INS-S, OSA and SOS orders only.',
+        );
     }
   }
 
@@ -276,6 +283,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       throw new Error('Failed to login to Neskrid');
     }
   }
+
   /**
    * Handles the completion of the order-registration on neskrid.
    * Should return something like this: '26/11/2021'

@@ -59,11 +59,15 @@ export class StsService implements STSInterface {
       orderNumber,
     );
 
+    if (!order) {
+      throw new Error('failed getting order-registration information');
+    }
+
     const stsOrder: STSOrderModel = await this.puppeteerUtil.readSTSOrder(
       order,
     );
     if (!stsOrder) {
-      throw new Error('failed getting order-registration information');
+      throw new Error('failed getting sts order-registration information');
     }
 
     if (!stsOrder.toeCap || stsOrder.toeCap == '') {
@@ -79,13 +83,15 @@ export class StsService implements STSInterface {
     }
 
     if (
-      (stsOrder.widthR || stsOrder.widthR != '') &&
+      stsOrder.widthR &&
+      stsOrder.widthR != '' &&
       (!stsOrder.widthL || stsOrder.widthL == '')
     ) {
       stsOrder.widthL = stsOrder.widthR;
     } else if (
       (!stsOrder.widthR || stsOrder.widthR == '') &&
-      (stsOrder.widthL || stsOrder.widthL != '')
+      stsOrder.widthL &&
+      stsOrder.widthL != ''
     ) {
       stsOrder.widthR = stsOrder.widthL;
     } else if (

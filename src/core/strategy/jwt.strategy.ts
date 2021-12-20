@@ -6,7 +6,7 @@ import { Request } from 'express';
 import {
   UserInterface,
   userInterfaceProvider,
-} from '../interfaces/user.interface';
+} from '../application.services/interfaces/auth/user.interface';
 
 @Injectable()
 export class jwtStrategy extends PassportStrategy(Strategy) {

@@ -16,18 +16,19 @@ import { CreateLogDto } from '../dto/log/logEntry/create-log.dto';
 import {
   LogInterface,
   logInterfaceProvider,
-} from '../../core/interfaces/log.interface';
+} from '../../core/application.services/interfaces/log/log.interface';
 import {
   OrderInterface,
   orderInterfaceProvider,
-} from '../../core/interfaces/order.interface';
+} from '../../core/application.services/interfaces/log/order.interface';
 import {
   LogErrorInterface,
   logErrorInterfaceProvider,
-} from '../../core/interfaces/log-error.interface';
+} from '../../core/application.services/interfaces/log/log-error.interface';
 import { QueryDto } from '../dto/filter/query.dto';
 import { LogEntryDto } from '../dto/log/logEntry/log-entry.dto';
 import { PaginationDto } from '../dto/filter/pagination-dto';
+import { UpdateLogDto } from '../dto/log/logEntry/update-log.dto';
 
 @Controller('log')
 export class LogController {
@@ -48,7 +49,7 @@ export class LogController {
       );
     } catch (err) {
       console.log(err.message);
-      throw new HttpException(err, HttpStatus.BAD_REQUEST);
+      throw new HttpException(err.message, HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -66,12 +67,24 @@ export class LogController {
     }
   }
 
+  @Patch()
+  async update(@Body() updateLogDto: UpdateLogDto): Promise<LogEntryDto> {
+    try {
+      return JSON.parse(
+        JSON.stringify(await this.logService.update(updateLogDto)),
+      );
+    } catch (err) {
+      console.log(err.message);
+      throw new HttpException(err.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+
   @Get()
   async findAll(@Query() query: QueryDto): Promise<PaginationDto<LogEntryDto>> {
     try {
       return JSON.parse(JSON.stringify(await this.logService.findAll(query)));
     } catch (err) {
-      throw new HttpException(err, HttpStatus.BAD_REQUEST);
+      throw new HttpException(err.message, HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -81,7 +94,7 @@ export class LogController {
       return JSON.parse(JSON.stringify(await this.logService.findOne(+id)));
     } catch (err) {
       console.log(err.message);
-      throw new HttpException(err, HttpStatus.BAD_REQUEST);
+      throw new HttpException(err.message, HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -90,22 +103,34 @@ export class LogController {
     try {
       return await this.logService.remove(+id);
     } catch (err) {
-      throw new HttpException(err, HttpStatus.BAD_REQUEST);
+      throw new HttpException(err.message, HttpStatus.BAD_REQUEST);
     }
   }
 
   @Delete('deleteAll')
   async removeAll() {
-    return await this.logService.removeAll();
+    try {
+      return await this.logService.removeAll();
+    } catch (err) {
+      throw new HttpException(err.message, HttpStatus.BAD_REQUEST);
+    }
   }
 
   @Get('order/:id')
   async findOrder(@Param('id') id: string) {
-    return await this.orderService.findOne(+id);
+    try {
+      return await this.orderService.findOne(+id);
+    } catch (err) {
+      throw new HttpException(err.message, HttpStatus.BAD_REQUEST);
+    }
   }
 
   @Get('Error/:id')
   async findError(@Param('id') id: string) {
-    return await this.errorService.findOne(+id);
+    try {
+      return await this.errorService.findOne(+id);
+    } catch (err) {
+      throw new HttpException(err.message, HttpStatus.BAD_REQUEST);
+    }
   }
 }

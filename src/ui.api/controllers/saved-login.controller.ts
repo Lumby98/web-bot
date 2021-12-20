@@ -10,7 +10,7 @@ import {
 import {
   savedLoginServiceInterface,
   savedLoginServiceInterfaceProvider,
-} from '../../core/interfaces/savedLoginService.interface';
+} from '../../core/application.services/interfaces/auth/savedLoginService.interface';
 import { jwtAuthenticationGuard } from '../guard/jwt-authentication.guard';
 import { InsertSavedLoginDto } from '../dto/savedLogin/insert-SavedLogin.dto';
 import { KeyDto } from '../dto/savedLogin/Key.dto';

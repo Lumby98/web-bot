@@ -12,7 +12,7 @@ import { jwtAuthenticationGuard } from '../guard/jwt-authentication.guard';
 import {
   InsoleInterface,
   insoleInterfaceProvider,
-} from '../../core/interfaces/insole.interface';
+} from '../../core/application.services/interfaces/insole-registration/insole.interface';
 
 @Controller('insole')
 export class InsoleController {

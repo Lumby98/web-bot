@@ -13,15 +13,20 @@ import { Inject, UseGuards } from '@nestjs/common';
 import {
   NeskridScraperInterface,
   neskridScraperInterfaceProvider,
-} from '../../core/interfaces/neskrid-scraper.interface';
+} from '../../core/application.services/interfaces/scraper/neskrid-scraper.interface';
 import {
   HultaforsScraperInterface,
   hultaforsScraperInterfaceProvider,
-} from '../../core/interfaces/hultafors-scraper.interface';
+} from '../../core/application.services/interfaces/scraper/hultafors-scraper.interface';
 import {
   SiteInterface,
   siteInterfaceProvider,
-} from '../../core/interfaces/site.interface';
+} from '../../core/application.services/interfaces/data-collection/site.interface';
+import { LoginTypeEnum } from '../../core/enums/loginType.enum';
+import {
+  savedLoginServiceInterface,
+  savedLoginServiceInterfaceProvider,
+} from '../../core/application.services/interfaces/auth/savedLoginService.interface';
 
 @WebSocketGateway()
 export class ScrapeGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -31,6 +36,8 @@ export class ScrapeGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @Inject(hultaforsScraperInterfaceProvider)
     private hultaforsScraperService: HultaforsScraperInterface,
     @Inject(siteInterfaceProvider) private siteService: SiteInterface,
+    @Inject(savedLoginServiceInterfaceProvider)
+    private readonly savedLoginService: savedLoginServiceInterface,
   ) {}
 
   /**
@@ -44,17 +51,22 @@ export class ScrapeGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
   ): Promise<void> {
     try {
-      //checks if there is a username, password and website
-      if (!dto.username || !dto.password || !dto.website) {
-        client.error('missing login information');
-      }
+      const neskridLogin = await this.savedLoginService.getLogin(
+        LoginTypeEnum.NESKRID,
+        dto.key,
+      );
+
+      const hultaforsLogin = await this.savedLoginService.getLogin(
+        LoginTypeEnum.HULTAFORS,
+        dto.key,
+      );
 
       let scrapeProducts;
       //switch determining which site to scrape
       switch (dto.website) {
         case 'Neskrid': {
           scrapeProducts = await this.neskridScraperService
-            .scrapNeskrid(dto.username, dto.password)
+            .scrapNeskrid(neskridLogin.username, neskridLogin.password)
             .catch((err) => {
               throw err;
             });
@@ -62,7 +74,7 @@ export class ScrapeGateway implements OnGatewayConnection, OnGatewayDisconnect {
         }
         case 'Hultafors': {
           scrapeProducts = await this.hultaforsScraperService
-            .scrapeHultafors(dto.username, dto.password)
+            .scrapeHultafors(hultaforsLogin.username, hultaforsLogin.password)
             .catch((err) => {
               throw err;
             });

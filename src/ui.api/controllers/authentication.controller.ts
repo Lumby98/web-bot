@@ -18,7 +18,7 @@ import { UserDto } from '../dto/user/user.dto';
 import {
   AuthenticationInterface,
   authenticationInterfaceProvider,
-} from '../../core/interfaces/authentication.interface';
+} from '../../core/application.services/interfaces/auth/authentication.interface';
 
 /**
  * authentication is made with help from the following guide from wanago.io
@@ -32,7 +32,7 @@ export class AuthenticationController {
   ) {}
 
   /**
-   * calls the authentication service to create a user,
+   * calls the authentication application.services to create a user,
    * if the request has an jwt token attached to it
    * @param registrationData
    */

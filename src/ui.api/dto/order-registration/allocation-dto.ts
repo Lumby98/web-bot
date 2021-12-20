@@ -1,7 +1,7 @@
-import { OrderLists } from '../../../core/models/order-lists';
+import { OrderList } from '../../../core/models/order-list';
 
 export class AllocationDto {
-  orderLists: OrderLists;
+  orderList: OrderList;
   username: string;
   password: string;
   dev: boolean;

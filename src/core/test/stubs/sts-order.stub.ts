@@ -1,6 +1,6 @@
 import { STSOrderModel } from '../../models/sts-order.model';
 
-export const StsOrderStub = (): STSOrderModel => {
+export const stsOrderStub = (): STSOrderModel => {
   return {
     model: '4502160 Klemtu DUO',
     orderNr: 'dfxdvcxv',

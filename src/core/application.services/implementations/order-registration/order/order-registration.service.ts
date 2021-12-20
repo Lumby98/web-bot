@@ -10,6 +10,7 @@ import {
   puppeteerServiceInterfaceProvider,
 } from '../../../interfaces/puppeteer/puppeteer-service.Interface';
 import { ConfigService } from '@nestjs/config';
+import { TargetAndSelector } from "../../../../models/target-and-selector";
 
 @Injectable()
 export class OrderRegistrationService implements OrderRegistrationInterface {
@@ -221,23 +222,18 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
   /**
    * gets order-registration type for the different order-registration numbers given
    * @private
-   * @param orderNumber
+   * @param type
    */
-  async getOrderType(orderNumber: string): Promise<OrderTypeEnum> {
-    if (orderNumber.length < 1) {
-      throw new Error('order-registration number is blank');
-    }
+  async getOrderType(type: string): Promise<OrderTypeEnum> {
 
-    const targetAndSelector =
-      await this.puppeteerUtil.getTableTargetandSelector(orderNumber);
-
-    const orderType = targetAndSelector.type;
-
-    switch (orderType) {
+    switch (type) {
       case 'STS':
         return OrderTypeEnum.STS;
 
       case 'INS-S':
+        return OrderTypeEnum.INSS;
+
+      case 'INS':
         return OrderTypeEnum.INSS;
 
       case 'OSA':
@@ -477,5 +473,9 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     }
 
     return true;
+  }
+
+  async getTableInfo(orderNumber: string): Promise<TargetAndSelector> {
+    return await this.puppeteerUtil.getTableTargetandSelector(orderNumber);
   }
 }

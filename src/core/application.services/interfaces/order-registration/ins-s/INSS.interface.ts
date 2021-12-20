@@ -6,7 +6,10 @@ export interface INSSInterface {
    * test test
    * @param orderNumber
    */
-  handleINSSOrder(orderNumber: string): Promise<INSSOrderModel>;
+  handleINSSOrder(
+    orderNumber: string,
+    selector: string,
+  ): Promise<INSSOrderModel>;
   inputInssUsageEnvironment(order: INSSOrderModel);
   inputInssModel(order: INSSOrderModel);
   orthotics();

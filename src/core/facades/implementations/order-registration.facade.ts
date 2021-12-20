@@ -69,7 +69,7 @@ export class OrderRegistrationFacade
         login.password,
       );
       await this.puppeteerService.goToURL(
-        this.configService.get('ORTOWEARURL') + 'administration/ordersAdmin/',
+        this.configService.get('ORTOWEARURL') + '/administration/orders/open',
       );
     } catch (err) {
       const log: CreateLogDto = {
@@ -90,18 +90,31 @@ export class OrderRegistrationFacade
       };
     }
     try {
-      const type = await this.orderRegistrationService.getOrderType(
-        orderNumber,
-      );
+      if (orderNumber.length < 1) {
+        throw new Error('order-registration number is blank');
+      }
+
+      const targetAndSelector =
+        await this.orderRegistrationService.getTableInfo(orderNumber);
+
+      const orderType = targetAndSelector.type;
+
+      const type = await this.orderRegistrationService.getOrderType(orderType);
       let order;
       switch (type) {
         case OrderTypeEnum.STS:
-          order = await this.stsService.handleSTSOrder(orderNumber);
+          order = await this.stsService.handleSTSOrder(
+            orderNumber,
+            targetAndSelector.selector,
+          );
           order.insole = await this.orderRegistrationService.checkForInsole();
           STSOrder = order;
           break;
         case OrderTypeEnum.INSS:
-          order = await this.inssService.handleINSSOrder(orderNumber);
+          order = await this.inssService.handleINSSOrder(
+            orderNumber,
+            targetAndSelector.selector,
+          );
           INSOrder = order;
           break;
         case OrderTypeEnum.OSA:
@@ -389,7 +402,7 @@ export class OrderRegistrationFacade
         password,
       );
       await this.puppeteerService.goToURL(
-        this.configService.get('ORTOWEARURL') + 'administration/ordersAdmin/',
+        this.configService.get('ORTOWEARURL') + '/administration/orders/open',
       );
     } catch (err) {
       const log: CreateLogDto = {

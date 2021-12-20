@@ -36,15 +36,15 @@ export class InssService implements INSSInterface {
     }
   }
 
-  async handleINSSOrder(orderNumber: string): Promise<INSSOrderModel> {
-    if (orderNumber.length < 1) {
-      throw new Error('missing order-registration number');
+  async handleINSSOrder(
+    orderNumber: string,
+    selector: string,
+  ): Promise<INSSOrderModel> {
+    if (selector.length < 1) {
+      throw new Error('could not find selector for order in table');
     }
 
-    const targetAndSelector =
-      await this.puppeteerUtil.getTableTargetandSelector(orderNumber);
-
-    await this.puppeteerUtil.click(targetAndSelector.selector, true, true);
+    await this.puppeteerUtil.click(selector, true, true);
     await this.puppeteerUtil.click(
       '#topBtns > div > div > button.btn.btn-sm.btn-warning',
       true,

@@ -20,6 +20,7 @@ describe('StsService', () => {
     puppeteerService = new PuppeteerService(puppeteerUtil);
     stsService = new StsService(puppeteerUtil, puppeteerService);
     jest.clearAllMocks();
+    console.log('fuckfuckfcukfuck');
   });
 
   it('puppeteerUtil should be defined', () => {
@@ -74,7 +75,7 @@ describe('StsService', () => {
     describe('when given a valid order number but cant find order reg page', () => {
       const orderNumber = 'dfxdvcxv';
       beforeEach(async () => {
-        jest.spyOn(puppeteerUtil, 'checkLocation').mockResolvedValue(false);
+        jest.spyOn(puppeteerUtil, 'checkLocation').mockResolvedValueOnce(false);
       });
 
       it('should throw a could not find order reg error', async () => {
@@ -87,7 +88,7 @@ describe('StsService', () => {
     describe('when given a valid order number but cant get order', () => {
       const orderNumber = 'dfxdvcxv';
       beforeEach(async () => {
-        jest.spyOn(puppeteerUtil, 'readOrder').mockResolvedValue(undefined);
+        jest.spyOn(puppeteerUtil, 'readOrder').mockResolvedValueOnce(undefined);
       });
 
       it('should throw a could not find order reg info', async () => {
@@ -100,7 +101,9 @@ describe('StsService', () => {
     describe('when given a valid order number but cant get sts order', () => {
       const orderNumber = 'dfxdvcxv';
       beforeEach(async () => {
-        jest.spyOn(puppeteerUtil, 'readSTSOrder').mockResolvedValue(undefined);
+        jest
+          .spyOn(puppeteerUtil, 'readSTSOrder')
+          .mockResolvedValueOnce(undefined);
       });
 
       it('should throw a could not find sts order reg info', async () => {
@@ -115,7 +118,9 @@ describe('StsService', () => {
       const stsOrder = stsOrderStub();
       beforeEach(async () => {
         stsOrder.toeCap = undefined;
-        jest.spyOn(puppeteerUtil, 'readSTSOrder').mockResolvedValue(stsOrder);
+        jest
+          .spyOn(puppeteerUtil, 'readSTSOrder')
+          .mockResolvedValueOnce(stsOrder);
       });
 
       it('should throw a failed getting the toe cap error', async () => {
@@ -130,7 +135,9 @@ describe('StsService', () => {
       const stsOrder = stsOrderStub();
       beforeEach(async () => {
         stsOrder.toeCap = '';
-        jest.spyOn(puppeteerUtil, 'readSTSOrder').mockResolvedValue(stsOrder);
+        jest
+          .spyOn(puppeteerUtil, 'readSTSOrder')
+          .mockResolvedValueOnce(stsOrder);
       });
 
       it('should throw a failed getting the toe cap error', async () => {
@@ -145,7 +152,9 @@ describe('StsService', () => {
       const stsOrder = stsOrderStub();
       beforeEach(async () => {
         stsOrder.orderNr = 'awdawd';
-        jest.spyOn(puppeteerUtil, 'readSTSOrder').mockResolvedValue(stsOrder);
+        jest
+          .spyOn(puppeteerUtil, 'readSTSOrder')
+          .mockResolvedValueOnce(stsOrder);
       });
 
       it('should throw a failed getting correct order-reg error', async () => {
@@ -160,7 +169,9 @@ describe('StsService', () => {
       const stsOrder = stsOrderStub();
       beforeEach(async () => {
         stsOrder.sole = undefined;
-        jest.spyOn(puppeteerUtil, 'readSTSOrder').mockResolvedValue(stsOrder);
+        jest
+          .spyOn(puppeteerUtil, 'readSTSOrder')
+          .mockResolvedValueOnce(stsOrder);
       });
 
       it('should throw a failed getting the sole error', async () => {
@@ -175,7 +186,9 @@ describe('StsService', () => {
       const stsOrder = stsOrderStub();
       beforeEach(async () => {
         stsOrder.sole = '';
-        jest.spyOn(puppeteerUtil, 'readSTSOrder').mockResolvedValue(stsOrder);
+        jest
+          .spyOn(puppeteerUtil, 'readSTSOrder')
+          .mockResolvedValueOnce(stsOrder);
       });
 
       it('should throw a failed getting the sole error', async () => {
@@ -191,7 +204,9 @@ describe('StsService', () => {
       beforeEach(async () => {
         stsOrder.widthL = undefined;
         stsOrder.widthR = undefined;
-        jest.spyOn(puppeteerUtil, 'readSTSOrder').mockResolvedValue(stsOrder);
+        jest
+          .spyOn(puppeteerUtil, 'readSTSOrder')
+          .mockResolvedValueOnce(stsOrder);
       });
 
       it('should throw a widths are empty error', async () => {
@@ -210,7 +225,9 @@ describe('StsService', () => {
       let result;
       beforeEach(async () => {
         stsOrder.widthR = undefined;
-        jest.spyOn(puppeteerUtil, 'readSTSOrder').mockResolvedValue(stsOrder);
+        jest
+          .spyOn(puppeteerUtil, 'readSTSOrder')
+          .mockResolvedValueOnce(stsOrder);
         expected = stsOrder;
         expected.widthR = stsOrder.widthL;
         result = await stsService.handleSTSOrder(orderNumber);
@@ -228,7 +245,9 @@ describe('StsService', () => {
       let result;
       beforeEach(async () => {
         stsOrder.widthR = '';
-        jest.spyOn(puppeteerUtil, 'readSTSOrder').mockResolvedValue(stsOrder);
+        jest
+          .spyOn(puppeteerUtil, 'readSTSOrder')
+          .mockResolvedValueOnce(stsOrder);
         expected = stsOrder;
         expected.widthR = stsOrder.widthL;
         result = await stsService.handleSTSOrder(orderNumber);
@@ -246,7 +265,9 @@ describe('StsService', () => {
       let result;
       beforeEach(async () => {
         stsOrder.widthL = undefined;
-        jest.spyOn(puppeteerUtil, 'readSTSOrder').mockResolvedValue(stsOrder);
+        jest
+          .spyOn(puppeteerUtil, 'readSTSOrder')
+          .mockResolvedValueOnce(stsOrder);
         expected = stsOrder;
         expected.widthL = stsOrder.widthR;
         result = await stsService.handleSTSOrder(orderNumber);
@@ -264,7 +285,9 @@ describe('StsService', () => {
       let result;
       beforeEach(async () => {
         stsOrder.widthL = '';
-        jest.spyOn(puppeteerUtil, 'readSTSOrder').mockResolvedValue(stsOrder);
+        jest
+          .spyOn(puppeteerUtil, 'readSTSOrder')
+          .mockResolvedValueOnce(stsOrder);
         expected = stsOrder;
         expected.widthL = stsOrder.widthR;
         result = await stsService.handleSTSOrder(orderNumber);
@@ -279,7 +302,7 @@ describe('StsService', () => {
   describe('inputStsModel', () => {
     describe('Should run with no errors', () => {
       beforeEach(async () => {
-        jest.spyOn(puppeteerUtil, 'checkLocation').mockResolvedValue(true);
+        jest.spyOn(puppeteerUtil, 'checkLocation').mockResolvedValueOnce(true);
 
         await stsService.inputStsModel('mockText1', '45', 'Neskrid 66-10');
       });

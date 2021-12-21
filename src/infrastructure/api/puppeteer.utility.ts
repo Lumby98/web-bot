@@ -517,8 +517,10 @@ export class PuppeteerUtility implements PuppeteerUtilityInterface {
           .trim();
       }
 
-      if (editedLowerCaseName.includes(lowerCaseArticleName) ||
-      lowerCaseArticleName.includes(editedLowerCaseName)) {
+      if (
+        editedLowerCaseName.includes(lowerCaseArticleName) ||
+        lowerCaseArticleName.includes(editedLowerCaseName)
+      ) {
         if (!foundArticle) {
           foundArticle = article;
         } else {

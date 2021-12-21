@@ -347,6 +347,16 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       throw new Error('failed to get deliveryDate');
     }
 
+    const checkboxCheck = await this.puppeteerUtil.checkLocation(
+      '#order_cemaxnconf',
+      false,
+      true,
+    );
+
+    if (checkboxCheck) {
+      await this.puppeteerUtil.clickRadioButton('#order_cemaxnconf');
+    }
+
     if (completeOrder) {
       // confirm btn
       await this.puppeteerUtil.click(

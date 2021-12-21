@@ -574,41 +574,110 @@ export class OrderRegistrationFacade
       }
 
       if (orderWithLogs.insole) {
-        await this.puppeteerUtil.selectDropdownByValue(
+        const checkForSelect1 = await this.puppeteerUtil.checkLocation(
           '#default > form > div.box-body.row > div.col-6 > div:nth-child(3) > div.col-3 > select',
-          'AVSI3STZSN3F7GRV',
+          false,
+          true,
         );
 
-        const selectedValue = await this.puppeteerUtil.getSelectedValue(
-          '#default > form > div.box-body.row > div.col-6 > div:nth-child(3) > div.col-3 > select',
+        const checkForSelect2 = await this.puppeteerUtil.checkLocation(
+          '#default > form > div.box-body.row > div.col-6 > div:nth-child(4) > div.col-3 > select',
+          false,
+          true,
         );
 
-        if (selectedValue != 'AVSI3STZSN3F7GRV') {
-          throw new Error('Failed to select supplier: ' + selectedValue);
+        if (checkForSelect1) {
+          await this.puppeteerUtil.selectDropdownByValue(
+            '#default > form > div.box-body.row > div.col-6 > div:nth-child(3) > div.col-3 > select',
+            'AVSI3STZSN3F7GRV',
+          );
+
+          const selectedValue = await this.puppeteerUtil.getSelectedValue(
+            '#default > form > div.box-body.row > div.col-6 > div:nth-child(3) > div.col-3 > select',
+          );
+
+          if (selectedValue != 'AVSI3STZSN3F7GRV') {
+            throw new Error('Failed to select supplier: ' + selectedValue);
+          }
+        } else if (checkForSelect2) {
+          await this.puppeteerUtil.selectDropdownByValue(
+            '#default > form > div.box-body.row > div.col-6 > div:nth-child(4) > div.col-3 > select',
+            'AVSI3STZSN3F7GRV',
+          );
+
+          const selectedValue = await this.puppeteerUtil.getSelectedValue(
+            '#default > form > div.box-body.row > div.col-6 > div:nth-child(4) > div.col-3 > select',
+          );
+
+          if (selectedValue != 'AVSI3STZSN3F7GRV') {
+            throw new Error('Failed to select supplier: ' + selectedValue);
+          }
+        } else {
+          throw new Error('Could not find supplier dropdown');
         }
       } else {
-        await this.puppeteerUtil.selectDropdownByValue(
+        const checkForSelect1 = await this.puppeteerUtil.checkLocation(
           '#default > form > div.box-body.row > div.col-6 > div:nth-child(3) > div.col-3 > select',
-          '1x20e4UK1Nfp3S6t',
+          false,
+          true,
         );
 
-        let selectedValue = await this.puppeteerUtil.getSelectedValue(
-          '#default > form > div.box-body.row > div.col-6 > div:nth-child(3) > div.col-3 > select',
+        const checkForSelect2 = await this.puppeteerUtil.checkLocation(
+          '#default > form > div.box-body.row > div.col-6 > div:nth-child(4) > div.col-3 > select',
+          false,
+          true,
         );
 
-        if (selectedValue != '1x20e4UK1Nfp3S6t') {
+        if (checkForSelect1) {
           await this.puppeteerUtil.selectDropdownByValue(
             '#default > form > div.box-body.row > div.col-6 > div:nth-child(3) > div.col-3 > select',
             '1x20e4UK1Nfp3S6t',
           );
-        }
 
-        selectedValue = await this.puppeteerUtil.getSelectedValue(
-          '#default > form > div.box-body.row > div.col-6 > div:nth-child(3) > div.col-3 > select',
-        );
+          let selectedValue = await this.puppeteerUtil.getSelectedValue(
+            '#default > form > div.box-body.row > div.col-6 > div:nth-child(3) > div.col-3 > select',
+          );
 
-        if (selectedValue != '1x20e4UK1Nfp3S6t') {
-          throw new Error('Failed to select supplier: ' + selectedValue);
+          if (selectedValue != '1x20e4UK1Nfp3S6t') {
+            await this.puppeteerUtil.selectDropdownByValue(
+              '#default > form > div.box-body.row > div.col-6 > div:nth-child(3) > div.col-3 > select',
+              '1x20e4UK1Nfp3S6t',
+            );
+          }
+
+          selectedValue = await this.puppeteerUtil.getSelectedValue(
+            '#default > form > div.box-body.row > div.col-6 > div:nth-child(3) > div.col-3 > select',
+          );
+
+          if (selectedValue != '1x20e4UK1Nfp3S6t') {
+            throw new Error('Failed to select supplier: ' + selectedValue);
+          }
+        } else if (checkForSelect2) {
+          await this.puppeteerUtil.selectDropdownByValue(
+            '#default > form > div.box-body.row > div.col-6 > div:nth-child(4) > div.col-3 > select',
+            '1x20e4UK1Nfp3S6t',
+          );
+
+          let selectedValue = await this.puppeteerUtil.getSelectedValue(
+            '#default > form > div.box-body.row > div.col-6 > div:nth-child(4) > div.col-3 > select',
+          );
+
+          if (selectedValue != '1x20e4UK1Nfp3S6t') {
+            await this.puppeteerUtil.selectDropdownByValue(
+              '#default > form > div.box-body.row > div.col-6 > div:nth-child(4) > div.col-3 > select',
+              '1x20e4UK1Nfp3S6t',
+            );
+          }
+
+          selectedValue = await this.puppeteerUtil.getSelectedValue(
+            '#default > form > div.box-body.row > div.col-6 > div:nth-child(4) > div.col-3 > select',
+          );
+
+          if (selectedValue != '1x20e4UK1Nfp3S6t') {
+            throw new Error('Failed to select supplier: ' + selectedValue);
+          }
+        } else {
+          throw new Error('Could not find supplier dropdown');
         }
       }
 

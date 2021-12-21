@@ -215,9 +215,10 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     const resultDate = new Date(date.getTime());
 
     resultDate.setDate(
-      date.getDate() + ((7 + dayOfWeek - date.getDay() - 1) % 7) + 2,
+      date.getDate() + ((7 + dayOfWeek - date.getDay() - 1) % 7) + 1,
     );
 
+    console.log(resultDate);
     return resultDate;
   }
 

@@ -10,8 +10,6 @@ import {
 } from '../../../application.services/interfaces/puppeteer/puppeteer-service.Interface';
 import { PuppeteerUtility } from '../../../../infrastructure/api/puppeteer.utility';
 import { PuppeteerService } from '../../../application.services/implementations/order-registration/puppeteer/puppeteer.service';
-import { func, when } from '@hapi/joi';
-import { once } from 'cluster';
 import { insOrderStub } from '../../stubs/ins-s-order.stub';
 import { orderStub } from '../../stubs/order-stub';
 
@@ -95,15 +93,21 @@ describe('InssService', () => {
     });
 
     describe('When handle inss order gets called with invalid order number', () => {
-      it('should throw a failed getting correct order-registration error', () => {
+      it('should throw a failed getting correct order-registration error. input= empty string ', () => {
         expect(
           async () => await inssService.handleINSSOrder('', 'Selector'),
         ).rejects.toThrow('failed getting correct order-registration'); //expect the unexpected, or the spanish inquisition, either or.
       });
 
-      it('should throw a failed getting correct order-registration error', () => {
+      it('should throw a failed getting correct order-registration error. input= null', () => {
         expect(
           async () => await inssService.handleINSSOrder(null, 'Selector'),
+        ).rejects.toThrow('failed getting correct order-registration'); //expect the unexpected, or the spanish inquisition, either or.
+      });
+
+      it('should throw a failed getting correct order-registration error. input= undefined', () => {
+        expect(
+          async () => await inssService.handleINSSOrder(undefined, 'Selector'),
         ).rejects.toThrow('failed getting correct order-registration'); //expect the unexpected, or the spanish inquisition, either or.
       });
     });

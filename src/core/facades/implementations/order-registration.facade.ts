@@ -546,7 +546,7 @@ export class OrderRegistrationFacade
         );
       }
 
-      if (!order.EU) {
+      if (order.EU) {
         await this.puppeteerUtil.selectDropdownByValue('#return_to', 'client');
 
         const selectedValue = await this.puppeteerUtil.getSelectedValue(
@@ -613,11 +613,7 @@ export class OrderRegistrationFacade
       }
 
       if (completeOrder) {
-        await this.puppeteerUtil.click(
-          '#default > form > div.box-footer > div > button.btn.btn-ow.pull-right.page_speed_2111450335',
-          true,
-          true,
-        );
+        await this.puppeteerUtil.click('button[type=submit]', true, true);
       }
       const log: CreateLogDto = {
         status: true,

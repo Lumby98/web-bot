@@ -72,11 +72,11 @@ describe('InssService', () => {
   });
 
   describe('HandleInssOrder', () => {
-    describe('when handle inss order gets called with invalid order number', async () => {
+    describe('when handle inss order gets called with invalid order number', () => {
       it('should throw a missing order registration error', () => {
         expect(
           async () => await inssService.handleINSSOrder('', 'Selector'),
-        ).rejects.toThrow('missing order-registration number'); //expect the unexpected, or the spanish inquisition, either or.
+        ).rejects.toThrow('failed getting correct order-registration'); //expect the unexpected, or the spanish inquisition, either or.
       });
     });
   });

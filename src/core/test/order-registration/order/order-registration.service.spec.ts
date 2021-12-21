@@ -248,14 +248,6 @@ describe('OrderRegistrationService', () => {
       });
     });
 
-    describe('when called with invalid order-registration number', () => {
-      it('should throw error if order-registration number is blank', () => {
-        expect(async () =>
-          orderRegistrationService.getOrderType(''),
-        ).rejects.toThrow('order-registration number is blank');
-      });
-    });
-
     describe('when invalid type is returned', () => {
       const validOrderNumber = '156dt64-1';
       beforeEach(async () => {

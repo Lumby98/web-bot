@@ -12,6 +12,8 @@ import { PuppeteerUtility } from '../../../../infrastructure/api/puppeteer.utili
 import { PuppeteerService } from '../../../application.services/implementations/order-registration/puppeteer/puppeteer.service';
 import { func, when } from '@hapi/joi';
 import { once } from 'cluster';
+import { insOrderStub } from '../../stubs/ins-s-order.stub';
+import { orderStub } from '../../stubs/order-stub';
 
 jest.mock('src/infrastructure/api/puppeteer.utility.ts');
 jest.mock(
@@ -72,12 +74,54 @@ describe('InssService', () => {
   });
 
   describe('HandleInssOrder', () => {
-    describe('when handle inss order gets called with invalid order number', () => {
-      it('should throw a missing order registration error', () => {
+    describe('When given at valid order number and selector', () => {
+      const orderNumber = 'dfxdvcxv';
+      let result;
+      beforeEach(async () => {
+        result = await inssService.handleINSSOrder(orderNumber, 'Selector');
+      });
+
+      it('should return a valid ins order model', () => {
+        expect(result).toEqual(insOrderStub());
+      });
+
+      it('should call read order with the given order number', () => {
+        expect(puppeteerUtil.readOrder).toBeCalledWith(orderNumber);
+      });
+
+      it('should call read inss order with the order from read order', () => {
+        expect(puppeteerUtil.readINSSOrder).toBeCalledWith(orderStub());
+      });
+    });
+
+    describe('When handle inss order gets called with invalid order number', () => {
+      it('should throw a failed getting correct order-registration error', () => {
         expect(
           async () => await inssService.handleINSSOrder('', 'Selector'),
         ).rejects.toThrow('failed getting correct order-registration'); //expect the unexpected, or the spanish inquisition, either or.
       });
+
+      it('should throw a failed getting correct order-registration error', () => {
+        expect(
+          async () => await inssService.handleINSSOrder(null, 'Selector'),
+        ).rejects.toThrow('failed getting correct order-registration'); //expect the unexpected, or the spanish inquisition, either or.
+      });
+    });
+
+    describe('When handle inss order gets called with invalid selector', () => {
+      it('should throw a could not find selector for order in table error', () => {
+        expect(
+          async () => await inssService.handleINSSOrder('dfxdvcxv', ''),
+        ).rejects.toThrow('could not find selector for order in table');
+      });
+
+      it('should throw a could not find selector for order in table error', () => {
+        expect(
+          async () => await inssService.handleINSSOrder('dfxdvcxv', null),
+        ).rejects.toThrow('could not find selector for order in table');
+      });
+
+
     });
   });
 });

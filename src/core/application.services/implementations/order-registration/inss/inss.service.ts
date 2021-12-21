@@ -40,7 +40,7 @@ export class InssService implements INSSInterface {
     orderNumber: string,
     selector: string,
   ): Promise<INSSOrderModel> {
-    if (selector.length < 1) {
+    if (!selector || selector.length < 1) {
       throw new Error('could not find selector for order in table');
     }
 

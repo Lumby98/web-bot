@@ -88,8 +88,6 @@ export class OrderRegistrationFacade
         INSOrder: INSOrder,
         logEntries: logEntries,
       };
-    } finally {
-      this.puppeteerUtil.stop();
     }
     try {
       if (orderNumber.length < 1) {
@@ -147,8 +145,6 @@ export class OrderRegistrationFacade
         order: { orderNr: orderNumber, completed: false },
       };
       logEntries.push(log);
-    } finally {
-      this.puppeteerUtil.stop();
     }
     await this.puppeteerService.stopPuppeteer();
     return {
@@ -225,8 +221,6 @@ export class OrderRegistrationFacade
         INSOrder: INSOrder,
         logEntries: orders.logEntries,
       };
-    } finally {
-      this.puppeteerUtil.stop();
     }
     if (orders.STSOrder) {
       try {
@@ -298,8 +292,6 @@ export class OrderRegistrationFacade
         await this.puppeteerService.goToURL(
           'https://www.neskrid.com/plugins/neskrid/myneskrid_new.aspx',
         );
-      } finally {
-        this.puppeteerUtil.stop();
       }
     }
 
@@ -377,8 +369,6 @@ export class OrderRegistrationFacade
         await this.puppeteerService.goToURL(
           'https://www.neskrid.com/plugins/neskrid/myneskrid_new.aspx',
         );
-      } finally {
-        this.puppeteerUtil.stop();
       }
     }
     await this.puppeteerService.stopPuppeteer();
@@ -428,8 +418,6 @@ export class OrderRegistrationFacade
       orderWithLogs.logEntries.push(log);
       orderWithLogs.order = undefined;
       return orderWithLogs;
-    } finally {
-      this.puppeteerUtil.stop();
     }
 
     try {
@@ -725,8 +713,6 @@ export class OrderRegistrationFacade
       await this.puppeteerService.goToURL(
         this.configService.get('ORTOWEARURL') + 'administration/ordersAdmin/',
       );
-    } finally {
-      this.puppeteerUtil.stop();
     }
 
     await this.puppeteerService.stopPuppeteer();

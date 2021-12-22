@@ -456,7 +456,8 @@ export class OrderRegistrationFacade
       if (!isInAlocation) {
         throw new Error('Failed to allocate, order is already allocated');
       }
-
+      // IF statement where you check if orderWithLogs.daysToAdd is < 0
+      // then instead of the below if statement you simply add the amount of days
       if (orderWithLogs.insole) {
         if (
           order.timeOfDelivery.getDay() == 3 ||

@@ -27,7 +27,7 @@ export class PuppeteerUtility implements PuppeteerUtilityInterface {
     });
     this.page = await this.browser.newPage();
 
-    await this.page.goto(url, { waitUntil: 'networkidle0', timeout: 60000 });
+    await this.page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
     this.page.on('dialog', async (dialog) => {
       await dialog.dismiss();
     });
@@ -49,7 +49,7 @@ export class PuppeteerUtility implements PuppeteerUtilityInterface {
    */
   async navigateToURL(url: string) {
     await this.page.goto(url, {
-      waitUntil: 'networkidle0',
+      waitUntil: 'networkidle2',
       timeout: 60000,
     });
   }

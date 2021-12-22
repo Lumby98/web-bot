@@ -592,6 +592,7 @@ export class PuppeteerUtility implements PuppeteerUtilityInterface {
           currentSelector,
           false,
           true,
+          2000,
         );
 
         if (cellCheck) {

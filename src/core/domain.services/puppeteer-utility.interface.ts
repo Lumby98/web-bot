@@ -20,6 +20,7 @@ export interface PuppeteerUtilityInterface {
     selector: string,
     hidden: boolean,
     visible: boolean,
+    timeout?: number,
   ): Promise<boolean>;
   getCurrentURL(): string;
   getCSSofElement(selector: string, property: string): Promise<string>;

@@ -215,9 +215,10 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     const resultDate = new Date(date.getTime());
 
     resultDate.setDate(
-      date.getDate() + ((7 + dayOfWeek - date.getDay() - 1) % 7) + 2,
+      date.getDate() + ((7 + dayOfWeek - date.getDay() - 1) % 7) + 1,
     );
 
+    console.log(resultDate);
     return resultDate;
   }
 
@@ -347,6 +348,18 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       throw new Error('failed to get deliveryDate');
     }
 
+    const checkboxCheck = await this.puppeteerUtil.checkLocation(
+      '#order_cemaxnconf',
+      false,
+      true,
+    );
+
+    if (checkboxCheck) {
+      await this.puppeteerUtil.clickRadioButton('#order_cemaxnconf');
+    }
+
+    await this.puppeteerUtil.wait(undefined, 10000);
+
     if (completeOrder) {
       // confirm btn
       await this.puppeteerUtil.click(
@@ -391,11 +404,20 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
 
     await this.puppeteerUtil.loginOrtowear(username, password);
 
-    const checklocation = await this.puppeteerUtil.checkLocation(
+    let checklocation = await this.puppeteerUtil.checkLocation(
       'div.home-main:nth-child(2) > div:nth-child(1)',
       false,
       true,
     );
+
+    if (!checklocation) {
+      checklocation = await this.puppeteerUtil.checkLocation(
+        'div.home-main:nth-child(2) > div:nth-child(1)',
+        false,
+        true,
+        30000,
+      );
+    }
 
     if (!checklocation) {
       if (
@@ -412,7 +434,9 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
           'Failed to login, ortowear gave this error:' + ortowearError,
         );
       } else {
-        throw new Error('Failed to login, but ortowear didnt display error');
+        throw new Error(
+          'Failed to login, but ortowear didnt display error, if this happens then Ortowear is most likely down.',
+        );
       }
     }
 

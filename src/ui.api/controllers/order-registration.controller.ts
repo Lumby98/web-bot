@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Inject, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Inject,
+  Param,
+  Post,
+  Query,
+} from '@nestjs/common';
 import {
   OrderRegistrationFacadeInterface,
   orderRegistrationFacadeInterfaceProvider,
@@ -8,17 +16,23 @@ import { OrderLists } from '../../core/models/order-lists';
 import { STSOrderModel } from '../../core/models/sts-order.model';
 import { AllocationDto } from '../dto/order-registration/allocation-dto';
 import { AllocationTestDto } from '../dto/order-registration/allocationTest.dto';
+import {
+  OrderRegistrationInterface,
+  orderRegistrationInterfaceProvider,
+} from '../../core/application.services/interfaces/order-registration/order/order-registration.interface';
 
 @Controller('orderRegistration')
 export class OrderRegistrationController {
   constructor(
     @Inject(orderRegistrationFacadeInterfaceProvider)
-    private readonly orderRegistrationService: OrderRegistrationFacadeInterface,
+    private readonly orderRegistrationFacade: OrderRegistrationFacadeInterface,
+    @Inject(orderRegistrationInterfaceProvider)
+    private readonly orderRegistrationService: OrderRegistrationInterface,
   ) {}
 
   @Post('getOrderInfo')
   async getOrderInfo(@Body() order: OrderRegistrationDto) {
-    const orders = await this.orderRegistrationService.getOrderInfo(
+    const orders = await this.orderRegistrationFacade.getOrderInfo(
       order.orderNumbers[0],
       {
         username: order.username,
@@ -36,7 +50,7 @@ export class OrderRegistrationController {
     allocationTestDto.orderWithLogs.order.timeOfDelivery = newDate;
 
     const completedOrders =
-      await this.orderRegistrationService.handleAllocations(
+      await this.orderRegistrationFacade.handleAllocations(
         allocationTestDto.orderWithLogs,
         allocationTestDto.username,
         allocationTestDto.password,
@@ -49,7 +63,7 @@ export class OrderRegistrationController {
 
   @Post('createOrder')
   async createOrders(@Body() order: AllocationDto) {
-    const createdOrders = await this.orderRegistrationService.createOrder(
+    const createdOrders = await this.orderRegistrationFacade.createOrder(
       order.orderList,
       order.username,
       order.password,
@@ -58,5 +72,17 @@ export class OrderRegistrationController {
     );
 
     return createdOrders;
+  }
+
+  @Get('getNextDayOfWeekTest')
+  async getNextDayOfWeek(
+    @Query('date') date: string,
+    @Query('dayOfWeek') dayOfWeek: number,
+  ) {
+    const formatedDate = this.orderRegistrationService.formatDeliveryDate(date);
+    return this.orderRegistrationService.getNextDayOfWeek(
+      formatedDate,
+      dayOfWeek,
+    );
   }
 }

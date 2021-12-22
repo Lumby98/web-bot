@@ -27,7 +27,7 @@ export class PuppeteerUtility implements PuppeteerUtilityInterface {
     });
     this.page = await this.browser.newPage();
 
-    await this.page.goto(url);
+    await this.page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
     this.page.on('dialog', async (dialog) => {
       await dialog.dismiss();
     });
@@ -274,15 +274,20 @@ export class PuppeteerUtility implements PuppeteerUtilityInterface {
    * @param selector
    * @param hidden
    * @param visible
+   * @param timeout
    */
   async checkLocation(
     selector: string,
     hidden: boolean,
     visible: boolean,
+    timeout = 8000,
   ): Promise<boolean> {
+    if (timeout < 0) {
+      throw new Error('Timeout cant be negative');
+    }
     try {
       const element = await this.page.waitForSelector(selector, {
-        timeout: 8000,
+        timeout: timeout,
         hidden: hidden,
         visible: visible,
       });
@@ -342,8 +347,11 @@ export class PuppeteerUtility implements PuppeteerUtilityInterface {
     );
 
     if (!isLanguageModal) {
-      await this.wait(
+      await this.checkLocation(
         '#modallanguages > div > div > div.modal-body.text-center > ul > li:nth-child(1) > a',
+        false,
+        true,
+        30000,
       );
     }
 
@@ -351,10 +359,13 @@ export class PuppeteerUtility implements PuppeteerUtilityInterface {
       '#modallanguages > div > div > div.modal-body.text-center > ul > li:nth-child(1) > a',
       false,
       true,
+      30000,
     );
 
     if (!isLanguageModal) {
-      throw new Error('Neskrid didnt load language modal');
+      throw new Error(
+        'Neskrid didnt load language modal, if this happens then Neskrid is most likely down.',
+      );
     }
 
     await this.page.click(
@@ -400,7 +411,7 @@ export class PuppeteerUtility implements PuppeteerUtilityInterface {
 
   async click(selector: string, hover: boolean, wait: boolean) {
     if (wait) {
-      this.wait(selector);
+      await this.wait(selector);
     }
     if (hover) {
       await this.page.hover(selector);
@@ -581,6 +592,7 @@ export class PuppeteerUtility implements PuppeteerUtilityInterface {
           currentSelector,
           false,
           true,
+          2000,
         );
 
         if (cellCheck) {

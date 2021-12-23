@@ -56,6 +56,7 @@ export class OrderRegistrationController {
         allocationTestDto.password,
         allocationTestDto.dev,
         allocationTestDto.completeOrder,
+        allocationTestDto.dateBuffer,
       );
 
     return completedOrders;

@@ -461,9 +461,14 @@ export class OrderRegistrationFacade
       // If statement where you check if orderWithLogs.daysToAdd is < 0
       // then instead of the below if statement you simply add the amount of days
       if (dateBuffer > 0) {
-        order.timeOfDelivery.setDate(
-          order.timeOfDelivery.getDate() + dateBuffer,
-        );
+        console.log(order.timeOfDelivery);
+
+        const date = new Date(order.timeOfDelivery);
+
+        date.setDate(date.getDate() + dateBuffer);
+        order.timeOfDelivery = date;
+
+        console.log(order.timeOfDelivery);
       } else {
         if (orderWithLogs.insole) {
           if (

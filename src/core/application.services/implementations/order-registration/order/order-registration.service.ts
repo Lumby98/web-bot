@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { OrderRegistrationInterface } from '../../../interfaces/order-registration/order/order-registration.interface';
+import { DateTime } from 'luxon';
 import {
   PuppeteerUtilityInterface,
   puppeteerUtilityInterfaceProvider,
@@ -212,14 +213,15 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
         'Invalid day of the week: the day of the week should be from 0-6',
       );
     }
-    const resultDate = new Date(date.getTime());
 
-    resultDate.setDate(
-      date.getDate() + ((7 + dayOfWeek - date.getDay() - 1) % 7) + 1,
-    );
+    let luxDate = DateTime.fromJSDate(date);
 
-    console.log(resultDate);
-    return resultDate;
+    luxDate = luxDate.plus({
+      days: ((7 + dayOfWeek - date.getDay() - 1) % 7) + 1,
+    });
+
+    console.log(luxDate.toJSDate());
+    return luxDate.toJSDate();
   }
 
   /**
@@ -295,13 +297,14 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       newDate.setDate(newDate.getDate() + 7);
 
       console.log(
-        `Date is : ${newDate.getDate()}/${
+        `Date is : ${
           newDate.getMonth() + 1
-        }/${newDate.getFullYear()}`,
+        }/${newDate.getDate()}/${newDate.getFullYear()}`,
       );
-      return `${newDate.getDate()}/${
+      return '12/23/2021';
+      /*return `${
         newDate.getMonth() + 1
-      }/${newDate.getFullYear()}`;
+      }/${newDate.getDate()}/${newDate.getFullYear()}`;*/
     }
     await this.puppeteerUtil.click('#wizard_button_save', true, true);
     const pageCheck = await this.puppeteerUtil.checkLocation(

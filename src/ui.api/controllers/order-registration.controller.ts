@@ -45,9 +45,14 @@ export class OrderRegistrationController {
 
   @Post('allocateOrders')
   async allocateOrders(@Body() allocationTestDto: AllocationTestDto) {
-    const newDate = new Date();
+    /*const newDate = new Date();
     newDate.setDate(newDate.getDate() + 90);
-    allocationTestDto.orderWithLogs.order.timeOfDelivery = newDate;
+    allocationTestDto.orderWithLogs.order.timeOfDelivery = newDate;*/
+    const date = this.orderRegistrationService.formatDeliveryDate(
+      allocationTestDto.dateString,
+    );
+
+    allocationTestDto.orderWithLogs.order.timeOfDelivery = date;
 
     const completedOrders =
       await this.orderRegistrationFacade.handleAllocations(
@@ -56,6 +61,7 @@ export class OrderRegistrationController {
         allocationTestDto.password,
         allocationTestDto.dev,
         allocationTestDto.completeOrder,
+        +allocationTestDto.dateBuffer,
       );
 
     return completedOrders;

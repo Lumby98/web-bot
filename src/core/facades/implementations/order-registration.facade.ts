@@ -386,6 +386,7 @@ export class OrderRegistrationFacade
    * @param password
    * @param dev
    * @param completeOrder
+   * @param dateBuffer
    */
   async handleAllocations(
     orderWithLogs: OrderWithLogs,
@@ -393,6 +394,7 @@ export class OrderRegistrationFacade
     password: string,
     dev: boolean,
     completeOrder: boolean,
+    dateBuffer: number,
   ): Promise<OrderWithLogs> {
     const order: OrderInfoModel = orderWithLogs.order;
     try {
@@ -456,22 +458,30 @@ export class OrderRegistrationFacade
       if (!isInAlocation) {
         throw new Error('Failed to allocate, order is already allocated');
       }
-      // IF statement where you check if orderWithLogs.daysToAdd is < 0
+      // If statement where you check if orderWithLogs.daysToAdd is < 0
       // then instead of the below if statement you simply add the amount of days
-      if (orderWithLogs.insole) {
-        if (
-          order.timeOfDelivery.getDay() == 3 ||
-          order.timeOfDelivery.getDay() == 4
-        ) {
-          order.timeOfDelivery = this.orderRegistrationService.getNextDayOfWeek(
-            order.timeOfDelivery,
-            5,
-          );
-        } else {
-          order.timeOfDelivery = this.orderRegistrationService.getNextDayOfWeek(
-            order.timeOfDelivery,
-            3,
-          );
+      if (dateBuffer > 0) {
+        order.timeOfDelivery.setDate(
+          order.timeOfDelivery.getDate() + dateBuffer,
+        );
+      } else {
+        if (orderWithLogs.insole) {
+          if (
+            order.timeOfDelivery.getDay() == 3 ||
+            order.timeOfDelivery.getDay() == 4
+          ) {
+            order.timeOfDelivery =
+              this.orderRegistrationService.getNextDayOfWeek(
+                order.timeOfDelivery,
+                5,
+              );
+          } else {
+            order.timeOfDelivery =
+              this.orderRegistrationService.getNextDayOfWeek(
+                order.timeOfDelivery,
+                3,
+              );
+          }
         }
       }
 

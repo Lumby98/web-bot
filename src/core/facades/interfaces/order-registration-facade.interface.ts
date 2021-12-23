@@ -18,6 +18,6 @@ export interface OrderRegistrationFacadeInterface {
     password: string,
     dev: boolean,
     completeOrder: boolean,
-    dateBuffer: number,
+    dateBuffer?: number,
   ): Promise<OrderWithLogs>;
 }

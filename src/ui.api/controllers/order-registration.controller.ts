@@ -48,11 +48,10 @@ export class OrderRegistrationController {
     /*const newDate = new Date();
     newDate.setDate(newDate.getDate() + 90);
     allocationTestDto.orderWithLogs.order.timeOfDelivery = newDate;*/
-    const date = new Date(
-      allocationTestDto.year,
-      allocationTestDto.month - 1,
-      allocationTestDto.date,
+    const date = this.orderRegistrationService.formatDeliveryDate(
+      allocationTestDto.dateString,
     );
+
     allocationTestDto.orderWithLogs.order.timeOfDelivery = date;
 
     const completedOrders =
@@ -62,7 +61,7 @@ export class OrderRegistrationController {
         allocationTestDto.password,
         allocationTestDto.dev,
         allocationTestDto.completeOrder,
-        allocationTestDto.dateBuffer,
+        +allocationTestDto.dateBuffer,
       );
 
     return completedOrders;

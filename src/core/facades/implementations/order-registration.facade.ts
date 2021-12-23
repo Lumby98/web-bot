@@ -14,6 +14,7 @@ import { OrderList } from '../../models/order-list';
 import { OrderInfoModel } from '../../models/order-info.model';
 import { OrderWithLogs } from '../../models/orderWithLogs';
 import { ConfigService } from '@nestjs/config';
+import { DateTime } from 'luxon';
 import { date } from '@hapi/joi';
 import {
   OrderRegistrationInterface,
@@ -461,12 +462,27 @@ export class OrderRegistrationFacade
       // If statement where you check if orderWithLogs.daysToAdd is < 0
       // then instead of the below if statement you simply add the amount of days
       if (dateBuffer > 0) {
-        console.log(order.timeOfDelivery);
+        let luxDate = DateTime.fromJSDate(order.timeOfDelivery);
 
-        const date = new Date(order.timeOfDelivery);
+        luxDate = luxDate.plus({ days: dateBuffer });
+
+        // console.log(order.timeOfDelivery);
+        // const date = new Date(
+        //   order.timeOfDelivery.getFullYear(),
+        //   order.timeOfDelivery.getMonth(),
+        //   order.timeOfDelivery.getDate(),
+        // );
+
+        /*const date = new Date(order.timeOfDelivery.getTime());
 
         date.setDate(date.getDate() + dateBuffer);
         order.timeOfDelivery = date;
+*/
+        // date.setDate(date.getUTCDate() + dateBuffer);
+        //
+        // order.timeOfDelivery = date;
+
+        order.timeOfDelivery = luxDate.toJSDate();
 
         console.log(order.timeOfDelivery);
       } else {

@@ -153,7 +153,7 @@ export class OrderRegistrationGateway
             ortowearLogin.password,
             this.configService.get('DEV'),
             this.configService.get('COMPLETEORDER'),
-            dateBuffer,
+            +dateBuffer,
           );
 
         processStepList = [

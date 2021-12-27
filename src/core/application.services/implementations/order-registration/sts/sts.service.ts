@@ -109,13 +109,15 @@ export class StsService implements STSInterface {
     }
 
     if (
-      (stsOrder.sizeR || stsOrder.sizeR != '') &&
+      stsOrder.sizeR &&
+      stsOrder.sizeR != '' &&
       (!stsOrder.sizeL || stsOrder.sizeL == '')
     ) {
       stsOrder.sizeL = stsOrder.sizeR;
     } else if (
       (!stsOrder.sizeR || stsOrder.sizeR == '') &&
-      (stsOrder.sizeL || stsOrder.sizeL != '')
+      stsOrder.sizeL &&
+      stsOrder.sizeL != ''
     ) {
       stsOrder.sizeR = stsOrder.sizeL;
     } else if (
@@ -140,8 +142,11 @@ export class StsService implements STSInterface {
     }
 
     const substring = 'Norway';
-    if (stsOrder.deliveryAddress.includes(substring)) {
-      stsOrder.EU = false;
+
+    for (const address of stsOrder.deliveryAddress) {
+      if (address.includes(substring)) {
+        stsOrder.EU = false;
+      }
     }
 
     return stsOrder;

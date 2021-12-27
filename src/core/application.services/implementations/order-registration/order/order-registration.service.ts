@@ -301,10 +301,10 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
           newDate.getMonth() + 1
         }/${newDate.getDate()}/${newDate.getFullYear()}`,
       );
-      return '12/23/2021';
-      /*return `${
+      /*return '12/23/2021';*/
+      return `${
         newDate.getMonth() + 1
-      }/${newDate.getDate()}/${newDate.getFullYear()}`;*/
+      }/${newDate.getDate()}/${newDate.getFullYear()}`;
     }
     await this.puppeteerUtil.click('#wizard_button_save', true, true);
     const pageCheck = await this.puppeteerUtil.checkLocation(

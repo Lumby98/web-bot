@@ -124,8 +124,6 @@ describe('InssService', () => {
           async () => await inssService.handleINSSOrder('dfxdvcxv', null),
         ).rejects.toThrow('could not find selector for order in table');
       });
-
-
     });
   });
 });

@@ -113,19 +113,134 @@ describe('InssService', () => {
     });
 
     describe('When handle inss order gets called with invalid selector', () => {
-      it('should throw a could not find selector for order in table error', () => {
+      it('should throw a could not find selector for order in table error. selector = blank string ( "" )', () => {
         expect(
           async () => await inssService.handleINSSOrder('dfxdvcxv', ''),
         ).rejects.toThrow('could not find selector for order in table');
       });
 
-      it('should throw a could not find selector for order in table error', () => {
+      it('should throw a could not find selector for order in table error. selector = null', () => {
         expect(
           async () => await inssService.handleINSSOrder('dfxdvcxv', null),
         ).rejects.toThrow('could not find selector for order in table');
       });
 
+      it('should throw a could not find selector for order in table error.  selector= undefined', () => {
+        expect(
+          async () => await inssService.handleINSSOrder('dfxdvcxv', undefined),
+        ).rejects.toThrow('could not find selector for order in table');
+      });
+    });
 
+    describe('When both sizes are empty', () => {
+      beforeAll(() => {
+        const inssOrderStub = insOrderStub();
+        inssOrderStub.sizeL = '';
+        inssOrderStub.sizeR = '';
+        jest
+          .spyOn(puppeteerUtil, 'readINSSOrder')
+          .mockResolvedValue(inssOrderStub);
+      });
+      it('should throw an append order on the site error', async () => {
+        await expect(
+          async () => await inssService.handleINSSOrder('dfxdvcxv', 'null'),
+        ).rejects.toThrow(
+          'Both sizes are empty. Please amend the order entry on the site',
+        );
+      });
+    });
+
+    describe('When both sizes are null', () => {
+      beforeAll(() => {
+        const inssOrderStub = insOrderStub();
+        inssOrderStub.sizeL = null;
+        inssOrderStub.sizeR = null;
+        jest
+          .spyOn(puppeteerUtil, 'readINSSOrder')
+          .mockResolvedValue(inssOrderStub);
+      });
+      it('should throw an append order on the site error', async () => {
+        await expect(
+          async () => await inssService.handleINSSOrder('dfxdvcxv', 'null'),
+        ).rejects.toThrow(
+          'Both sizes are empty. Please amend the order entry on the site',
+        );
+      });
+    });
+
+    describe('When both sizes are undefined', () => {
+      beforeAll(() => {
+        const inssOrderStub = insOrderStub();
+        inssOrderStub.sizeL = undefined;
+        inssOrderStub.sizeR = undefined;
+        jest
+          .spyOn(puppeteerUtil, 'readINSSOrder')
+          .mockResolvedValue(inssOrderStub);
+      });
+      it('should throw an append order on the site error', async () => {
+        await expect(
+          async () => await inssService.handleINSSOrder('dfxdvcxv', 'null'),
+        ).rejects.toThrow(
+          'Both sizes are empty. Please amend the order entry on the site',
+        );
+      });
+    });
+
+    describe('when there is only one size in it', () => {
+      let result;
+      beforeEach(async () => {
+        result = await inssService.handleINSSOrder('dfxdvcxv', 'null');
+      });
+      describe('When one size is empty', () => {
+        beforeAll(() => {
+          const inssOrderStub = insOrderStub();
+          inssOrderStub.sizeL = '45';
+          inssOrderStub.sizeR = '';
+          jest
+            .spyOn(puppeteerUtil, 'readINSSOrder')
+            .mockResolvedValue(inssOrderStub);
+        });
+        it('should make both sizes the same, and not throw errors', () => {
+          const expectedInsOrderStub = insOrderStub();
+          expectedInsOrderStub.sizeL = '45';
+          expectedInsOrderStub.sizeR = '45';
+          expect(result).toEqual(expectedInsOrderStub);
+        });
+      });
+
+      describe('When one size is null', () => {
+        beforeAll(() => {
+          const inssOrderStub = insOrderStub();
+          inssOrderStub.sizeL = '45';
+          inssOrderStub.sizeR = null;
+          jest
+            .spyOn(puppeteerUtil, 'readINSSOrder')
+            .mockResolvedValue(inssOrderStub);
+        });
+        it('should make both sizes the same, and not throw errors', () => {
+          const expectedInsOrderStub = insOrderStub();
+          expectedInsOrderStub.sizeL = '45';
+          expectedInsOrderStub.sizeR = '45';
+          expect(result).toEqual(expectedInsOrderStub);
+        });
+      });
+
+      describe('When one size is undefined', () => {
+        beforeAll(() => {
+          const inssOrderStub = insOrderStub();
+          inssOrderStub.sizeL = '45';
+          inssOrderStub.sizeR = undefined;
+          jest
+            .spyOn(puppeteerUtil, 'readINSSOrder')
+            .mockResolvedValue(inssOrderStub);
+        });
+        it('should make both sizes the same, and not throw errors', () => {
+          const expectedInsOrderStub = insOrderStub();
+          expectedInsOrderStub.sizeL = '45';
+          expectedInsOrderStub.sizeR = '45';
+          expect(result).toEqual(expectedInsOrderStub);
+        });
+      });
     });
   });
 });

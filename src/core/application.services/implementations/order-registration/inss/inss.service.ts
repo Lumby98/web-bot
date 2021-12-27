@@ -77,7 +77,7 @@ export class InssService implements INSSInterface {
       throw new Error('failed getting correct order-registration');
     }
 
-    if (
+    /*    if (
       (inssOrder.sizeR || inssOrder.sizeR != '') &&
       (!inssOrder.sizeL || inssOrder.sizeL == '')
     ) {
@@ -85,6 +85,27 @@ export class InssService implements INSSInterface {
     } else if (
       (!inssOrder.sizeR || inssOrder.sizeR == '') &&
       (inssOrder.sizeL || inssOrder.sizeL != '')
+    ) {
+      inssOrder.sizeR = inssOrder.sizeL;
+    } else if (
+      (!inssOrder.sizeR || inssOrder.sizeR == '') &&
+      (!inssOrder.sizeL || inssOrder.sizeL == '')
+    ) {
+      throw new Error(
+        'Both sizes are empty. Please amend the order entry on the site',
+      );
+    }*/
+
+    if (
+      inssOrder.sizeR &&
+      inssOrder.sizeR != '' &&
+      (!inssOrder.sizeL || inssOrder.sizeL == '')
+    ) {
+      inssOrder.sizeL = inssOrder.sizeR;
+    } else if (
+      (!inssOrder.sizeR || inssOrder.sizeR == '') &&
+      inssOrder.sizeL &&
+      inssOrder.sizeL != ''
     ) {
       inssOrder.sizeR = inssOrder.sizeL;
     } else if (

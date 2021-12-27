@@ -14,6 +14,7 @@ import { OrderList } from '../../models/order-list';
 import { OrderInfoModel } from '../../models/order-info.model';
 import { OrderWithLogs } from '../../models/orderWithLogs';
 import { ConfigService } from '@nestjs/config';
+import { DateTime } from 'luxon';
 import { date } from '@hapi/joi';
 import {
   OrderRegistrationInterface,
@@ -386,6 +387,7 @@ export class OrderRegistrationFacade
    * @param password
    * @param dev
    * @param completeOrder
+   * @param dateBuffer
    */
   async handleAllocations(
     orderWithLogs: OrderWithLogs,
@@ -393,6 +395,7 @@ export class OrderRegistrationFacade
     password: string,
     dev: boolean,
     completeOrder: boolean,
+    dateBuffer: number,
   ): Promise<OrderWithLogs> {
     const order: OrderInfoModel = orderWithLogs.order;
     try {
@@ -456,21 +459,50 @@ export class OrderRegistrationFacade
       if (!isInAlocation) {
         throw new Error('Failed to allocate, order is already allocated');
       }
+      // If statement where you check if orderWithLogs.daysToAdd is < 0
+      // then instead of the below if statement you simply add the amount of days
+      if (dateBuffer > 0) {
+        let luxDate = DateTime.fromJSDate(order.timeOfDelivery);
 
-      if (orderWithLogs.insole) {
-        if (
-          order.timeOfDelivery.getDay() == 3 ||
-          order.timeOfDelivery.getDay() == 4
-        ) {
-          order.timeOfDelivery = this.orderRegistrationService.getNextDayOfWeek(
-            order.timeOfDelivery,
-            5,
-          );
-        } else {
-          order.timeOfDelivery = this.orderRegistrationService.getNextDayOfWeek(
-            order.timeOfDelivery,
-            3,
-          );
+        luxDate = luxDate.plus({ days: dateBuffer });
+
+        // console.log(order.timeOfDelivery);
+        // const date = new Date(
+        //   order.timeOfDelivery.getFullYear(),
+        //   order.timeOfDelivery.getMonth(),
+        //   order.timeOfDelivery.getDate(),
+        // );
+
+        /*const date = new Date(order.timeOfDelivery.getTime());
+
+        date.setDate(date.getDate() + dateBuffer);
+        order.timeOfDelivery = date;
+*/
+        // date.setDate(date.getUTCDate() + dateBuffer);
+        //
+        // order.timeOfDelivery = date;
+
+        order.timeOfDelivery = luxDate.toJSDate();
+
+        console.log(order.timeOfDelivery);
+      } else {
+        if (orderWithLogs.insole) {
+          if (
+            order.timeOfDelivery.getDay() == 3 ||
+            order.timeOfDelivery.getDay() == 4
+          ) {
+            order.timeOfDelivery =
+              this.orderRegistrationService.getNextDayOfWeek(
+                order.timeOfDelivery,
+                5,
+              );
+          } else {
+            order.timeOfDelivery =
+              this.orderRegistrationService.getNextDayOfWeek(
+                order.timeOfDelivery,
+                3,
+              );
+          }
         }
       }
 
@@ -546,7 +578,7 @@ export class OrderRegistrationFacade
         );
       }
 
-      if (!order.EU) {
+      if (order.EU) {
         await this.puppeteerUtil.selectDropdownByValue('#return_to', 'client');
 
         const selectedValue = await this.puppeteerUtil.getSelectedValue(
@@ -574,50 +606,115 @@ export class OrderRegistrationFacade
       }
 
       if (orderWithLogs.insole) {
-        await this.puppeteerUtil.selectDropdownByValue(
+        const checkForSelect1 = await this.puppeteerUtil.checkLocation(
           '#default > form > div.box-body.row > div.col-6 > div:nth-child(3) > div.col-3 > select',
-          'AVSI3STZSN3F7GRV',
+          false,
+          true,
         );
 
-        const selectedValue = await this.puppeteerUtil.getSelectedValue(
-          '#default > form > div.box-body.row > div.col-6 > div:nth-child(3) > div.col-3 > select',
+        const checkForSelect2 = await this.puppeteerUtil.checkLocation(
+          '#default > form > div.box-body.row > div.col-6 > div:nth-child(4) > div.col-3 > select',
+          false,
+          true,
         );
 
-        if (selectedValue != 'AVSI3STZSN3F7GRV') {
-          throw new Error('Failed to select supplier: ' + selectedValue);
+        if (checkForSelect1) {
+          await this.puppeteerUtil.selectDropdownByValue(
+            '#default > form > div.box-body.row > div.col-6 > div:nth-child(3) > div.col-3 > select',
+            'AVSI3STZSN3F7GRV',
+          );
+
+          const selectedValue = await this.puppeteerUtil.getSelectedValue(
+            '#default > form > div.box-body.row > div.col-6 > div:nth-child(3) > div.col-3 > select',
+          );
+
+          if (selectedValue != 'AVSI3STZSN3F7GRV') {
+            throw new Error('Failed to select supplier: ' + selectedValue);
+          }
+        } else if (checkForSelect2) {
+          await this.puppeteerUtil.selectDropdownByValue(
+            '#default > form > div.box-body.row > div.col-6 > div:nth-child(4) > div.col-3 > select',
+            'AVSI3STZSN3F7GRV',
+          );
+
+          const selectedValue = await this.puppeteerUtil.getSelectedValue(
+            '#default > form > div.box-body.row > div.col-6 > div:nth-child(4) > div.col-3 > select',
+          );
+
+          if (selectedValue != 'AVSI3STZSN3F7GRV') {
+            throw new Error('Failed to select supplier: ' + selectedValue);
+          }
+        } else {
+          throw new Error('Could not find supplier dropdown');
         }
       } else {
-        await this.puppeteerUtil.selectDropdownByValue(
+        const checkForSelect1 = await this.puppeteerUtil.checkLocation(
           '#default > form > div.box-body.row > div.col-6 > div:nth-child(3) > div.col-3 > select',
-          '1x20e4UK1Nfp3S6t',
+          false,
+          true,
         );
 
-        let selectedValue = await this.puppeteerUtil.getSelectedValue(
-          '#default > form > div.box-body.row > div.col-6 > div:nth-child(3) > div.col-3 > select',
+        const checkForSelect2 = await this.puppeteerUtil.checkLocation(
+          '#default > form > div.box-body.row > div.col-6 > div:nth-child(4) > div.col-3 > select',
+          false,
+          true,
         );
 
-        if (selectedValue != '1x20e4UK1Nfp3S6t') {
+        if (checkForSelect1) {
           await this.puppeteerUtil.selectDropdownByValue(
             '#default > form > div.box-body.row > div.col-6 > div:nth-child(3) > div.col-3 > select',
             '1x20e4UK1Nfp3S6t',
           );
-        }
 
-        selectedValue = await this.puppeteerUtil.getSelectedValue(
-          '#default > form > div.box-body.row > div.col-6 > div:nth-child(3) > div.col-3 > select',
-        );
+          let selectedValue = await this.puppeteerUtil.getSelectedValue(
+            '#default > form > div.box-body.row > div.col-6 > div:nth-child(3) > div.col-3 > select',
+          );
 
-        if (selectedValue != '1x20e4UK1Nfp3S6t') {
-          throw new Error('Failed to select supplier: ' + selectedValue);
+          if (selectedValue != '1x20e4UK1Nfp3S6t') {
+            await this.puppeteerUtil.selectDropdownByValue(
+              '#default > form > div.box-body.row > div.col-6 > div:nth-child(3) > div.col-3 > select',
+              '1x20e4UK1Nfp3S6t',
+            );
+          }
+
+          selectedValue = await this.puppeteerUtil.getSelectedValue(
+            '#default > form > div.box-body.row > div.col-6 > div:nth-child(3) > div.col-3 > select',
+          );
+
+          if (selectedValue != '1x20e4UK1Nfp3S6t') {
+            throw new Error('Failed to select supplier: ' + selectedValue);
+          }
+        } else if (checkForSelect2) {
+          await this.puppeteerUtil.selectDropdownByValue(
+            '#default > form > div.box-body.row > div.col-6 > div:nth-child(4) > div.col-3 > select',
+            '1x20e4UK1Nfp3S6t',
+          );
+
+          let selectedValue = await this.puppeteerUtil.getSelectedValue(
+            '#default > form > div.box-body.row > div.col-6 > div:nth-child(4) > div.col-3 > select',
+          );
+
+          if (selectedValue != '1x20e4UK1Nfp3S6t') {
+            await this.puppeteerUtil.selectDropdownByValue(
+              '#default > form > div.box-body.row > div.col-6 > div:nth-child(4) > div.col-3 > select',
+              '1x20e4UK1Nfp3S6t',
+            );
+          }
+
+          selectedValue = await this.puppeteerUtil.getSelectedValue(
+            '#default > form > div.box-body.row > div.col-6 > div:nth-child(4) > div.col-3 > select',
+          );
+
+          if (selectedValue != '1x20e4UK1Nfp3S6t') {
+            throw new Error('Failed to select supplier: ' + selectedValue);
+          }
+        } else {
+          throw new Error('Could not find supplier dropdown');
         }
       }
 
       if (completeOrder) {
-        await this.puppeteerUtil.click(
-          '#default > form > div.box-footer > div > button.btn.btn-ow.pull-right.page_speed_2111450335',
-          true,
-          true,
-        );
+        await this.puppeteerUtil.click('button[type=submit]', true, true);
       }
       const log: CreateLogDto = {
         status: true,

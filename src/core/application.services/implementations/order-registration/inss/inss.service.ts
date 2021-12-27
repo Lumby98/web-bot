@@ -120,10 +120,9 @@ export class InssService implements INSSInterface {
     const isModelLoaded = await this.puppeteerUtil.checkLocation(
       '#insoleForm',
       false,
-      false,
+      true,
+      30000,
     );
-
-    await this.puppeteerUtil.wait('#insoleForm', 2000);
 
     if (!isModelLoaded) {
       throw new Error('failed to load model page');

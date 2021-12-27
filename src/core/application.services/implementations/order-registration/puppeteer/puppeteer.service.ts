@@ -98,10 +98,11 @@ export class PuppeteerService implements PuppeteerServiceInterface {
       checkSelector,
       false,
       true,
+      2000,
     );
 
     if (!isChecked) {
-      if (counter == 5) {
+      if (counter == 10) {
         throw new Error('failed to try again: ' + checkSelector);
       }
       counter++;

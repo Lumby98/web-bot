@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { OrderRegistrationInterface } from '../../../interfaces/order-registration/order/order-registration.interface';
+import { DateTime } from 'luxon';
 import {
   PuppeteerUtilityInterface,
   puppeteerUtilityInterfaceProvider,
@@ -212,13 +213,15 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
         'Invalid day of the week: the day of the week should be from 0-6',
       );
     }
-    const resultDate = new Date(date.getTime());
 
-    resultDate.setDate(
-      date.getDate() + ((7 + dayOfWeek - date.getDay() - 1) % 7) + 2,
-    );
+    let luxDate = DateTime.fromJSDate(date);
 
-    return resultDate;
+    luxDate = luxDate.plus({
+      days: ((7 + dayOfWeek - date.getDay() - 1) % 7) + 1,
+    });
+
+    console.log(luxDate.toJSDate());
+    return luxDate.toJSDate();
   }
 
   /**
@@ -294,13 +297,14 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       newDate.setDate(newDate.getDate() + 7);
 
       console.log(
-        `Date is : ${newDate.getDate()}/${
+        `Date is : ${
           newDate.getMonth() + 1
-        }/${newDate.getFullYear()}`,
+        }/${newDate.getDate()}/${newDate.getFullYear()}`,
       );
-      return `${newDate.getDate()}/${
+      return '12/23/2021';
+      /*return `${
         newDate.getMonth() + 1
-      }/${newDate.getFullYear()}`;
+      }/${newDate.getDate()}/${newDate.getFullYear()}`;*/
     }
     await this.puppeteerUtil.click('#wizard_button_save', true, true);
     const pageCheck = await this.puppeteerUtil.checkLocation(
@@ -347,6 +351,18 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       throw new Error('failed to get deliveryDate');
     }
 
+    const checkboxCheck = await this.puppeteerUtil.checkLocation(
+      '#order_cemaxnconf',
+      false,
+      true,
+    );
+
+    if (checkboxCheck) {
+      await this.puppeteerUtil.clickRadioButton('#order_cemaxnconf');
+    }
+
+    await this.puppeteerUtil.wait(undefined, 10000);
+
     if (completeOrder) {
       // confirm btn
       await this.puppeteerUtil.click(
@@ -391,11 +407,20 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
 
     await this.puppeteerUtil.loginOrtowear(username, password);
 
-    const checklocation = await this.puppeteerUtil.checkLocation(
+    let checklocation = await this.puppeteerUtil.checkLocation(
       'div.home-main:nth-child(2) > div:nth-child(1)',
       false,
       true,
     );
+
+    if (!checklocation) {
+      checklocation = await this.puppeteerUtil.checkLocation(
+        'div.home-main:nth-child(2) > div:nth-child(1)',
+        false,
+        true,
+        30000,
+      );
+    }
 
     if (!checklocation) {
       if (
@@ -412,7 +437,9 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
           'Failed to login, ortowear gave this error:' + ortowearError,
         );
       } else {
-        throw new Error('Failed to login, but ortowear didnt display error');
+        throw new Error(
+          'Failed to login, but ortowear didnt display error, if this happens then Ortowear is most likely down.',
+        );
       }
     }
 

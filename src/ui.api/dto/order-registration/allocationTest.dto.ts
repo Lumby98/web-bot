@@ -6,4 +6,6 @@ export class AllocationTestDto {
   password: string;
   dev: boolean;
   completeOrder: boolean;
+  dateString: string;
+  dateBuffer?: number;
 }

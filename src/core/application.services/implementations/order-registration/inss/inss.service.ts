@@ -129,9 +129,17 @@ export class InssService implements INSSInterface {
       throw new Error('failed getting customer');
     }
 
-    const substring = 'Norway';
+    /* const substring = 'Norway';
     if (inssOrder.deliveryAddress.includes(substring)) {
       inssOrder.EU = false;
+    }*/
+
+    const substring = 'Norway';
+
+    for (const address of inssOrder.deliveryAddress) {
+      if (address.includes(substring)) {
+        inssOrder.EU = false;
+      }
     }
 
     return inssOrder;

@@ -56,6 +56,11 @@ export class OrderRegistrationGateway
     @ConnectedSocket() clientSocket: Socket,
   ): Promise<void> {
     try {
+      let dateBuffer = 0;
+      if (orderReg.dateBuffer) {
+        dateBuffer = orderReg.dateBuffer;
+      }
+
       const ortowearLogin = await this.savedLoginService.getLogin(
         LoginTypeEnum.ORTOWEAR,
         orderReg.key,
@@ -148,6 +153,7 @@ export class OrderRegistrationGateway
             ortowearLogin.password,
             this.configService.get('DEV'),
             this.configService.get('COMPLETEORDER'),
+            +dateBuffer,
           );
 
         processStepList = [

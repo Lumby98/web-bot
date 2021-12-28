@@ -437,8 +437,27 @@ describe('InssService', () => {
       });
 
       it('should call read inss order with the order from read order', () => {
-        expect(puppeteerUtil.readINSSOrder).toBeCalledWith(orderStub());
+        expect(puppeteerUtil.selectInputContainerByArticleName).toBeCalledWith(
+          'Jalas 7100 Evo',
+          '#scrollrbody > div.modal.fade.modal-choiceinvalid.in > div > div > div.modal-body > div > div.form > form > div:nth-child(3)',
+          'value',
+        );
       });
     });
+
+    describe('When trying to load dropdown, and it has not loaded', () => {
+      beforeEach(async () => {
+        jest
+          .spyOn(puppeteerUtil, 'checkLocation')
+          .mockResolvedValueOnce(true)
+          .mockResolvedValueOnce(false);
+      });
+      it('should throw cannot load dropdown error', async () => {
+        await expect(
+          async () => await inssService.inputInssModel(insOrderStub()),
+        ).rejects.toThrow('Cannot load dropdown!');
+      });
+    });
+
   });
 });

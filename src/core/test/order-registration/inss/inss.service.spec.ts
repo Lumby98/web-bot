@@ -242,5 +242,203 @@ describe('InssService', () => {
         });
       });
     });
+
+    describe('When model is empty', () => {
+      beforeEach(() => {
+        const inssOrderStub = insOrderStub();
+        inssOrderStub.model = '';
+        jest
+          .spyOn(puppeteerUtil, 'readINSSOrder')
+          .mockResolvedValue(inssOrderStub);
+      });
+      it('should throw a failed getting model exception', async () => {
+        await expect(
+          async () => await inssService.handleINSSOrder('dfxdvcxv', 'null'),
+        ).rejects.toThrow('failed getting model');
+      });
+    });
+
+    describe('When model is null', () => {
+      beforeEach(() => {
+        const inssOrderStub = insOrderStub();
+        inssOrderStub.model = null;
+        jest
+          .spyOn(puppeteerUtil, 'readINSSOrder')
+          .mockResolvedValue(inssOrderStub);
+      });
+      it('should throw a failed getting model exception', async () => {
+        await expect(
+          async () => await inssService.handleINSSOrder('dfxdvcxv', 'null'),
+        ).rejects.toThrow('failed getting model');
+      });
+    });
+
+    describe('When model is undefined', () => {
+      beforeEach(() => {
+        const inssOrderStub = insOrderStub();
+        inssOrderStub.model = undefined;
+        jest
+          .spyOn(puppeteerUtil, 'readINSSOrder')
+          .mockResolvedValue(inssOrderStub);
+      });
+      it('should throw a failed getting model exception', async () => {
+        await expect(
+          async () => await inssService.handleINSSOrder('dfxdvcxv', 'null'),
+        ).rejects.toThrow('failed getting model');
+      });
+    });
+
+    describe('When address is empty', () => {
+      beforeEach(() => {
+        const inssOrderStub = insOrderStub();
+        inssOrderStub.deliveryAddress = [''];
+        jest
+          .spyOn(puppeteerUtil, 'readINSSOrder')
+          .mockResolvedValue(inssOrderStub);
+      });
+      it('should throw a failed getting delivery address exception', async () => {
+        await expect(
+          async () => await inssService.handleINSSOrder('dfxdvcxv', 'null'),
+        ).rejects.toThrow('failed getting delivery address');
+      });
+    });
+
+    describe('When address is null', () => {
+      beforeEach(() => {
+        const inssOrderStub = insOrderStub();
+        inssOrderStub.deliveryAddress = null;
+        jest
+          .spyOn(puppeteerUtil, 'readINSSOrder')
+          .mockResolvedValue(inssOrderStub);
+      });
+      it('should throw a failed getting delivery address exception', async () => {
+        await expect(
+          async () => await inssService.handleINSSOrder('dfxdvcxv', 'null'),
+        ).rejects.toThrow('failed getting delivery address');
+      });
+    });
+
+    describe('When address is undefined', () => {
+      beforeEach(() => {
+        const inssOrderStub = insOrderStub();
+        inssOrderStub.deliveryAddress = undefined;
+        jest
+          .spyOn(puppeteerUtil, 'readINSSOrder')
+          .mockResolvedValue(inssOrderStub);
+      });
+      it('should throw a failed getting delivery address exception', async () => {
+        await expect(
+          async () => await inssService.handleINSSOrder('dfxdvcxv', 'null'),
+        ).rejects.toThrow('failed getting delivery address');
+      });
+    });
+
+    describe('When address is less than 3 characters long', () => {
+      beforeEach(() => {
+        const inssOrderStub = insOrderStub();
+        inssOrderStub.deliveryAddress = ['12'];
+        jest
+          .spyOn(puppeteerUtil, 'readINSSOrder')
+          .mockResolvedValue(inssOrderStub);
+      });
+      it('should throw a failed getting delivery address exception', async () => {
+        await expect(
+          async () => await inssService.handleINSSOrder('dfxdvcxv', 'null'),
+        ).rejects.toThrow('failed getting delivery address');
+      });
+    });
+
+    describe('When customer is undefined', () => {
+      beforeEach(() => {
+        const inssOrderStub = insOrderStub();
+        inssOrderStub.customerName = undefined;
+        jest
+          .spyOn(puppeteerUtil, 'readINSSOrder')
+          .mockResolvedValue(inssOrderStub);
+      });
+      it('should throw a failed getting customer exception', async () => {
+        await expect(
+          async () => await inssService.handleINSSOrder('dfxdvcxv', 'null'),
+        ).rejects.toThrow('failed getting customer');
+      });
+    });
+
+    describe('When customer is null', () => {
+      beforeEach(() => {
+        const inssOrderStub = insOrderStub();
+        inssOrderStub.customerName = null;
+        jest
+          .spyOn(puppeteerUtil, 'readINSSOrder')
+          .mockResolvedValue(inssOrderStub);
+      });
+      it('should throw a failed getting customer exception', async () => {
+        await expect(
+          async () => await inssService.handleINSSOrder('dfxdvcxv', 'null'),
+        ).rejects.toThrow('failed getting customer');
+      });
+    });
+
+    describe('When customer is empty', () => {
+      beforeEach(() => {
+        const inssOrderStub = insOrderStub();
+        inssOrderStub.customerName = '';
+        jest
+          .spyOn(puppeteerUtil, 'readINSSOrder')
+          .mockResolvedValue(inssOrderStub);
+      });
+      it('should throw a failed getting customer exception', async () => {
+        await expect(
+          async () => await inssService.handleINSSOrder('dfxdvcxv', 'null'),
+        ).rejects.toThrow('failed getting customer');
+      });
+    });
+
+    describe('When delivery address includes norway', () => {
+      let result;
+      beforeEach(async () => {
+        const inssOrderStub = insOrderStub();
+        inssOrderStub.deliveryAddress = ['', '', 'Norway'];
+        jest
+          .spyOn(puppeteerUtil, 'readINSSOrder')
+          .mockResolvedValue(inssOrderStub);
+        result = await inssService.handleINSSOrder('dfxdvcxv', 'null');
+      });
+      it('should set eu to false', async () => {
+        expect(result.EU).toEqual(false);
+      });
+    });
+
+    describe('When delivery address does not include norway', () => {
+      let result;
+      beforeEach(async () => {
+        const inssOrderStub = insOrderStub();
+        inssOrderStub.deliveryAddress = ['', '', 'Poland'];
+        jest
+          .spyOn(puppeteerUtil, 'readINSSOrder')
+          .mockResolvedValue(inssOrderStub);
+        result = await inssService.handleINSSOrder('dfxdvcxv', 'null');
+      });
+      it('should set eu to true', async () => {
+        expect(result.EU).toEqual(true);
+      });
+    });
+  });
+
+  describe('handle input inss model', () => {
+    describe('when given a valid inss model', () => {
+      const orderNumber = 'dfxdvcxv';
+      const model = 'Jalas 7100 Evo';
+      beforeEach(async () => {
+        await inssService.inputInssModel(insOrderStub());
+      });
+
+      it('should call searchable select with the model', () => {
+        expect(puppeteerUtil.searchableSelect).toBeCalledWith(model);
+      });
+
+      it('should call read inss order with the order from read order', () => {
+        expect(puppeteerUtil.readINSSOrder).toBeCalledWith(orderStub());
+      });
+    });
   });
 });

@@ -118,12 +118,6 @@ export class OrderRegistrationFacade
           );
           INSOrder = order;
           break;
-        case OrderTypeEnum.OSA:
-          //todo
-          break;
-        case OrderTypeEnum.SOS:
-          //todo
-          break;
         default:
           throw new Error('could not determine order-registration type');
       }

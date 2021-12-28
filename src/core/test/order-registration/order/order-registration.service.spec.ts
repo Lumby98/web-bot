@@ -16,19 +16,6 @@ import { TargetAndSelectorStub } from '../../stubs/target-and-selector';
 import { OrderRegistrationInterface } from '../../../application.services/interfaces/order-registration/order/order-registration.interface';
 
 jest.mock('src/infrastructure/api/puppeteer.utility.ts');
-
-/*jest.mock('@nestjs/config', () => {
-  return {
-    get: jest.fn((key: string) => {
-      // this is being super extra, in the case that you need multiple keys with the `get` method
-      if (key === 'ORTOWEARURL') {
-        return 'https://beta.ortowear.com/';
-      }
-      return null;
-    }),
-  };
-});*/
-
 jest.mock(
   'src/core/application.services/implementations/order-registration/puppeteer/puppeteer.service.ts',
 );
@@ -39,47 +26,6 @@ describe('OrderRegistrationService', () => {
   let orderRegistrationService: OrderRegistrationInterface;
   let configService: ConfigService;
   beforeEach(async () => {
-    /*const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        OrderRegistrationService,
-        PuppeteerUtility,
-        {
-          provide: puppeteerUtilityInterfaceProvider,
-          useClass: PuppeteerUtility,
-        },
-        PuppeteerService,
-        {
-          provide: puppeteerServiceInterfaceProvider,
-          useClass: PuppeteerService,
-        },
-        {
-          provide: ConfigService,
-          useValue: {
-            get: jest.fn((key: string) => {
-              // this is being super extra, in the case that you need multiple keys with the `get` method
-              if (key === 'ORTOWEARURL') {
-                return 'https://beta.ortowear.com/';
-              }
-              return null;
-            }),
-          },
-        },
-      ],
-    })
-      .overrideProvider({
-        provide: puppeteerServiceInterfaceProvider,
-        useClass: PuppeteerService,
-      })
-      .useValue(mockwebbotService)
-      .compile();
-
-    orderRegistrationService = module.get<OrderRegistrationService>(
-      OrderRegistrationService,
-    );
-
-    puppeteerUtil = module.get<PuppeteerUtility>(PuppeteerUtility);
-
-    webbotService = module.get<PuppeteerService>(PuppeteerService);*/
     configService = new ConfigService<Record<string, unknown>>();
     puppeteerUtil = new PuppeteerUtility();
     puppeteerService = new PuppeteerService(puppeteerUtil);
@@ -249,7 +195,7 @@ describe('OrderRegistrationService', () => {
     });
 
     describe('when invalid type is returned', () => {
-      const validOrderNumber = '156dt64-1';
+      const invalidType = 'SOS';
       beforeEach(async () => {
         const targetAndSelector = TargetAndSelectorStub();
         targetAndSelector.type = 'MTF';
@@ -259,9 +205,22 @@ describe('OrderRegistrationService', () => {
       });
       it('should throw error if types does not match enum', () => {
         expect(
+          async () => await orderRegistrationService.getOrderType(invalidType),
+        ).rejects.toThrow(
+          'invalid order-registration type ' +
+            'Order type was ' +
+            invalidType +
+            ' This program supports STS and INS-S orders only.',
+        );
+      });
+
+      it('should throw error if type is No matching records found', () => {
+        expect(
           async () =>
-            await orderRegistrationService.getOrderType(validOrderNumber),
-        ).rejects.toThrow('invalid order-registration type');
+            await orderRegistrationService.getOrderType(
+              'No matching records found',
+            ),
+        ).rejects.toThrow('could not find order-registration');
       });
     });
   });
@@ -288,5 +247,23 @@ describe('OrderRegistrationService', () => {
         expect(expected).toEqual(false);
       });
     });
+
+    describe('when insole contains Emma', () => {
+      beforeEach(async () => {
+        jest
+          .spyOn(puppeteerUtil, 'readSelectorText')
+          .mockResolvedValueOnce('EMMA');
+      });
+
+      it("should throw error if it's an emma insole", () => {
+        expect(
+          async () => await orderRegistrationService.checkForInsole(),
+        ).rejects.toThrow(
+          'invalid order-registration, EMMA order-registration is not supported',
+        );
+      });
+    });
   });
+
+  describe('InputOrderInformation', () => {});
 });

@@ -5,5 +5,10 @@ export interface PuppeteerServiceInterface {
   stopPuppeteer();
   goToURL(url: string);
   getElementText(selector: string): Promise<string>;
-  tryAgain(checkSelector: string, clickSelector: string, counter: number);
+  tryAgain(
+    checkSelector: string,
+    clickSelector: string,
+    counter: number,
+  ): Promise<boolean>;
+  validateUrl(url: string);
 }

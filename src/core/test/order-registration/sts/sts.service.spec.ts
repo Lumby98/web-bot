@@ -595,7 +595,7 @@ describe('StsService', () => {
       });
     });
 
-    describe('Should call puppeteerService.tryAgain if isSupplementlLoaded is false', () => {
+    describe('Should call puppeteerService.tryAgain if isSupplementLoaded is false', () => {
       beforeEach(async () => {
         jest
           .spyOn(puppeteerUtil, 'checkLocation')

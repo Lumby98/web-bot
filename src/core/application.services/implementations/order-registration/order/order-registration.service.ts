@@ -23,6 +23,145 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     private configService: ConfigService,
   ) {}
 
+  /**
+   * navigates to Ortorwear and goes to the order-registration list
+   * @param username
+   * @param password
+   * @private
+   */
+  async handleOrtowearNavigation(username: string, password: string) {
+    const validateLogin = this.loginValidation(username, password);
+    if (!validateLogin) {
+      throw new Error('Wrong username or password');
+    }
+    /**
+     * TODO wait for the page to load
+     */
+
+    await this.puppeteerService.goToURL(this.configService.get('ORTOWEARURL'));
+
+    await this.puppeteerUtil.loginOrtowear(username, password);
+
+    let checkLocation = await this.puppeteerUtil.checkLocation(
+      'div.home-main:nth-child(2) > div:nth-child(1)',
+      false,
+      true,
+    );
+
+    if (!checkLocation) {
+      checkLocation = await this.puppeteerUtil.checkLocation(
+        'div.home-main:nth-child(2) > div:nth-child(1)',
+        false,
+        true,
+        30000,
+      );
+    }
+
+    if (!checkLocation) {
+      if (
+        await this.puppeteerUtil.checkLocation(
+          '#loginForm > div.form-group.has-error > span > strong',
+          false,
+          true,
+        )
+      ) {
+        const ortowearError = await this.puppeteerService.getElementText(
+          '#loginForm > div.form-group.has-error > span > strong',
+        );
+        throw new Error(
+          'Failed to login, ortowear gave this error:' + ortowearError,
+        );
+      } else {
+        throw new Error(
+          'Failed to login, but ortowear didnt display error, if this happens then Ortowear is most likely down.',
+        );
+      }
+    }
+
+    const myPageURL = this.configService.get('ORTOWEARURL') + 'my_page';
+    const currentURL = await this.puppeteerUtil.getCurrentURL();
+    if (myPageURL != currentURL) {
+      if (
+        await this.puppeteerUtil.checkLocation(
+          '#loginForm > div.form-group.has-error > span > strong',
+          false,
+          false,
+        )
+      ) {
+        throw new Error(
+          'Failed to login, but ortowear didnt display error' +
+            myPageURL +
+            ' ' +
+            currentURL,
+        );
+      } else {
+        const ortowearError = await this.puppeteerService.getElementText(
+          '#loginForm > div.form-group.has-error > span > strong',
+        );
+        throw new Error(
+          'Failed to login, ortowear gave this error:' + ortowearError,
+        );
+      }
+    }
+  }
+
+  /**
+   * gets order-registration type for the different order-registration numbers given
+   * @private
+   * @param type
+   */
+  getOrderType(type: string): OrderTypeEnum {
+    switch (type) {
+      case 'STS':
+        return OrderTypeEnum.STS;
+
+      case 'INS-S':
+        return OrderTypeEnum.INSS;
+
+      case 'INS':
+        return OrderTypeEnum.INSS;
+
+      case 'No matching records found':
+        throw new Error('could not find order-registration');
+
+      default:
+        throw new Error(
+          'invalid order-registration type ' +
+            'Order type was ' +
+            type +
+            ' This program supports STS and INS-S orders only.',
+        );
+    }
+  }
+
+  /**
+   * check if an order-registration has an insole
+   * @private
+   */
+  async checkForInsole(): Promise<boolean> {
+    const insoleSelector =
+      'body > div.wrapper > div.content-wrapper > section.content > div.row > div > div > div > div.box-body > form > div:nth-child(4) > div > div > div.col-6.col-print-6 > table > tbody > tr:nth-child(2) > td:nth-child(2) > p';
+
+    const doesCoverExist = await this.puppeteerUtil.checkLocation(
+      insoleSelector,
+      false,
+      false,
+    );
+
+    if (!doesCoverExist) {
+      return false;
+    }
+
+    const insole = await this.puppeteerUtil.readSelectorText(insoleSelector);
+
+    if (insole.includes('EMMA')) {
+      throw new Error(
+        'invalid order-registration, EMMA order-registration is not supported',
+      );
+    }
+    return true;
+  }
+
   async InputOrderInformation(
     orderNr: string,
     deliveryAddress: string[],
@@ -151,34 +290,6 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
   }
 
   /**
-   * check if an order-registration has an insole
-   * @private
-   */
-  async checkForInsole(): Promise<boolean> {
-    const insoleSelector =
-      'body > div.wrapper > div.content-wrapper > section.content > div.row > div > div > div > div.box-body > form > div:nth-child(4) > div > div > div.col-6.col-print-6 > table > tbody > tr:nth-child(2) > td:nth-child(2) > p';
-
-    const doesCoverExist = await this.puppeteerUtil.checkLocation(
-      insoleSelector,
-      false,
-      false,
-    );
-
-    if (!doesCoverExist) {
-      return false;
-    }
-
-    const insole = await this.puppeteerUtil.readSelectorText(insoleSelector);
-
-    if (insole.includes('EMMA')) {
-      throw new Error(
-        'invalid order-registration, EMMA order-registration is not supported',
-      );
-    }
-    return true;
-  }
-
-  /**
    * Formats strings to a format that the javascript Date class will accept.
    * Formats from this: 'mm/dd/yyyy'
    * Formats to this format: 'yyyy-mm-ddThh:mm:ssZ'
@@ -222,41 +333,6 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
 
     console.log(luxDate.toJSDate());
     return luxDate.toJSDate();
-  }
-
-  /**
-   * gets order-registration type for the different order-registration numbers given
-   * @private
-   * @param type
-   */
-  async getOrderType(type: string): Promise<OrderTypeEnum> {
-    switch (type) {
-      case 'STS':
-        return OrderTypeEnum.STS;
-
-      case 'INS-S':
-        return OrderTypeEnum.INSS;
-
-      case 'INS':
-        return OrderTypeEnum.INSS;
-
-      case 'OSA':
-        return OrderTypeEnum.OSA;
-
-      case 'SOS':
-        return OrderTypeEnum.SOS;
-
-      case 'No matching records found':
-        throw new Error('could not find order-registration');
-
-      default:
-        throw new Error(
-          'invalid order-registration type ' +
-            'Order type was ' +
-            type +
-            ' This program supports STS, INS-S, OSA and SOS orders only.',
-        );
-    }
   }
 
   async handleNeskridNavigation(username: string, password: string) {
@@ -386,88 +462,6 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     }
 
     return deliveryDate;
-  }
-
-  /**
-   * navigates to Ortorwear and goes to the order-registration list
-   * @param username
-   * @param password
-   * @private
-   */
-  async handleOrtowearNavigation(username: string, password: string) {
-    const validateLogin = this.loginValidation(username, password);
-    if (!validateLogin) {
-      throw new Error('Wrong username or password');
-    }
-    /**
-     * TODO wait for the page to load
-     */
-
-    await this.puppeteerService.goToURL(this.configService.get('ORTOWEARURL'));
-
-    await this.puppeteerUtil.loginOrtowear(username, password);
-
-    let checklocation = await this.puppeteerUtil.checkLocation(
-      'div.home-main:nth-child(2) > div:nth-child(1)',
-      false,
-      true,
-    );
-
-    if (!checklocation) {
-      checklocation = await this.puppeteerUtil.checkLocation(
-        'div.home-main:nth-child(2) > div:nth-child(1)',
-        false,
-        true,
-        30000,
-      );
-    }
-
-    if (!checklocation) {
-      if (
-        await this.puppeteerUtil.checkLocation(
-          '#loginForm > div.form-group.has-error > span > strong',
-          false,
-          true,
-        )
-      ) {
-        const ortowearError = await this.puppeteerService.getElementText(
-          '#loginForm > div.form-group.has-error > span > strong',
-        );
-        throw new Error(
-          'Failed to login, ortowear gave this error:' + ortowearError,
-        );
-      } else {
-        throw new Error(
-          'Failed to login, but ortowear didnt display error, if this happens then Ortowear is most likely down.',
-        );
-      }
-    }
-
-    const myPageURL = this.configService.get('ORTOWEARURL') + 'my_page';
-    const currentURL = await this.puppeteerUtil.getCurrentURL();
-    if (myPageURL != currentURL) {
-      if (
-        await this.puppeteerUtil.checkLocation(
-          '#loginForm > div.form-group.has-error > span > strong',
-          false,
-          false,
-        )
-      ) {
-        throw new Error(
-          'Failed to login, but ortowear didnt display error' +
-            myPageURL +
-            ' ' +
-            currentURL,
-        );
-      } else {
-        const ortowearError = await this.puppeteerService.getElementText(
-          '#loginForm > div.form-group.has-error > span > strong',
-        );
-        throw new Error(
-          'Failed to login, ortowear gave this error:' + ortowearError,
-        );
-      }
-    }
   }
 
   async inputAddress(

@@ -459,5 +459,139 @@ describe('InssService', () => {
       });
     });
 
+    describe('When cant find cover safety panel', () => {
+      beforeEach(async () => {
+        jest
+          .spyOn(puppeteerUtil, 'checkLocation')
+          .mockResolvedValueOnce(true)
+          .mockResolvedValueOnce(true)
+          .mockResolvedValueOnce(true)
+          .mockResolvedValueOnce(false)
+          .mockResolvedValueOnce(false);
+      });
+      it('should throw Cannot find cover safety selector! error', async () => {
+        await expect(
+          async () => await inssService.inputInssModel(insOrderStub()),
+        ).rejects.toThrow('Cannot find cover safety selector!');
+      });
+    });
+
+    describe('When orthotics is not loaded', () => {
+      beforeEach(async () => {
+        jest
+          .spyOn(puppeteerUtil, 'checkLocation')
+          .mockResolvedValueOnce(true)
+          .mockResolvedValueOnce(true)
+          .mockResolvedValueOnce(true)
+          .mockResolvedValueOnce(true)
+          .mockResolvedValueOnce(false);
+
+        await inssService.inputInssModel(insOrderStub());
+      });
+      it('should call tryAgain()', () => {
+        expect(puppeteerService.tryAgain).toBeCalledWith(
+          '#order_opt_107',
+          '#scrollrbody > div.wizard_navigation > button.btn.btn-default.wizard_button_next',
+          0,
+        );
+      });
+    });
+  });
+
+  describe('inputInssUsageEnvironment', () => {
+    describe('When all external methods return proper values', () => {
+      beforeEach(async () => {
+        jest
+          .spyOn(puppeteerUtil, 'getInputValue')
+          .mockResolvedValueOnce(insOrderStub().customerName)
+          .mockResolvedValueOnce(insOrderStub().customerName)
+          .mockResolvedValueOnce(insOrderStub().orderNr)
+          .mockResolvedValueOnce(insOrderStub().orderNr);
+
+        await inssService.inputInssUsageEnvironment(insOrderStub());
+      });
+      it('Should call input 4 times', () => {
+        expect(puppeteerUtil.input).toHaveBeenCalledTimes(2);
+      });
+    });
+
+    describe('When Registration no. medical specialist input does not load', () => {
+      beforeEach(() => {
+        jest.spyOn(puppeteerUtil, 'checkLocation').mockResolvedValueOnce(false);
+      });
+      it('Should throw could not load Registration no. medical specialist input error', async () => {
+        await expect(
+          async () =>
+            await inssService.inputInssUsageEnvironment(insOrderStub()),
+        ).rejects.toThrow(
+          'Could not load Registration no. medical specialist input',
+        );
+      });
+    });
+
+    describe('When unable to input registration no.', () => {
+      beforeEach(() => {
+        jest.spyOn(puppeteerUtil, 'getInputValue').mockResolvedValue('');
+      });
+      it('Should throw could not load Registration no. medical specialist input error', async () => {
+        await expect(
+          async () =>
+            await inssService.inputInssUsageEnvironment(insOrderStub()),
+        ).rejects.toThrow(
+          'Failed to input Registration no. medical specialist input',
+        );
+      });
+    });
+
+    describe('If end user input does not load', () => {
+      beforeEach(() => {
+        jest
+          .spyOn(puppeteerUtil, 'getInputValue')
+          .mockResolvedValue(insOrderStub().customerName);
+
+        jest
+          .spyOn(puppeteerUtil, 'checkLocation')
+          .mockResolvedValueOnce(true)
+          .mockResolvedValueOnce(false);
+      });
+
+      it('Should throw could not load Registration no. medical specialist input error', async () => {
+        await expect(
+          async () =>
+            await inssService.inputInssUsageEnvironment(insOrderStub()),
+        ).rejects.toThrow('Could not load end user input');
+      });
+    });
+
+    describe('When input orderNr to end user fails ', () => {
+      beforeEach(() => {
+        jest
+          .spyOn(puppeteerUtil, 'getInputValue')
+          .mockResolvedValueOnce(insOrderStub().customerName)
+          .mockResolvedValueOnce(insOrderStub().customerName)
+          .mockResolvedValueOnce('')
+          .mockResolvedValueOnce('');
+      });
+      it('Should throw Failed to input orderNr to end user input error', async () => {
+        await expect(
+          async () =>
+            await inssService.inputInssUsageEnvironment(insOrderStub()),
+        ).rejects.toThrow('Failed to input orderNr to end user input');
+      });
+    });
+  });
+
+  describe('orthotics', () => {
+    describe('When orthotics page dosent get loaded ', () => {
+      beforeEach(() => {
+        jest.spyOn(puppeteerUtil, 'checkLocation').mockResolvedValueOnce(false);
+      });
+
+      it('Should throw Could not get to supplement page error', async () => {
+        await expect(async () => await inssService.orthotics()).rejects.toThrow(
+          'Could not get to supplement page',
+        );
+      });
+    });
   });
 });

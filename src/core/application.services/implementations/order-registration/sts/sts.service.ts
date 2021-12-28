@@ -184,7 +184,7 @@ export class StsService implements STSInterface {
           i + 1
         }) > h3`;
 
-        const modelcheck = this.puppeteerUtil.checkLocation(
+        const modelcheck = await this.puppeteerUtil.checkLocation(
           selector,
           false,
           true,
@@ -197,11 +197,6 @@ export class StsService implements STSInterface {
         await this.puppeteerUtil.click(selector, true, true);
 
         found = true;
-        const propertyValues = await this.puppeteerUtil.getCSSofElement(
-          `div.col-md-7 > div.row > div:nth-child(${i + 1})`,
-          'background-color',
-        );
-        console.log(`Property values of model: ${propertyValues}`);
       }
     }
 
@@ -333,18 +328,14 @@ export class StsService implements STSInterface {
     if (insole) {
       await this.puppeteerUtil.click('#order_info_14', true, true);
 
-      const isSupplementlLoaded = await this.puppeteerUtil.checkLocation(
+      const isModalLoaded = await this.puppeteerUtil.checkLocation(
         '#choice_224',
         false,
         true,
       );
 
-      if (!isSupplementlLoaded) {
+      if (!isModalLoaded) {
         throw new Error('Could not get to orthotic/inlay modal');
-      }
-
-      if (isSupplementlLoaded) {
-        console.log('Supplement is loaded');
       }
 
       await this.puppeteerUtil.wait(null, 5000);

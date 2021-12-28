@@ -581,14 +581,12 @@ describe('StsService', () => {
   });
 
   describe('inputStsModel', () => {
-    describe('Should run with no errors', () => {
+    describe('when given valid input', () => {
       beforeEach(async () => {
-        jest.spyOn(puppeteerUtil, 'checkLocation').mockResolvedValueOnce(true);
-
         await stsService.inputStsModel('mockText1', '45', 'Neskrid 66-10');
       });
 
-      it('should return an STS order-registration', async () => {
+      it('should run with no errors and call check location for is supplement loaded', async () => {
         expect(puppeteerUtil.checkLocation).toBeCalledWith(
           '#order_info_14',
           false,
@@ -597,7 +595,7 @@ describe('StsService', () => {
       });
     });
 
-    describe('Should call puppeteerService.tryAgain if isSupplementlLoaded is false ', () => {
+    describe('Should call puppeteerService.tryAgain if isSupplementlLoaded is false', () => {
       beforeEach(async () => {
         jest
           .spyOn(puppeteerUtil, 'checkLocation')
@@ -616,6 +614,327 @@ describe('StsService', () => {
           '#scrollrbody > div.wizard_navigation > button.btn.btn-default.wizard_button_next',
           0,
         );
+      });
+    });
+
+    describe('When is model loaded is false', () => {
+      beforeEach(async () => {
+        jest.spyOn(puppeteerUtil, 'checkLocation').mockResolvedValueOnce(false);
+      });
+
+      it('should throw a failed to load model page error', async () => {
+        await expect(
+          async () =>
+            await stsService.inputStsModel('mockText1', '45', 'Neskrid 66-10'),
+        ).rejects.toThrow('failed to load model page');
+      });
+    });
+
+    describe('When is models is undefined', () => {
+      beforeEach(async () => {
+        jest
+          .spyOn(puppeteerUtil, 'getTextsForAll')
+          .mockResolvedValueOnce(undefined);
+      });
+
+      it('should throw a could not find models error', async () => {
+        await expect(
+          async () =>
+            await stsService.inputStsModel('mockText1', '45', 'Neskrid 66-10'),
+        ).rejects.toThrow('could not find models');
+      });
+    });
+
+    describe('when no model matches the found models', () => {
+      it('should throw a Could not find matching model for error', async () => {
+        await expect(
+          async () =>
+            await stsService.inputStsModel('wrongModel', '45', 'Neskrid 66-10'),
+        ).rejects.toThrow('Could not find matching model for: wrongModel');
+      });
+    });
+
+    describe('When model check is false', () => {
+      beforeEach(async () => {
+        jest
+          .spyOn(puppeteerUtil, 'checkLocation')
+          .mockResolvedValueOnce(true)
+          .mockResolvedValueOnce(false);
+      });
+
+      it('should throw a cannot locate model select button error', async () => {
+        await expect(
+          async () =>
+            await stsService.inputStsModel('mockText1', '45', 'Neskrid 66-10'),
+        ).rejects.toThrow('Cannot locate model select button');
+      });
+    });
+
+    describe('When size selector loaded is false', () => {
+      beforeEach(async () => {
+        jest
+          .spyOn(puppeteerUtil, 'checkLocation')
+          .mockResolvedValueOnce(true)
+          .mockResolvedValueOnce(true)
+          .mockResolvedValueOnce(false);
+      });
+
+      it('should throw a page failed to load shoe size selector error', async () => {
+        await expect(
+          async () =>
+            await stsService.inputStsModel('mockText1', '45', 'Neskrid 66-10'),
+        ).rejects.toThrow('Page failed to load shoe size selector');
+      });
+    });
+
+    describe('When the width is invalid', () => {
+      it('should throw a invalid width error', async () => {
+        await expect(
+          async () =>
+            await stsService.inputStsModel('mockText1', '45', 'Neskrid 66'),
+        ).rejects.toThrow('invalid width');
+      });
+    });
+
+    describe('When width selector loaded is false', () => {
+      beforeEach(async () => {
+        jest
+          .spyOn(puppeteerUtil, 'checkLocation')
+          .mockResolvedValueOnce(true)
+          .mockResolvedValueOnce(true)
+          .mockResolvedValueOnce(true)
+          .mockResolvedValueOnce(false);
+      });
+
+      it('should throw a page failed to load shoe width selector error', async () => {
+        await expect(
+          async () =>
+            await stsService.inputStsModel('mockText1', '45', 'Neskrid 66-10'),
+        ).rejects.toThrow('Page failed to load shoe width selector');
+      });
+    });
+  });
+
+  describe('inputStsUsageEnvironment', () => {
+    describe('When given valid input', () => {
+      const orderNumber = 'dfxdvcxv';
+      beforeEach(async () => {
+        await stsService.inputStsUsageEnvironment(orderNumber);
+      });
+
+      it('should call check location on isModelLoaded', async () => {
+        expect(puppeteerUtil.checkLocation).toBeCalledWith(
+          '#page-content-wrapper > div > div > div > div.col-md-7 > div',
+          false,
+          false,
+        );
+      });
+
+      it('should call puppeterutil input twice', async () => {
+        expect(puppeteerUtil.input).toBeCalledTimes(2);
+      });
+    });
+
+    describe('When end user is loaded is false', () => {
+      const orderNumber = 'dfxdvcxv';
+      beforeEach(async () => {
+        jest.spyOn(puppeteerUtil, 'checkLocation').mockResolvedValueOnce(false);
+      });
+
+      it('should throw a could not load end user input error', async () => {
+        await expect(
+          async () => await stsService.inputStsUsageEnvironment(orderNumber),
+        ).rejects.toThrow('Could not load end user input');
+      });
+    });
+
+    describe('When the first input fails', () => {
+      const orderNumber = 'dfxdvcxv';
+      beforeEach(async () => {
+        jest
+          .spyOn(puppeteerUtil, 'getInputValue')
+          .mockResolvedValueOnce('12311');
+        await stsService.inputStsUsageEnvironment(orderNumber);
+      });
+
+      it('should call puppeterutil input thrice', async () => {
+        expect(puppeteerUtil.input).toBeCalledTimes(3);
+      });
+
+      it('should call puppeterutil input with the right input', async () => {
+        expect(puppeteerUtil.input).toBeCalledWith(
+          '#order_enduser',
+          orderNumber,
+        );
+      });
+    });
+
+    describe('When both attempts at inputing the end user fail', () => {
+      const orderNumber = 'dfxdvcxv';
+      beforeEach(async () => {
+        jest
+          .spyOn(puppeteerUtil, 'getInputValue')
+          .mockResolvedValueOnce(undefined)
+          .mockResolvedValueOnce(undefined);
+      });
+
+      it('should throw a failed to input orderNr to end user input error', async () => {
+        await expect(
+          async () => await stsService.inputStsUsageEnvironment(orderNumber),
+        ).rejects.toThrow('Failed to input orderNr to end user input');
+      });
+    });
+
+    describe('When proffesionalSectorDropdownIsLoaded is false', () => {
+      const orderNumber = 'dfxdvcxv';
+      beforeEach(async () => {
+        jest
+          .spyOn(puppeteerUtil, 'checkLocation')
+          .mockResolvedValueOnce(true)
+          .mockResolvedValueOnce(false);
+      });
+
+      it('should throw a could not load professional sector dropdown error', async () => {
+        await expect(
+          async () => await stsService.inputStsUsageEnvironment(orderNumber),
+        ).rejects.toThrow('Could not load professional sector dropdown');
+      });
+    });
+
+    describe('When isModelLoaded is false', () => {
+      const orderNumber = 'dfxdvcxv';
+      beforeEach(async () => {
+        jest
+          .spyOn(puppeteerUtil, 'checkLocation')
+          .mockResolvedValueOnce(true)
+          .mockResolvedValueOnce(true)
+          .mockResolvedValueOnce(false);
+        await stsService.inputStsUsageEnvironment(orderNumber);
+      });
+
+      it('should call pupperUtil click twice', async () => {
+        expect(puppeteerUtil.click).toBeCalledTimes(2);
+      });
+
+      it('should call pupperUtil click with the right selector', async () => {
+        expect(puppeteerUtil.click).toBeCalledWith(
+          '#scrollrbody > div.wizard_navigation > button.btn.btn-default.wizard_button_next',
+          true,
+          true,
+        );
+      });
+    });
+  });
+
+  describe('supplement', () => {
+    describe('When given valid and input insole is true, dev is true', () => {
+      const insole = true;
+      const dev = true;
+      beforeEach(async () => {
+        await stsService.supplement(insole, dev);
+      });
+
+      it('should call puppeteer util click with the right arguments', async () => {
+        expect(puppeteerUtil.click).toBeCalledWith('#choice_224', false, true);
+      });
+
+      it('should call puppeterutil click only twice', async () => {
+        expect(puppeteerUtil.click).toBeCalledTimes(2);
+      });
+    });
+
+    describe('When given valid input and insole is false, dev is true', () => {
+      const insole = false;
+      const dev = true;
+      beforeEach(async () => {
+        await stsService.supplement(insole, dev);
+      });
+
+      it('should not call puppeteer util click', async () => {
+        expect(puppeteerUtil.click).toBeCalledTimes(0);
+      });
+
+      it('should not call puppeteer util wait', async () => {
+        expect(puppeteerUtil.wait).toBeCalledTimes(0);
+      });
+    });
+
+    describe('When given valid input and insole is false, dev is false', () => {
+      const insole = false;
+      const dev = false;
+      beforeEach(async () => {
+        await stsService.supplement(insole, dev);
+      });
+
+      it('should  call puppeteer util click one time', async () => {
+        expect(puppeteerUtil.click).toBeCalledTimes(1);
+      });
+
+      it('should not call puppeteer util wait', async () => {
+        expect(puppeteerUtil.wait).toBeCalledTimes(0);
+      });
+
+      it('should call puppeteer util click with the right arguments', async () => {
+        expect(puppeteerUtil.click).toBeCalledWith(
+          '#wizard_button_save',
+          true,
+          true,
+        );
+      });
+    });
+
+    describe('When given valid input and insole is true, dev is false', () => {
+      const insole = true;
+      const dev = false;
+      beforeEach(async () => {
+        await stsService.supplement(insole, dev);
+      });
+
+      it('should call puppeteer util click three times', async () => {
+        expect(puppeteerUtil.click).toBeCalledTimes(3);
+      });
+
+      it('should call puppeteer util wait once', async () => {
+        expect(puppeteerUtil.wait).toBeCalledTimes(1);
+      });
+
+      it('should call puppeteer util click with the right arguments', async () => {
+        expect(puppeteerUtil.click).toBeCalledWith(
+          '#wizard_button_save',
+          true,
+          true,
+        );
+      });
+    });
+
+    describe('When isSupplementlLoaded is false', () => {
+      const insole = true;
+      const dev = true;
+      beforeEach(async () => {
+        jest.spyOn(puppeteerUtil, 'checkLocation').mockResolvedValueOnce(false);
+      });
+
+      it('should throw a could not get to supplement page error', async () => {
+        await expect(
+          async () => await stsService.supplement(insole, dev),
+        ).rejects.toThrow('Could not get to supplement page');
+      });
+    });
+
+    describe('When isModalLoaded is false', () => {
+      const insole = true;
+      const dev = true;
+      beforeEach(async () => {
+        jest
+          .spyOn(puppeteerUtil, 'checkLocation')
+          .mockResolvedValueOnce(true)
+          .mockResolvedValueOnce(false);
+      });
+
+      it('should throw a could not get to orthotic/inlay modal error', async () => {
+        await expect(
+          async () => await stsService.supplement(insole, dev),
+        ).rejects.toThrow('Could not get to orthotic/inlay modal');
       });
     });
   });

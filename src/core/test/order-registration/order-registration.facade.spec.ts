@@ -147,7 +147,6 @@ describe('OrderRegistrationService', () => {
       }
       return null;
     });
-
     jest.clearAllMocks();
   });
 

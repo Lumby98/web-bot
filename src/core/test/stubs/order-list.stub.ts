@@ -9,9 +9,9 @@ export const orderListStub = (): OrderList => {
     logEntries: [
       {
         status: true,
-        process: ProcessStepEnum.REGISTERORDER,
+        process: ProcessStepEnum.GETORDERINFO,
         timestamp: new Date(),
-        order: { orderNr: 'randomOrderNumberForTest', completed: true },
+        order: { orderNr: 'randomOrderNumberForTest', completed: false },
       },
     ],
     INSOrder: insOrderStub(),

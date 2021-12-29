@@ -162,7 +162,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     return true;
   }
 
-  async InputOrderInformation(
+  async inputOrderInformation(
     orderNr: string,
     deliveryAddress: string[],
     insole: boolean,

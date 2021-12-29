@@ -225,7 +225,7 @@ export class OrderRegistrationFacade
           true,
         );
 
-        await this.orderRegistrationService.InputOrderInformation(
+        await this.orderRegistrationService.inputOrderInformation(
           orders.STSOrder.orderNr,
           orders.STSOrder.deliveryAddress,
           orders.STSOrder.insole,
@@ -297,7 +297,7 @@ export class OrderRegistrationFacade
           true,
           true,
         );
-        await this.orderRegistrationService.InputOrderInformation(
+        await this.orderRegistrationService.inputOrderInformation(
           orders.INSOrder.orderNr,
           orders.INSOrder.deliveryAddress,
           true,

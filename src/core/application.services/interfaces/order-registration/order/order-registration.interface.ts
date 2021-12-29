@@ -9,7 +9,7 @@ export interface OrderRegistrationInterface {
   checkForInsole(): Promise<boolean>;
   handleNeskridNavigation(username: string, password: string);
   loginValidation(username: string, password: string): boolean;
-  InputOrderInformation(
+  inputOrderInformation(
     orderNr: string,
     deliveryAddress: string[],
     insole: boolean,

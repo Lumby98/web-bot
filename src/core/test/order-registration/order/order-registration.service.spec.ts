@@ -265,5 +265,405 @@ describe('OrderRegistrationService', () => {
     });
   });
 
-  describe('InputOrderInformation', () => {});
+  describe('InputOrderInformation', () => {
+    describe('when called with valid input and insole and EU are true', () => {
+      const orderNumber = 'dfxdvcxv';
+      const deliveryAddress = [
+        'Borgervaenget 5',
+        '2100 Koebenhavn',
+        'Kobenhavn, Denmark',
+      ];
+      const insole = true;
+      const EU = true;
+      const customerName = 'Ortowear';
+      beforeEach(async () => {
+        await orderRegistrationService.inputOrderInformation(
+          orderNumber,
+          deliveryAddress,
+          insole,
+          EU,
+          customerName,
+        );
+      });
+
+      it('should run with no errors and call check location isInUsageEnvoPage', async () => {
+        expect(puppeteerUtil.checkLocation).toBeCalledWith(
+          '#order_enduser',
+          false,
+          false,
+        );
+      });
+
+      it('should call input twice', () => {
+        expect(puppeteerUtil.input).toBeCalledTimes(2);
+      });
+
+      it('should call click twice', () => {
+        expect(puppeteerUtil.click).toBeCalledTimes(2);
+      });
+
+      it('should call input with the the right arguments', () => {
+        expect(puppeteerUtil.input).toBeCalledWith(
+          '#order_ordernr',
+          orderNumber,
+        );
+      });
+
+      it('should call input with the the right arguments', () => {
+        expect(puppeteerUtil.input).toBeCalledWith(
+          '#order_afladr_search',
+          'RODOTEKA',
+        );
+      });
+    });
+
+    describe('when called with valid input and insole is true and EU is false', () => {
+      const orderNumber = 'dfxdvcxv';
+      const deliveryAddress = [
+        'Borgervaenget 5',
+        '2100 Koebenhavn',
+        'Kobenhavn, Denmark',
+      ];
+      const insole = true;
+      const EU = false;
+      const customerName = 'Ortowear';
+      beforeEach(async () => {
+        await orderRegistrationService.inputOrderInformation(
+          orderNumber,
+          deliveryAddress,
+          insole,
+          EU,
+          customerName,
+        );
+      });
+
+      it('should run with no errors and call check location isInUsageEnvoPage', async () => {
+        expect(puppeteerUtil.checkLocation).toBeCalledWith(
+          '#order_enduser',
+          false,
+          false,
+        );
+      });
+
+      it('should call input twice', () => {
+        expect(puppeteerUtil.input).toBeCalledTimes(2);
+      });
+
+      it('should call click twice', () => {
+        expect(puppeteerUtil.click).toBeCalledTimes(2);
+      });
+
+      it('should call input with the the right arguments', () => {
+        expect(puppeteerUtil.input).toBeCalledWith(
+          '#order_ordernr',
+          orderNumber,
+        );
+      });
+
+      it('should call input with the the right arguments', () => {
+        expect(puppeteerUtil.input).toBeCalledWith(
+          '#order_afladr_search',
+          'RODOTEKA',
+        );
+      });
+    });
+
+    describe('when called with valid input and insole is false and EU is true', () => {
+      const orderNumber = 'dfxdvcxv';
+      const deliveryAddress = [
+        'Borgervaenget 5',
+        '2100 Koebenhavn',
+        'Kobenhavn, Denmark',
+      ];
+      const insole = false;
+      const EU = true;
+      const customerName = 'Ortowear';
+      beforeEach(async () => {
+        await orderRegistrationService.inputOrderInformation(
+          orderNumber,
+          deliveryAddress,
+          insole,
+          EU,
+          customerName,
+        );
+      });
+
+      it('should run with no errors and call check location isInUsageEnvoPage', async () => {
+        expect(puppeteerUtil.checkLocation).toBeCalledWith(
+          '#order_enduser',
+          false,
+          false,
+        );
+      });
+
+      it('should call input twice', () => {
+        expect(puppeteerUtil.input).toBeCalledTimes(2);
+      });
+
+      it('should call click twice', () => {
+        expect(puppeteerUtil.click).toBeCalledTimes(2);
+      });
+
+      it('should call input with the the right arguments', () => {
+        expect(puppeteerUtil.input).toBeCalledWith(
+          '#order_ordernr',
+          orderNumber,
+        );
+      });
+
+      it('should call input with the the right arguments', () => {
+        expect(puppeteerUtil.input).toBeCalledWith(
+          '#order_afladr_search',
+          'Ortowear',
+        );
+      });
+    });
+
+    describe('when called with valid input and insole is false and EU is false', () => {
+      const orderNumber = 'dfxdvcxv';
+      const deliveryAddress = [
+        'Borgervaenget 5',
+        '2100 Koebenhavn',
+        'Kobenhavn, Denmark',
+      ];
+      const insole = false;
+      const EU = false;
+      const customerName = 'Ortowear';
+      beforeEach(async () => {
+        jest
+          .spyOn(orderRegistrationService, 'inputAddress')
+          .mockResolvedValueOnce(undefined);
+
+        await orderRegistrationService.inputOrderInformation(
+          orderNumber,
+          deliveryAddress,
+          insole,
+          EU,
+          customerName,
+        );
+      });
+
+      it('should run with no errors and call check location isInUsageEnvoPage', async () => {
+        expect(puppeteerUtil.checkLocation).toBeCalledWith(
+          '#order_enduser',
+          false,
+          false,
+        );
+      });
+
+      it('should call input twice', () => {
+        expect(puppeteerUtil.input).toBeCalledTimes(2);
+      });
+
+      it('should call click twice', () => {
+        expect(puppeteerUtil.click).toBeCalledTimes(2);
+      });
+
+      it('should call input with the the right arguments', () => {
+        expect(puppeteerUtil.input).toBeCalledWith(
+          '#order_ordernr',
+          orderNumber,
+        );
+      });
+
+      it('should call input with the the right arguments', () => {
+        expect(puppeteerUtil.input).toBeCalledWith(
+          '#order_afladr_search',
+          customerName,
+        );
+      });
+
+      it('should call input address with the the right arguments', () => {
+        expect(orderRegistrationService.inputAddress).toBeCalledWith(
+          deliveryAddress,
+          orderNumber,
+          customerName,
+        );
+      });
+    });
+  });
+
+  describe('AdjustMonth', () => {
+    describe('when called with valid arguments and the months are the same right away', () => {
+      const newDate = new Date();
+      newDate.setMonth(11);
+      const timeOfdelivery = newDate;
+      const ortowearMonth = 'December';
+      const counter = 0;
+      let result;
+      beforeEach(async () => {
+        jest
+          .spyOn(orderRegistrationService, 'getMonthFromString')
+          .mockReturnValueOnce(12);
+        result = await orderRegistrationService.adjustMonth(
+          timeOfdelivery,
+          ortowearMonth,
+          counter,
+        );
+      });
+      it('should return true', () => {
+        expect(result).toEqual(true);
+      });
+    });
+
+    describe('when called with valid arguments and the months are not the same and 11 months apart', () => {
+      const newDate = new Date();
+      newDate.setMonth(11);
+      const timeOfdelivery = newDate;
+      const ortowearMonth = 'January';
+      const counter = 0;
+      let result;
+      beforeEach(async () => {
+        jest
+          .spyOn(orderRegistrationService, 'getMonthFromString')
+          .mockReturnValueOnce(1)
+          .mockReturnValueOnce(2)
+          .mockReturnValueOnce(3)
+          .mockReturnValueOnce(4)
+          .mockReturnValueOnce(5)
+          .mockReturnValueOnce(6)
+          .mockReturnValueOnce(7)
+          .mockReturnValueOnce(8)
+          .mockReturnValueOnce(9)
+          .mockReturnValueOnce(10)
+          .mockReturnValueOnce(11)
+          .mockReturnValueOnce(12);
+        result = await orderRegistrationService.adjustMonth(
+          timeOfdelivery,
+          ortowearMonth,
+          counter,
+        );
+      });
+      it('should return true', () => {
+        expect(result).toEqual(true);
+      });
+
+      it('should call puppeteerUtil click 11 times ', () => {
+        expect(puppeteerUtil.click).toBeCalledTimes(11);
+      });
+
+      it('should call puppeteerUtil click with the right arguments ', () => {
+        expect(puppeteerUtil.click).toBeCalledWith(
+          '#ui-datepicker-div > div > a.ui-datepicker-next.ui-corner-all',
+          true,
+          true,
+        );
+      });
+
+      it('should call puppeteerService getElementText 11 times ', () => {
+        expect(puppeteerService.getElementText).toBeCalledTimes(11);
+      });
+
+      it('should call puppeteerService getElementText with the right arguments ', () => {
+        expect(puppeteerService.getElementText).toBeCalledWith(
+          '#ui-datepicker-div > div > div > span.ui-datepicker-month',
+        );
+      });
+    });
+
+    describe('when the time of delivery date is past', () => {
+      const newDate = new Date();
+      newDate.setMonth(0);
+      const timeOfdelivery = newDate;
+      const ortowearMonth = 'December';
+      const counter = 0;
+      beforeEach(async () => {
+        jest
+          .spyOn(orderRegistrationService, 'getMonthFromString')
+          .mockReturnValueOnce(12);
+      });
+      it('should throw a cannot set delivery date in the past error', () => {
+        expect(
+          async () =>
+            await orderRegistrationService.adjustMonth(
+              timeOfdelivery,
+              ortowearMonth,
+              counter,
+            ),
+        ).rejects.toThrow('Cannot set delivery date in the past');
+      });
+    });
+  });
+
+  describe('AdjustYear', () => {
+    describe('when called with valid arguments and the years are the same right away', () => {
+      const orderYear = 2021;
+      const ortowearYear = 2021;
+      const counter = 0;
+      let result;
+      beforeEach(async () => {
+        result = await orderRegistrationService.adjustYear(
+          orderYear,
+          ortowearYear,
+          counter,
+        );
+      });
+      it('should return true', () => {
+        expect(result).toEqual(true);
+      });
+    });
+
+    describe('when called with valid arguments and the years are not the same and 99 years ahead', () => {
+      const orderYear = 2120;
+      const ortowearYear = 2021;
+      const counter = 0;
+      let result;
+      beforeEach(async () => {
+        for (let i = 0; i <= 99; i++) {
+          const year = 2021 + i;
+          jest
+            .spyOn(puppeteerService, 'getElementText')
+            .mockResolvedValueOnce(year.toString());
+        }
+
+        result = await orderRegistrationService.adjustYear(
+          orderYear,
+          ortowearYear,
+          counter,
+        );
+      });
+      it('should return true', () => {
+        expect(result).toEqual(true);
+      });
+
+      it('should call puppeteerUtil click 99 times ', () => {
+        expect(puppeteerUtil.click).toBeCalledTimes(100);
+      });
+
+      it('should call puppeteerUtil click with the right arguments ', () => {
+        expect(puppeteerUtil.click).toBeCalledWith(
+          '#ui-datepicker-div > div > a.ui-datepicker-next.ui-corner-all',
+          true,
+          true,
+        );
+      });
+
+      it('should call puppeteerService getElementText 11 times ', () => {
+        expect(puppeteerService.getElementText).toBeCalledTimes(100);
+      });
+
+      it('should call puppeteerService getElementText with the right arguments ', () => {
+        expect(puppeteerService.getElementText).toBeCalledWith(
+          '#ui-datepicker-div > div > div > span.ui-datepicker-year',
+        );
+      });
+    });
+
+    describe('when called with an invalid year in the past', () => {
+      const orderYear = 2020;
+      const ortowearYear = 2021;
+      const counter = 0;
+      let result;
+      it('should throw a cannot set delivery date in the past error', () => {
+        expect(
+          async () =>
+            await orderRegistrationService.adjustYear(
+              orderYear,
+              ortowearYear,
+              counter,
+            ),
+        ).rejects.toThrow('Cannot set delivery date in the past');
+      });
+    });
+  });
 });

@@ -302,7 +302,7 @@ describe('StsService', () => {
           .mockResolvedValueOnce(stsOrder);
       });
 
-      it('should throw a sizes are empty error', async () => {
+      it('should throw a widths are empty error', async () => {
         await expect(
           async () => await stsService.handleSTSOrder(orderNumber, 'selector'),
         ).rejects.toThrow(
@@ -322,7 +322,7 @@ describe('StsService', () => {
           .spyOn(puppeteerUtil, 'readSTSOrder')
           .mockResolvedValueOnce(stsOrder);
         expected = stsOrder;
-        expected.sizeR = stsOrder.sizeL;
+        expected.widthR = stsOrder.widthL;
         result = await stsService.handleSTSOrder(orderNumber, 'selector');
       });
 
@@ -337,12 +337,12 @@ describe('StsService', () => {
       let expected;
       let result;
       beforeEach(async () => {
-        stsOrder.sizeR = '';
+        stsOrder.widthR = '';
         jest
           .spyOn(puppeteerUtil, 'readSTSOrder')
           .mockResolvedValueOnce(stsOrder);
         expected = stsOrder;
-        expected.sizeR = stsOrder.sizeL;
+        expected.widthR = stsOrder.widthL;
         result = await stsService.handleSTSOrder(orderNumber, 'selector');
       });
 
@@ -357,7 +357,7 @@ describe('StsService', () => {
       let expected;
       let result;
       beforeEach(async () => {
-        stsOrder.sizeL = undefined;
+        stsOrder.widthL = undefined;
         jest
           .spyOn(puppeteerUtil, 'readSTSOrder')
           .mockResolvedValueOnce(stsOrder);
@@ -377,205 +377,17 @@ describe('StsService', () => {
       let expected;
       let result;
       beforeEach(async () => {
-        stsOrder.sizeL = '';
+        stsOrder.widthL = '';
         jest
           .spyOn(puppeteerUtil, 'readSTSOrder')
           .mockResolvedValueOnce(stsOrder);
         expected = stsOrder;
-        expected.sizeL = stsOrder.sizeR;
+        expected.widthL = stsOrder.widthR;
         result = await stsService.handleSTSOrder(orderNumber, 'selector');
       });
 
       it('should return a valid STS order model', () => {
         expect(result).toEqual(expected);
-      });
-    });
-
-    describe('when given a valid order number but the sts order model is an empty string', () => {
-      const orderNumber = 'dfxdvcxv';
-      const stsOrder = stsOrderStub();
-      beforeEach(async () => {
-        stsOrder.model = '';
-        jest
-          .spyOn(puppeteerUtil, 'readSTSOrder')
-          .mockResolvedValueOnce(stsOrder);
-      });
-
-      it('should throw a failed getting model error', async () => {
-        await expect(
-          async () => await stsService.handleSTSOrder(orderNumber, 'selector'),
-        ).rejects.toThrow('failed getting model');
-      });
-    });
-
-    describe('when given a valid order number but the sts order model is undefined', () => {
-      const orderNumber = 'dfxdvcxv';
-      const stsOrder = stsOrderStub();
-      beforeEach(async () => {
-        stsOrder.model = undefined;
-        jest
-          .spyOn(puppeteerUtil, 'readSTSOrder')
-          .mockResolvedValueOnce(stsOrder);
-      });
-
-      it('should throw a failed getting model error', async () => {
-        await expect(
-          async () => await stsService.handleSTSOrder(orderNumber, 'selector'),
-        ).rejects.toThrow('failed getting model');
-      });
-    });
-
-    describe('when given a valid order number but the sts order delivery address is undefined', () => {
-      const orderNumber = 'dfxdvcxv';
-      const stsOrder = stsOrderStub();
-      beforeEach(async () => {
-        stsOrder.deliveryAddress = undefined;
-        jest
-          .spyOn(puppeteerUtil, 'readSTSOrder')
-          .mockResolvedValueOnce(stsOrder);
-      });
-
-      it('should throw a failed getting delivery address error', async () => {
-        await expect(
-          async () => await stsService.handleSTSOrder(orderNumber, 'selector'),
-        ).rejects.toThrow('failed getting delivery address');
-      });
-    });
-
-    describe('when given a valid order number but the sts order delivery address is less than 3', () => {
-      const orderNumber = 'dfxdvcxv';
-      const stsOrder = stsOrderStub();
-      beforeEach(async () => {
-        stsOrder.deliveryAddress = ['bork,', 'mork'];
-        jest
-          .spyOn(puppeteerUtil, 'readSTSOrder')
-          .mockResolvedValueOnce(stsOrder);
-      });
-
-      it('should throw a failed getting delivery address error', async () => {
-        await expect(
-          async () => await stsService.handleSTSOrder(orderNumber, 'selector'),
-        ).rejects.toThrow('failed getting delivery address');
-      });
-    });
-
-    describe('when given a valid order number but the sts order customer name is undefined', () => {
-      const orderNumber = 'dfxdvcxv';
-      const stsOrder = stsOrderStub();
-      beforeEach(async () => {
-        stsOrder.customerName = undefined;
-        jest
-          .spyOn(puppeteerUtil, 'readSTSOrder')
-          .mockResolvedValueOnce(stsOrder);
-      });
-
-      it('should throw a failed getting customer error', async () => {
-        await expect(
-          async () => await stsService.handleSTSOrder(orderNumber, 'selector'),
-        ).rejects.toThrow('failed getting customer');
-      });
-    });
-
-    describe('when given a valid order number but the sts order customer name is an empty string', () => {
-      const orderNumber = 'dfxdvcxv';
-      const stsOrder = stsOrderStub();
-      beforeEach(async () => {
-        stsOrder.customerName = '';
-        jest
-          .spyOn(puppeteerUtil, 'readSTSOrder')
-          .mockResolvedValueOnce(stsOrder);
-      });
-
-      it('should throw a failed getting customer error', async () => {
-        await expect(
-          async () => await stsService.handleSTSOrder(orderNumber, 'selector'),
-        ).rejects.toThrow('failed getting customer');
-      });
-    });
-
-    describe('when given a valid order number and the delivery address does not include Norway', () => {
-      const orderNumber = 'dfxdvcxv';
-      const stsOrder = stsOrderStub();
-      let expected;
-      let result;
-      beforeEach(async () => {
-        stsOrder.deliveryAddress = [
-          'Priorparken 850',
-          '2605 Brøndby',
-          'Kobenhavn, Denmark',
-        ];
-        jest
-          .spyOn(puppeteerUtil, 'readSTSOrder')
-          .mockResolvedValueOnce(stsOrder);
-        expected = stsOrder;
-        result = await stsService.handleSTSOrder(orderNumber, 'selector');
-      });
-
-      it('should return a valid STS order model where EU is true', () => {
-        expect(result.EU).toEqual(true);
-      });
-    });
-
-    describe('when given a valid order number and the delivery address includes Norway', () => {
-      const orderNumber = 'dfxdvcxv';
-      const stsOrder = stsOrderStub();
-      let result;
-      beforeEach(async () => {
-        stsOrder.deliveryAddress = [
-          'Priorparken 850',
-          '2605 Brøndby',
-          'Kobenhavn, Norway',
-        ];
-        jest
-          .spyOn(puppeteerUtil, 'readSTSOrder')
-          .mockResolvedValueOnce(stsOrder);
-        result = await stsService.handleSTSOrder(orderNumber, 'selector');
-      });
-
-      it('should return a valid STS order model where EU is false', () => {
-        expect(result.EU).toEqual(false);
-      });
-    });
-
-    describe('when given a valid order number and the delivery address includes Norway test 2', () => {
-      const orderNumber = 'dfxdvcxv';
-      const stsOrder = stsOrderStub();
-      let result;
-      beforeEach(async () => {
-        stsOrder.deliveryAddress = [
-          'Priorparken 850',
-          '2605 Brøndby Norway',
-          'Kobenhavn, Denmark',
-        ];
-        jest
-          .spyOn(puppeteerUtil, 'readSTSOrder')
-          .mockResolvedValueOnce(stsOrder);
-        result = await stsService.handleSTSOrder(orderNumber, 'selector');
-      });
-
-      it('should return a valid STS order model where EU is false', () => {
-        expect(result.EU).toEqual(false);
-      });
-    });
-
-    describe('when given a valid order number and the delivery address includes Norway test 3', () => {
-      const orderNumber = 'dfxdvcxv';
-      const stsOrder = stsOrderStub();
-      let result;
-      beforeEach(async () => {
-        stsOrder.deliveryAddress = [
-          'Priorparken Norway 850',
-          '2605 Brøndby',
-          'Kobenhavn, Denmark',
-        ];
-        jest
-          .spyOn(puppeteerUtil, 'readSTSOrder')
-          .mockResolvedValueOnce(stsOrder);
-        result = await stsService.handleSTSOrder(orderNumber, 'selector');
-      });
-
-      it('should return a valid STS order model where EU is false', () => {
-        expect(result.EU).toEqual(false);
       });
     });
   });

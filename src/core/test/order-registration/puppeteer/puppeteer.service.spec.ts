@@ -137,12 +137,7 @@ describe('PuppeteerService', () => {
       it('should throw a failed to navigate error', () => {
         expect(
           async () => await puppeteerService.goToURL(wrongUrl),
-        ).rejects.toThrow(
-          'Navigation failed: went to the wrong URL: ' +
-            resultUrl +
-            ' : ' +
-            wrongUrl,
-        );
+        ).rejects.toThrow('Navigation failed: went to the wrong URL');
       });
     });
   });

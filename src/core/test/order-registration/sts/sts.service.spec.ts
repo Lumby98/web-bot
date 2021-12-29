@@ -38,7 +38,9 @@ describe('StsService', () => {
     describe('when given a valid order number', () => {
       const orderNumber = 'dfxdvcxv';
       let result;
+      const order = orderStub();
       beforeEach(async () => {
+        jest.spyOn(puppeteerUtil, 'readOrder').mockResolvedValueOnce(order);
         result = await stsService.handleSTSOrder(orderNumber, 'selector');
       });
 
@@ -51,7 +53,7 @@ describe('StsService', () => {
       });
 
       it('should call read sts order with the order from read order', () => {
-        expect(puppeteerUtil.readSTSOrder).toBeCalledWith(orderStub());
+        expect(puppeteerUtil.readSTSOrder).toBeCalledWith(order);
       });
     });
 

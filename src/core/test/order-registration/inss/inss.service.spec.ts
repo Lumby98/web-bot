@@ -593,5 +593,17 @@ describe('InssService', () => {
         );
       });
     });
+
+    describe('When cover selector dosent get loaded ', () => {
+      beforeEach(() => {
+        jest.spyOn(puppeteerUtil, 'checkLocation').mockResolvedValueOnce(false);
+      });
+
+      it('Should throw Could not get to supplement page error', async () => {
+        await expect(async () => await inssService.orthotics()).rejects.toThrow(
+          'Could not get to supplement page',
+        );
+      });
+    });
   });
 });

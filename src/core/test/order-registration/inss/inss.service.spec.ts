@@ -596,12 +596,35 @@ describe('InssService', () => {
 
     describe('When cover selector dosent get loaded ', () => {
       beforeEach(() => {
-        jest.spyOn(puppeteerUtil, 'checkLocation').mockResolvedValueOnce(false);
+        jest
+          .spyOn(puppeteerUtil, 'checkLocation')
+          .mockResolvedValueOnce(true)
+          .mockResolvedValueOnce(false)
+          .mockResolvedValueOnce(false);
       });
 
-      it('Should throw Could not get to supplement page error', async () => {
+      it('Should throw cannot find cover selector error', async () => {
         await expect(async () => await inssService.orthotics()).rejects.toThrow(
-          'Could not get to supplement page',
+          'Cannot find cover selector!',
+        );
+      });
+    });
+
+    describe('When confirmation is not loaded', () => {
+      beforeEach(async () => {
+        jest
+          .spyOn(puppeteerUtil, 'checkLocation')
+          .mockResolvedValueOnce(true)
+          .mockResolvedValueOnce(true)
+          .mockResolvedValueOnce(false);
+
+        await inssService.orthotics();
+      });
+      it('should call tryAgain()', () => {
+        expect(puppeteerService.tryAgain).toBeCalledWith(
+          '#order_quantity',
+          '#scrollrbody > div.wizard_navigation > button.btn.btn-default.wizard_button_next',
+          0,
         );
       });
     });

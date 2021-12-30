@@ -421,7 +421,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
         0,
       );
     }
-    const dd = this.puppeteerUtil.checkLocation(
+    const dd = await this.puppeteerUtil.checkLocation(
       '#scrollrbody > div.modal.fade.modal-choiceinvalid.in > div > div > div.modal-body > div > table.table.mar-bot30 > tbody > tr:nth-child(2) > td:nth-child(3)',
       false,
       true,

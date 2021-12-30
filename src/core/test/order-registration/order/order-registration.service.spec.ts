@@ -82,6 +82,10 @@ describe('OrderRegistrationService', () => {
         );
       });
 
+      it('should call getCurrentUrl once', () => {
+        expect(puppeteerUtil.getCurrentURL).toBeCalledTimes(1);
+      });
+
       it('should call the webbot service goToURL method with the right arguments', async () => {
         expect(puppeteerService.goToURL).toBeCalledWith(
           'https://beta.ortowear.com/',
@@ -131,43 +135,7 @@ describe('OrderRegistrationService', () => {
       });
     });
 
-    describe('when handleOrtowearNavigation is called and puppeteer fails login', () => {
-      beforeEach(async () => {
-        jest
-          .spyOn(puppeteerUtil, 'getCurrentURL')
-          .mockReturnValueOnce('https://beta.ortowear.com/')
-          .mockReturnValueOnce('https://beta.ortowear.com/my_page');
-
-        jest
-          .spyOn(puppeteerUtil, 'loginOrtowear')
-          .mockImplementationOnce(() => {
-            throw new Error(
-              'Failed to login, wrong username or password (Ortowear)',
-            );
-          });
-      });
-
-      it('should throw an error with the right message when username and password is correct, but something else happened', () => {
-        expect(
-          async () =>
-            await orderRegistrationService.handleOrtowearNavigation(
-              validUsername,
-              validPassword,
-            ),
-        ).rejects.toThrow(
-          'Failed to login, wrong username or password (Ortowear)',
-        );
-      });
-    });
-
     describe('when site is down', () => {
-      beforeEach(async () => {
-        jest
-          .spyOn(puppeteerUtil, 'getCurrentURL')
-          .mockReturnValueOnce('')
-          .mockReturnValueOnce('');
-      });
-
       it('should throw error if site could not be reached', () => {
         expect(async () => {
           await orderRegistrationService.handleOrtowearNavigation(
@@ -379,6 +347,9 @@ describe('OrderRegistrationService', () => {
       const EU = true;
       const customerName = 'Ortowear';
       beforeEach(async () => {
+        jest
+          .spyOn(orderRegistrationService, 'inputAddress')
+          .mockResolvedValueOnce(undefined);
         await orderRegistrationService.inputOrderInformation(
           orderNumber,
           deliveryAddress,
@@ -402,6 +373,18 @@ describe('OrderRegistrationService', () => {
 
       it('should call click twice', () => {
         expect(puppeteerUtil.click).toBeCalledTimes(2);
+      });
+
+      it('should call inputaddres once', () => {
+        expect(orderRegistrationService.inputAddress).toBeCalledTimes(1);
+      });
+
+      it('should call inputaddres with the right arguments', () => {
+        expect(orderRegistrationService.inputAddress).toBeCalledWith(
+          deliveryAddress,
+          orderNumber,
+          customerName,
+        );
       });
 
       it('should call input with the the right arguments', () => {
@@ -430,10 +413,6 @@ describe('OrderRegistrationService', () => {
       const EU = false;
       const customerName = 'Ortowear';
       beforeEach(async () => {
-        jest
-          .spyOn(orderRegistrationService, 'inputAddress')
-          .mockResolvedValueOnce(undefined);
-
         await orderRegistrationService.inputOrderInformation(
           orderNumber,
           deliveryAddress,
@@ -463,21 +442,6 @@ describe('OrderRegistrationService', () => {
         expect(puppeteerUtil.input).toBeCalledWith(
           '#order_ordernr',
           orderNumber,
-        );
-      });
-
-      it('should call input with the the right arguments', () => {
-        expect(puppeteerUtil.input).toBeCalledWith(
-          '#order_afladr_search',
-          customerName,
-        );
-      });
-
-      it('should call input address with the the right arguments', () => {
-        expect(orderRegistrationService.inputAddress).toBeCalledWith(
-          deliveryAddress,
-          orderNumber,
-          customerName,
         );
       });
     });
@@ -817,6 +781,299 @@ describe('OrderRegistrationService', () => {
             password,
           );
         }).rejects.toThrow('Failed to login to Neskrid');
+      });
+    });
+  });
+
+  describe('handleOrderCompletion', () => {
+    describe('when called with valid input and dev is true and completeOrder is false', () => {
+      const dev = true;
+      const completeOrder = false;
+      const newDate = new Date();
+      newDate.setDate(newDate.getDate() + 7);
+      const expectedDateString = `${
+        newDate.getMonth() + 1
+      }/${newDate.getDate()}/${newDate.getFullYear()}`;
+      let result;
+      beforeEach(async () => {
+        result = await orderRegistrationService.handleOrderCompletion(
+          dev,
+          completeOrder,
+        );
+      });
+
+      it('should run with no errors and return the right date string', async () => {
+        expect(result).toEqual(expectedDateString);
+      });
+
+      it('should not call input', () => {
+        expect(puppeteerUtil.input).toBeCalledTimes(0);
+      });
+
+      it('should not call click', () => {
+        expect(puppeteerService.tryAgain).toBeCalledTimes(0);
+      });
+
+      it('should not call checklocation', () => {
+        expect(puppeteerUtil.checkLocation).toBeCalledTimes(0);
+      });
+    });
+
+    describe('when called with valid input and dev is true and completeOrder is true', () => {
+      const dev = true;
+      const completeOrder = true;
+      const newDate = new Date();
+      newDate.setDate(newDate.getDate() + 7);
+      const expectedDateString = `${
+        newDate.getMonth() + 1
+      }/${newDate.getDate()}/${newDate.getFullYear()}`;
+      let result;
+      beforeEach(async () => {
+        result = await orderRegistrationService.handleOrderCompletion(
+          dev,
+          completeOrder,
+        );
+      });
+
+      it('should run with no errors and return the right date string', async () => {
+        expect(result).toEqual(expectedDateString);
+      });
+
+      it('should not call click', () => {
+        expect(puppeteerUtil.click).toBeCalledTimes(0);
+      });
+
+      it('should not call tryAgain', () => {
+        expect(puppeteerService.tryAgain).toBeCalledTimes(0);
+      });
+
+      it('should not call checklocation', () => {
+        expect(puppeteerUtil.checkLocation).toBeCalledTimes(0);
+      });
+    });
+
+    describe('when called with valid input and dev is false and completeOrder is false', () => {
+      const dev = false;
+      const completeOrder = false;
+      const newDate = new Date();
+      newDate.setDate(newDate.getDate() + 7);
+      const expectedDateString = `${
+        newDate.getMonth() + 1
+      }/${newDate.getDate()}/${newDate.getFullYear()}`;
+      let result;
+      beforeEach(async () => {
+        jest
+          .spyOn(puppeteerUtil, 'readSelectorText')
+          .mockResolvedValueOnce(expectedDateString);
+        result = await orderRegistrationService.handleOrderCompletion(
+          dev,
+          completeOrder,
+        );
+      });
+
+      it('should run with no errors and return the right date string', async () => {
+        expect(result).toEqual(expectedDateString);
+      });
+
+      it('should call click four times', () => {
+        expect(puppeteerUtil.click).toBeCalledTimes(4);
+      });
+
+      it('should call click with the right arguments', async () => {
+        expect(puppeteerUtil.click).toBeCalledWith(
+          '#choiceinvalid-footer > button.btn.btn-default',
+          true,
+          true,
+        );
+      });
+
+      it('should not call tryAgain', () => {
+        expect(puppeteerService.tryAgain).toBeCalledTimes(0);
+      });
+
+      it('should call checklocation four times', () => {
+        expect(puppeteerUtil.checkLocation).toBeCalledTimes(4);
+      });
+    });
+
+    describe('when called with valid input and dev is false and completeOrder is true', () => {
+      const dev = false;
+      const completeOrder = true;
+      const newDate = new Date();
+      newDate.setDate(newDate.getDate() + 7);
+      const expectedDateString = `${
+        newDate.getMonth() + 1
+      }/${newDate.getDate()}/${newDate.getFullYear()}`;
+      let result;
+      beforeEach(async () => {
+        jest
+          .spyOn(puppeteerUtil, 'readSelectorText')
+          .mockResolvedValueOnce(expectedDateString);
+        result = await orderRegistrationService.handleOrderCompletion(
+          dev,
+          completeOrder,
+        );
+      });
+
+      it('should run with no errors and return the right date string', async () => {
+        expect(result).toEqual(expectedDateString);
+      });
+
+      it('should call click three times', () => {
+        expect(puppeteerUtil.click).toBeCalledTimes(3);
+      });
+
+      it('should call click with the right arguments', async () => {
+        expect(puppeteerUtil.click).toBeCalledWith(
+          '#choiceinvalid-footer > button.btn.btn-success',
+          true,
+          true,
+        );
+      });
+
+      it('should not call tryAgain', () => {
+        expect(puppeteerService.tryAgain).toBeCalledTimes(0);
+      });
+
+      it('should call checklocation four times', () => {
+        expect(puppeteerUtil.checkLocation).toBeCalledTimes(4);
+      });
+    });
+
+    describe('when called with valid input and dev is false and completeOrder is true and pageCheck returns false', () => {
+      const dev = false;
+      const completeOrder = true;
+      const newDate = new Date();
+      newDate.setDate(newDate.getDate() + 7);
+      const expectedDateString = `${
+        newDate.getMonth() + 1
+      }/${newDate.getDate()}/${newDate.getFullYear()}`;
+      let result;
+      beforeEach(async () => {
+        jest
+          .spyOn(puppeteerUtil, 'readSelectorText')
+          .mockResolvedValueOnce(expectedDateString);
+        jest
+          .spyOn(puppeteerUtil, 'checkLocation')
+          .mockResolvedValueOnce(false)
+          .mockResolvedValueOnce(true)
+          .mockResolvedValueOnce(true)
+          .mockResolvedValueOnce(true);
+        result = await orderRegistrationService.handleOrderCompletion(
+          dev,
+          completeOrder,
+        );
+      });
+
+      it('should run with no errors and return the right date string', async () => {
+        expect(result).toEqual(expectedDateString);
+      });
+
+      it('should call click three times', () => {
+        expect(puppeteerUtil.click).toBeCalledTimes(3);
+      });
+
+      it('should call click with the right arguments', async () => {
+        expect(puppeteerUtil.click).toBeCalledWith(
+          '#choiceinvalid-footer > button.btn.btn-success',
+          true,
+          true,
+        );
+      });
+
+      it('should call tryAgain once', () => {
+        expect(puppeteerService.tryAgain).toBeCalledTimes(1);
+      });
+
+      it('should call tryAgain with the right arguments', async () => {
+        expect(puppeteerService.tryAgain).toBeCalledWith(
+          '#page-content-wrapper > div > div:nth-child(3) > div > section > div.panel-footer > a.btn.btn-success',
+          '#wizard_button_save',
+          0,
+        );
+      });
+
+      it('should call checklocation four times', () => {
+        expect(puppeteerUtil.checkLocation).toBeCalledTimes(4);
+      });
+    });
+
+    describe('when called with valid input and dev is false and completeOrder is true and modal check returns false', () => {
+      const dev = false;
+      const completeOrder = true;
+      const newDate = new Date();
+      newDate.setDate(newDate.getDate() + 7);
+      const expectedDateString = `${
+        newDate.getMonth() + 1
+      }/${newDate.getDate()}/${newDate.getFullYear()}`;
+      let result;
+      beforeEach(async () => {
+        jest
+          .spyOn(puppeteerUtil, 'readSelectorText')
+          .mockResolvedValueOnce(expectedDateString);
+        jest
+          .spyOn(puppeteerUtil, 'checkLocation')
+          .mockResolvedValueOnce(true)
+          .mockResolvedValueOnce(false)
+          .mockResolvedValueOnce(true)
+          .mockResolvedValueOnce(true);
+        result = await orderRegistrationService.handleOrderCompletion(
+          dev,
+          completeOrder,
+        );
+      });
+
+      it('should run with no errors and return the right date string', async () => {
+        expect(result).toEqual(expectedDateString);
+      });
+
+      it('should call click three times', () => {
+        expect(puppeteerUtil.click).toBeCalledTimes(3);
+      });
+
+      it('should call click with the right arguments', async () => {
+        expect(puppeteerUtil.click).toBeCalledWith(
+          '#choiceinvalid-footer > button.btn.btn-success',
+          true,
+          true,
+        );
+      });
+
+      it('should call tryAgain once', () => {
+        expect(puppeteerService.tryAgain).toBeCalledTimes(1);
+      });
+
+      it('should call tryAgain with the right arguments', async () => {
+        expect(puppeteerService.tryAgain).toBeCalledWith(
+          '#scrollrbody > div.modal.fade.modal-choiceinvalid.in > div > div',
+          '#page-content-wrapper > div > div:nth-child(3) > div > section > div.panel-footer > a.btn.btn-success',
+          0,
+        );
+      });
+
+      it('should call checklocation four times', () => {
+        expect(puppeteerUtil.checkLocation).toBeCalledTimes(4);
+      });
+    });
+
+    describe('when called with valid input and dev is false and completeOrder is true and delivery date check returns false', () => {
+      const dev = false;
+      const completeOrder = true;
+      beforeEach(async () => {
+        jest
+          .spyOn(puppeteerUtil, 'checkLocation')
+          .mockResolvedValueOnce(true)
+          .mockResolvedValueOnce(true)
+          .mockResolvedValueOnce(false);
+      });
+
+      it('should throw a failed to get deliveryDate error ', () => {
+        expect(async () => {
+          await orderRegistrationService.handleOrderCompletion(
+            dev,
+            completeOrder,
+          );
+        }).rejects.toThrow('failed to get deliveryDate');
       });
     });
   });

@@ -178,7 +178,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
         true,
         true,
       );
-    } else if (EU) {
+    } else if (!EU) {
       await this.puppeteerUtil.input('#order_afladr_search', 'Ortowear');
       await this.puppeteerUtil.click(
         '#order_afladr > div > div.panel-heading > div > div > div',
@@ -192,6 +192,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
         true,
         true,
       );
+      await this.puppeteerUtil.wait(undefined, 2000);
       await this.inputAddress(deliveryAddress, orderNr, customerName);
     }
     await this.puppeteerUtil.wait('#order_afladr_name');
@@ -298,9 +299,16 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
   formatDeliveryDate(deliveryDateString: string): Date {
     console.log(deliveryDateString);
     const splitDate = deliveryDateString.split('/');
+    if (splitDate.length < 3) {
+      throw new Error('failed to format date: Invalid date string');
+    }
     const year = Number.parseInt(splitDate[2]);
     const month = Number.parseInt(splitDate[0]) - 1;
     const date = Number.parseInt(splitDate[1]);
+
+    if (isNaN(year) || isNaN(month) || isNaN(date)) {
+      throw new Error('failed to format date: date should be numbers');
+    }
     const formattedDate = new Date(year, month, date);
     console.log(
       `Year: ${year}, Month: ${month}, Date: ${date}, formatedDate: ${formattedDate}`,
@@ -330,7 +338,6 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     luxDate = luxDate.plus({
       days: ((7 + dayOfWeek - date.getDay() - 1) % 7) + 1,
     });
-
     console.log(luxDate.toJSDate());
     return luxDate.toJSDate();
   }
@@ -344,13 +351,15 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     await this.puppeteerService.goToURL('https://www.neskrid.com/');
 
     await this.puppeteerUtil.loginNeskrid(username, password);
-    await this.puppeteerUtil.wait(
+    await this.puppeteerUtil.checkLocation(
       '#page-content-wrapper > div.container-fluid > div:nth-child(1) > div > h1',
+      false,
+      true,
     );
 
     const desieredPage =
       'https://www.neskrid.com/plugins/neskrid/myneskrid_main.aspx';
-    const currentUrl = await this.puppeteerUtil.getCurrentURL();
+    const currentUrl = this.puppeteerUtil.getCurrentURL();
     if (desieredPage != currentUrl) {
       console.log(desieredPage);
       console.log(currentUrl);
@@ -469,24 +478,70 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     orderNr: string,
     customerName: string,
   ) {
+    if (deliveryAddress.length < 3) {
+      throw new Error('invalid date');
+    }
     await this.puppeteerUtil.wait('#order_afladr_form');
     await this.puppeteerUtil.input('#order_afladr_name', customerName);
 
     const address = deliveryAddress[0].split(' ');
+    if (address.length < 2) {
+      throw new Error('missing address information');
+    }
 
     await this.puppeteerUtil.input('#order_afladr_street', address[0]);
 
+    const selectedStreet = await this.puppeteerUtil.getInputValue(
+      '#order_afladr_street',
+    );
+
+    if (selectedStreet !== address[0]) {
+      throw new Error('wrong street selected for address');
+    }
+
     await this.puppeteerUtil.input('#order_afladr_nr', address[1]);
 
+    const selectedNumber = await this.puppeteerUtil.getInputValue(
+      '#order_afladr_nr',
+    );
+
+    if (selectedNumber !== address[1]) {
+      throw new Error('wrong street number selected for address');
+    }
+
     const postalCodeandCity = deliveryAddress[1].split(' ');
+    if (postalCodeandCity.length < 2) {
+      throw new Error('missing postal code or city');
+    }
 
     await this.puppeteerUtil.input('#order_afladr_zip', postalCodeandCity[0]);
+    const selectedZip = await this.puppeteerUtil.getInputValue(
+      '#order_afladr_zip',
+    );
+
+    if (selectedZip !== postalCodeandCity[0]) {
+      throw new Error('wrong zip code selected for address');
+    }
 
     await this.puppeteerUtil.input('#order_afladr_place', postalCodeandCity[1]);
+    const selectedCity = await this.puppeteerUtil.getInputValue(
+      '#order_afladr_place',
+    );
+
+    if (selectedCity !== postalCodeandCity[1]) {
+      throw new Error('wrong city selected for address');
+    }
 
     const country = deliveryAddress[2].split(' ');
 
-    await this.puppeteerUtil.input('#order_afladr_zip', postalCodeandCity[0]);
+    if (country.length < 2) {
+      throw new Error('missing country');
+    }
+
+    await this.puppeteerUtil.dropdownSelect(
+      '#order_afladr_country',
+      country[1],
+    );
   }
 
   loginValidation(username: string, password: string): boolean {

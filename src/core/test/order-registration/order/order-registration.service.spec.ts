@@ -666,4 +666,158 @@ describe('OrderRegistrationService', () => {
       });
     });
   });
+
+  describe('formatDeliveryDate', () => {
+    describe('when given valid date string', () => {
+      const date = '10/12/2022';
+      let result;
+      beforeEach(() => {
+        result = orderRegistrationService.formatDeliveryDate(date);
+      });
+
+      it('should should return formatted date', () => {
+        expect(result).toEqual(new Date(2022, 9, 12));
+      });
+    });
+
+    describe('when given invalid date format', () => {
+      const date = '10-12-2020';
+      it('should throw invalid date string error', () => {
+        expect(() => {
+          orderRegistrationService.formatDeliveryDate(date);
+        }).toThrow('failed to format date: Invalid date string');
+      });
+    });
+
+    describe('when wrong date information is given', () => {
+      it('should throw invalid date string error', () => {
+        expect(() => {
+          orderRegistrationService.formatDeliveryDate('november/12/2020');
+        }).toThrow('failed to format date: date should be numbers');
+      });
+      it('should throw invalid date string error', () => {
+        expect(() => {
+          orderRegistrationService.formatDeliveryDate('11/eleven/2020');
+        }).toThrow('failed to format date: date should be numbers');
+      });
+      it('should throw invalid date string error', () => {
+        expect(() => {
+          orderRegistrationService.formatDeliveryDate(
+            'november/12/twnty twnty',
+          );
+        }).toThrow('failed to format date: date should be numbers');
+      });
+    });
+  });
+
+  describe('getMonthFromString', () => {
+    describe('when given valid month string', () => {
+      const month = 'may';
+      let result;
+      beforeEach(() => {
+        result = orderRegistrationService.getMonthFromString(month);
+      });
+
+      it('should should return formatted date', () => {
+        expect(result).toEqual(5);
+      });
+    });
+
+    describe('when given invalid month sting', () => {
+      const month = 'fish';
+      it('should throw invalid date string error', () => {
+        expect(() => {
+          orderRegistrationService.getMonthFromString(month);
+        }).toThrow(`Failed to get month from string, input was this: ${month}`);
+      });
+    });
+  });
+
+  describe('getNextDayOfWeek', () => {
+    describe('when given valid day of week', () => {
+      const date = new Date(2022, 4, 2);
+      const dayOfWeek = 1;
+      const newDate = new Date(2022, 4, 9);
+      let result;
+      beforeEach(() => {
+        result = orderRegistrationService.getNextDayOfWeek(date, dayOfWeek);
+      });
+      it('should return valid a valid date', () => {
+        expect(result).toEqual(newDate);
+      });
+    });
+
+    describe('when given invalid day of week', () => {
+      it('should throw invalid day of week error', () => {
+        expect(() => {
+          orderRegistrationService.getNextDayOfWeek(new Date(), 7);
+        }).toThrow(
+          'Invalid day of the week: the day of the week should be from 0-6',
+        );
+      });
+    });
+  });
+
+  describe('handleNeskridNavigation', () => {
+    describe('when given valid arguments', () => {
+      const validUsername = 'username@username.com';
+      const validPassword = 'password';
+      beforeEach(async () => {
+        jest
+          .spyOn(orderRegistrationService, 'loginValidation')
+          .mockReturnValueOnce(true);
+        jest
+          .spyOn(puppeteerUtil, 'getCurrentURL')
+          .mockReturnValueOnce(
+            'https://www.neskrid.com/plugins/neskrid/myneskrid_main.aspx',
+          );
+        await orderRegistrationService.handleNeskridNavigation(
+          validUsername,
+          validPassword,
+        );
+      });
+
+      it('should call get current url', () => {
+        expect(puppeteerUtil.getCurrentURL).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('when login validation returns false', () => {
+      const username = 'username@username';
+      const password = 'password';
+      beforeEach(async () => {
+        jest
+          .spyOn(orderRegistrationService, 'loginValidation')
+          .mockReturnValueOnce(false);
+      });
+
+      it('should throw invalid login error', () => {
+        expect(async () => {
+          await orderRegistrationService.handleNeskridNavigation(
+            username,
+            password,
+          );
+        }).rejects.toThrow('Wrong username or password');
+      });
+    });
+
+    describe('when navigation fails', () => {
+      const username = 'username@username.com';
+      const password = 'password';
+      beforeEach(async () => {
+        jest
+          .spyOn(orderRegistrationService, 'loginValidation')
+          .mockReturnValueOnce(true);
+      });
+
+      it('should throw invalid login error', () => {
+        expect(async () => {
+          await orderRegistrationService.handleNeskridNavigation(
+            username,
+            password,
+          );
+        }).rejects.toThrow('Failed to login to Neskrid');
+      });
+    });
+  });
 });

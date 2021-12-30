@@ -32,7 +32,7 @@ jest.mock(
   'src/core/application.services/implementations/order-registration/inss/inss.service.ts',
 );
 
-describe('OrderRegistrationService', () => {
+describe('OrderRegistrationFacade', () => {
   let orderRegistrationFacade: OrderRegistrationFacade;
   let puppeteerUtil: PuppeteerUtilityInterface;
   let puppeteerService: PuppeteerServiceInterface;
@@ -68,6 +68,12 @@ describe('OrderRegistrationService', () => {
       return null;
     });
     jest.clearAllMocks();
+    jest.restoreAllMocks();
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+    jest.restoreAllMocks();
   });
 
   it('orderRegistrationFacade should be defined', () => {
@@ -354,10 +360,16 @@ describe('OrderRegistrationService', () => {
 
     describe('When it cant load the usage environment page inss', () => {
       let result;
+      let spy: jest.SpyInstance<
+        Promise<boolean>,
+        [selector: string, hidden: boolean, visible: boolean, timeout?: number]
+      >;
       const OrderListStub = orderListStub();
       OrderListStub.STSOrder = null;
       beforeEach(async () => {
-        jest.spyOn(puppeteerUtil, 'checkLocation').mockResolvedValue(undefined);
+        spy = jest
+          .spyOn(puppeteerUtil, 'checkLocation')
+          .mockResolvedValueOnce(undefined);
         result = await orderRegistrationFacade.createOrder(
           OrderListStub,
           loginDtoStub().username,
@@ -388,6 +400,7 @@ describe('OrderRegistrationService', () => {
           },
         ];
         expect(result).toEqual(OrderListStub);
+        spy.mockClear();
       });
     });
 
@@ -437,7 +450,7 @@ describe('OrderRegistrationService', () => {
       const OrderListStub = orderListStub();
       OrderListStub.INSOrder = null;
       beforeEach(async () => {
-        jest.spyOn(puppeteerUtil, 'checkLocation').mockResolvedValue(undefined);
+        jest.spyOn(puppeteerUtil, 'checkLocation').mockResolvedValueOnce(false);
         result = await orderRegistrationFacade.createOrder(
           OrderListStub,
           loginDtoStub().username,
@@ -477,7 +490,30 @@ describe('OrderRegistrationService', () => {
       let result;
       const orderWithLogs = orderWithLogsStub();
       beforeEach(async () => {
+        jest
+          .spyOn(puppeteerUtil, 'selectDate')
+          .mockResolvedValueOnce('dateSelector');
         orderWithLogs.order.timeOfDelivery = new Date();
+
+        jest.spyOn(puppeteerUtil, 'getInputValue').mockResolvedValueOnce(
+          `${orderWithLogs.order.timeOfDelivery.toLocaleDateString('default', {
+            day: '2-digit',
+          })}-${orderWithLogs.order.timeOfDelivery.toLocaleDateString(
+            'default',
+            {
+              month: '2-digit',
+            },
+          )}-${orderWithLogs.order.timeOfDelivery.getFullYear()}`,
+        );
+
+        jest
+          .spyOn(puppeteerUtil, 'getSelectedValue')
+          .mockResolvedValueOnce('client');
+
+        jest
+          .spyOn(puppeteerUtil, 'getSelectedValue')
+          .mockResolvedValueOnce('AVSI3STZSN3F7GRV');
+
         orderWithLogs.logEntries = [
           {
             status: true,
@@ -504,20 +540,171 @@ describe('OrderRegistrationService', () => {
       });
 
       it('should return an order with all the right logs', () => {
-        orderWithLogs.logEntries.push({
+        const orderWithLogsExpected = orderWithLogsStub();
+        orderWithLogsExpected.logEntries = orderWithLogs.logEntries;
+        orderWithLogsExpected.logEntries.push({
           status: true,
           process: ProcessStepEnum.ALOCATEORDER,
           timestamp: new Date(),
-          order: { orderNr: orderStub().orderNr, completed: false },
+          order: { orderNr: orderStub().orderNr, completed: true },
         });
 
+        orderWithLogsExpected.order.timeOfDelivery =
+          result.order.timeOfDelivery;
+
         console.log('orderWithLogs');
-        console.log(orderWithLogs);
+        console.log(orderWithLogsExpected);
 
         console.log('result');
         console.log(result);
 
-        expect(result).toEqual(orderWithLogs);
+        expect(result).toEqual(orderWithLogsExpected);
+      });
+    });
+
+    describe('When it cant select supplier', () => {
+      let result;
+      const orderWithLogs = orderWithLogsStub();
+      beforeEach(async () => {
+        jest
+          .spyOn(puppeteerUtil, 'selectDate')
+          .mockResolvedValueOnce('dateSelector');
+        orderWithLogs.order.timeOfDelivery = new Date();
+
+        jest.spyOn(puppeteerUtil, 'getInputValue').mockResolvedValueOnce(
+          `${orderWithLogs.order.timeOfDelivery.toLocaleDateString('default', {
+            day: '2-digit',
+          })}-${orderWithLogs.order.timeOfDelivery.toLocaleDateString(
+            'default',
+            {
+              month: '2-digit',
+            },
+          )}-${orderWithLogs.order.timeOfDelivery.getFullYear()}`,
+        );
+
+        jest
+          .spyOn(puppeteerUtil, 'getSelectedValue')
+          .mockResolvedValueOnce('client');
+
+        jest
+          .spyOn(puppeteerUtil, 'getSelectedValue')
+          .mockResolvedValueOnce('wrongSelector');
+
+        orderWithLogs.logEntries = [
+          {
+            status: true,
+            process: ProcessStepEnum.GETORDERINFO,
+            timestamp: new Date(),
+            order: { orderNr: 'randomOrderNumberForTest', completed: false },
+          },
+          {
+            status: true,
+            process: ProcessStepEnum.REGISTERORDER,
+            timestamp: new Date(),
+            order: { orderNr: 'dfxdvcxv', completed: false },
+          },
+        ];
+
+        result = await orderRegistrationFacade.handleAllocations(
+          orderWithLogs,
+          loginDtoStub().username,
+          loginDtoStub().password,
+          true,
+          false,
+          0,
+        );
+      });
+
+      it('should log a failed to select supplier error', () => {
+        const orderWithLogsExpected = orderWithLogsStub();
+        orderWithLogsExpected.logEntries = orderWithLogs.logEntries;
+        orderWithLogsExpected.logEntries.push({
+          status: false,
+          process: ProcessStepEnum.ALOCATEORDER,
+          timestamp: new Date(),
+          order: null,
+          error: { errorMessage: 'Failed to select supplier: wrongSelector' },
+        });
+
+        orderWithLogsExpected.order = undefined;
+
+        console.log('orderWithLogs');
+        console.log(orderWithLogsExpected);
+
+        console.log('result');
+        console.log(result);
+
+        expect(result).toEqual(orderWithLogsExpected);
+      });
+    });
+
+    describe('When it cant select return destination', () => {
+      let result;
+      const orderWithLogs = orderWithLogsStub();
+      beforeEach(async () => {
+        jest
+          .spyOn(puppeteerUtil, 'selectDate')
+          .mockResolvedValueOnce('dateSelector');
+        orderWithLogs.order.timeOfDelivery = new Date();
+
+        jest.spyOn(puppeteerUtil, 'getInputValue').mockResolvedValueOnce(
+          `${orderWithLogs.order.timeOfDelivery.toLocaleDateString('default', {
+            day: '2-digit',
+          })}-${orderWithLogs.order.timeOfDelivery.toLocaleDateString(
+            'default',
+            {
+              month: '2-digit',
+            },
+          )}-${orderWithLogs.order.timeOfDelivery.getFullYear()}`,
+        );
+
+        orderWithLogs.logEntries = [
+          {
+            status: true,
+            process: ProcessStepEnum.GETORDERINFO,
+            timestamp: new Date(),
+            order: { orderNr: 'randomOrderNumberForTest', completed: false },
+          },
+          {
+            status: true,
+            process: ProcessStepEnum.REGISTERORDER,
+            timestamp: new Date(),
+            order: { orderNr: 'dfxdvcxv', completed: false },
+          },
+        ];
+
+        result = await orderRegistrationFacade.handleAllocations(
+          orderWithLogs,
+          loginDtoStub().username,
+          loginDtoStub().password,
+          true,
+          false,
+          0,
+        );
+      });
+
+      it('should log a failed to select supplier error', () => {
+        const orderWithLogsExpected = orderWithLogsStub();
+        orderWithLogsExpected.logEntries = orderWithLogs.logEntries;
+        orderWithLogsExpected.logEntries.push({
+          status: false,
+          process: ProcessStepEnum.ALOCATEORDER,
+          timestamp: new Date(),
+          order: null,
+          error: {
+            errorMessage: 'Failed to select return destination: client',
+          },
+        });
+
+        orderWithLogsExpected.order = undefined;
+
+        console.log('orderWithLogs');
+        console.log(orderWithLogsExpected);
+
+        console.log('result');
+        console.log(result);
+
+        expect(result).toEqual(orderWithLogsExpected);
       });
     });
   });

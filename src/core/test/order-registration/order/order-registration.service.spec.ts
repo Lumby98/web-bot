@@ -785,6 +785,347 @@ describe('OrderRegistrationService', () => {
     });
   });
 
+  describe('inputAddress', () => {
+    describe('when called with valid input', () => {
+      const orderNumber = 'dfxdvcxv';
+      const deliveryAddress = [
+        'Borgervaenget 5',
+        '2100 Koebenhavn',
+        'Kobenhavn, Denmark',
+      ];
+      const customerName = 'Ortowear';
+      beforeEach(async () => {
+        jest
+          .spyOn(puppeteerUtil, 'getInputValue')
+          .mockResolvedValueOnce('Borgervaenget')
+          .mockResolvedValueOnce('5')
+          .mockResolvedValueOnce('2100')
+          .mockResolvedValueOnce('Koebenhavn');
+
+        await orderRegistrationService.inputAddress(
+          deliveryAddress,
+          orderNumber,
+          customerName,
+        );
+      });
+
+      it('should call input five times', () => {
+        expect(puppeteerUtil.input).toBeCalledTimes(5);
+      });
+
+      it('should not call getInputValue four times', () => {
+        expect(puppeteerUtil.getInputValue).toBeCalledTimes(4);
+      });
+
+      it('should not call checklocation', () => {
+        expect(puppeteerUtil.checkLocation).toBeCalledTimes(0);
+      });
+
+      it('should call dropdownSelect with the right arguments', () => {
+        expect(puppeteerUtil.dropdownSelect).toBeCalledWith(
+          '#order_afladr_country',
+          'Denmark',
+        );
+      });
+    });
+
+    describe('when the delivery address is to short', () => {
+      const orderNumber = 'dfxdvcxv';
+      const deliveryAddress = ['Borgervaenget 5', '2100 Koebenhavn'];
+      const customerName = 'Ortowear';
+
+      it('should throw an invalid date error', () => {
+        expect(async () => {
+          await orderRegistrationService.inputAddress(
+            deliveryAddress,
+            orderNumber,
+            customerName,
+          );
+        }).rejects.toThrow('invalid date');
+      });
+    });
+
+    describe('when the street and nr is invalid', () => {
+      const orderNumber = 'dfxdvcxv';
+      const deliveryAddress = [
+        'Borgervaenget5',
+        '2100 Koebenhavn',
+        'Kobenhavn, Denmark',
+      ];
+      const customerName = 'Ortowear';
+
+      it('should throw a missing address information error', () => {
+        expect(async () => {
+          await orderRegistrationService.inputAddress(
+            deliveryAddress,
+            orderNumber,
+            customerName,
+          );
+        }).rejects.toThrow('missing address information');
+      });
+    });
+
+    describe('when puppeteer inputs the wrong street', () => {
+      const orderNumber = 'dfxdvcxv';
+      const deliveryAddress = [
+        'Borgervaenget 5',
+        '2100 Koebenhavn',
+        'Kobenhavn, Denmark',
+      ];
+      const customerName = 'Ortowear';
+      beforeEach(async () => {
+        jest
+          .spyOn(puppeteerUtil, 'getInputValue')
+          .mockResolvedValueOnce('wrongRoad');
+      });
+
+      it('should throw a wrong street selected for address error', () => {
+        expect(async () => {
+          await orderRegistrationService.inputAddress(
+            deliveryAddress,
+            orderNumber,
+            customerName,
+          );
+        }).rejects.toThrow('wrong street selected for address');
+      });
+    });
+
+    describe('when puppeteer inputs the wrong street number', () => {
+      const orderNumber = 'dfxdvcxv';
+      const deliveryAddress = [
+        'Borgervaenget 5',
+        '2100 Koebenhavn',
+        'Kobenhavn, Denmark',
+      ];
+      const customerName = 'Ortowear';
+      beforeEach(async () => {
+        jest
+          .spyOn(puppeteerUtil, 'getInputValue')
+          .mockResolvedValueOnce('Borgervaenget')
+          .mockResolvedValueOnce('10');
+      });
+
+      it('should throw a wrong street number selected for address error', () => {
+        expect(async () => {
+          await orderRegistrationService.inputAddress(
+            deliveryAddress,
+            orderNumber,
+            customerName,
+          );
+        }).rejects.toThrow('wrong street number selected for address');
+      });
+    });
+
+    describe('when the postal code and city is invalid', () => {
+      const orderNumber = 'dfxdvcxv';
+      const deliveryAddress = [
+        'Borgervaenget 5',
+        '2100Koebenhavn',
+        'Kobenhavn, Denmark',
+      ];
+      const customerName = 'Ortowear';
+      beforeEach(async () => {
+        jest
+          .spyOn(puppeteerUtil, 'getInputValue')
+          .mockResolvedValueOnce('Borgervaenget')
+          .mockResolvedValueOnce('5');
+      });
+
+      it('should throw a missing postal code or city error', () => {
+        expect(async () => {
+          await orderRegistrationService.inputAddress(
+            deliveryAddress,
+            orderNumber,
+            customerName,
+          );
+        }).rejects.toThrow('missing postal code or city');
+      });
+    });
+
+    describe('when puppeteer inputs the wrong zip code', () => {
+      const orderNumber = 'dfxdvcxv';
+      const deliveryAddress = [
+        'Borgervaenget 5',
+        '2100 Koebenhavn',
+        'Kobenhavn, Denmark',
+      ];
+      const customerName = 'Ortowear';
+      beforeEach(async () => {
+        jest
+          .spyOn(puppeteerUtil, 'getInputValue')
+          .mockResolvedValueOnce('Borgervaenget')
+          .mockResolvedValueOnce('5')
+          .mockResolvedValueOnce('3456');
+      });
+
+      it('should throw a wrong zip code selected for address error', () => {
+        expect(async () => {
+          await orderRegistrationService.inputAddress(
+            deliveryAddress,
+            orderNumber,
+            customerName,
+          );
+        }).rejects.toThrow('wrong zip code selected for address');
+      });
+    });
+
+    describe('when the country is missing from delivery address', () => {
+      const orderNumber = 'dfxdvcxv';
+      const deliveryAddress = [
+        'Borgervaenget 5',
+        '2100 Koebenhavn',
+        'KobenhavnDenmark',
+      ];
+      const customerName = 'Ortowear';
+      beforeEach(async () => {
+        jest
+          .spyOn(puppeteerUtil, 'getInputValue')
+          .mockResolvedValueOnce('Borgervaenget')
+          .mockResolvedValueOnce('5')
+          .mockResolvedValueOnce('2100')
+          .mockResolvedValueOnce('Koebenhavn');
+      });
+
+      it('should throw a missing country error', () => {
+        expect(async () => {
+          await orderRegistrationService.inputAddress(
+            deliveryAddress,
+            orderNumber,
+            customerName,
+          );
+        }).rejects.toThrow('missing country');
+      });
+    });
+
+    describe('when puppeteer inputs the wrong city', () => {
+      const orderNumber = 'dfxdvcxv';
+      const deliveryAddress = [
+        'Borgervaenget 5',
+        '2100 Koebenhavn',
+        'Kobenhavn, Denmark',
+      ];
+      const customerName = 'Ortowear';
+      beforeEach(async () => {
+        jest
+          .spyOn(puppeteerUtil, 'getInputValue')
+          .mockResolvedValueOnce('Borgervaenget')
+          .mockResolvedValueOnce('5')
+          .mockResolvedValueOnce('2100')
+          .mockResolvedValueOnce('wrongCity');
+      });
+
+      it('should throw a wrong city selected for address error', () => {
+        expect(async () => {
+          await orderRegistrationService.inputAddress(
+            deliveryAddress,
+            orderNumber,
+            customerName,
+          );
+        }).rejects.toThrow(
+          'wrong city selected for address: ' +
+            'wrongCity' +
+            ' ' +
+            'Koebenhavn',
+        );
+      });
+    });
+  });
+
+  describe('loginValidation', () => {
+    describe('when called with a valid username and password', () => {
+      const validUsername = 'user@hotmail.com';
+      const validPassword = 'validPassword';
+      let result;
+      beforeEach(() => {
+        result = orderRegistrationService.loginValidation(
+          validUsername,
+          validPassword,
+        );
+      });
+
+      it('should return true', () => {
+        expect(result).toEqual(true);
+      });
+    });
+
+    describe('when called with a missing username', () => {
+      const validUsername = '';
+      const validPassword = 'validPassword';
+      let result;
+      beforeEach(() => {
+        result = orderRegistrationService.loginValidation(
+          validUsername,
+          validPassword,
+        );
+      });
+
+      it('should return false', () => {
+        expect(result).toEqual(false);
+      });
+    });
+
+    describe('when called with a missing password', () => {
+      const validUsername = 'user@hotmail.com';
+      const validPassword = '';
+      let result;
+      beforeEach(() => {
+        result = orderRegistrationService.loginValidation(
+          validUsername,
+          validPassword,
+        );
+      });
+
+      it('should return false', () => {
+        expect(result).toEqual(false);
+      });
+    });
+
+    describe('when called with an invalid username', () => {
+      const validUsername = 'invalid';
+      const validPassword = 'validPassword';
+      let result;
+      beforeEach(() => {
+        result = orderRegistrationService.loginValidation(
+          validUsername,
+          validPassword,
+        );
+      });
+
+      it('should return false', () => {
+        expect(result).toEqual(false);
+      });
+    });
+  });
+
+  describe('getTableInfo', () => {
+    describe('when called with a valid ordernumber', () => {
+      const orderNumber = '234234';
+      let result;
+      beforeEach(async () => {
+        jest.spyOn(puppeteerUtil, 'getTableTargetandSelector').mockReset();
+
+        jest
+          .spyOn(puppeteerUtil, 'getTableTargetandSelector')
+          .mockResolvedValueOnce(TargetAndSelectorStub());
+        result = await orderRegistrationService.getTableInfo(orderNumber);
+      });
+
+      it('should return true', () => {
+        expect(result).toEqual(TargetAndSelectorStub());
+      });
+
+      it('should call getTableTargetandSelector', () => {
+        expect(puppeteerUtil.getTableTargetandSelector).toBeCalledTimes(1);
+      });
+
+      it('should call getTableTargetandSelector with the right orderNumber', () => {
+        expect(puppeteerUtil.getTableTargetandSelector).toBeCalledWith(
+          orderNumber,
+        );
+      });
+    });
+  });
+
   describe('handleOrderCompletion', () => {
     describe('when called with valid input and dev is true and completeOrder is false', () => {
       const dev = true;
@@ -875,6 +1216,12 @@ describe('OrderRegistrationService', () => {
         expect(result).toEqual(expectedDateString);
       });
 
+      it('should call click radio button with the right arguments ', () => {
+        expect(puppeteerUtil.clickRadioButton).toBeCalledWith(
+          '#order_cemaxnconf',
+        );
+      });
+
       it('should call click four times', () => {
         expect(puppeteerUtil.click).toBeCalledTimes(4);
       });
@@ -921,6 +1268,12 @@ describe('OrderRegistrationService', () => {
 
       it('should call click three times', () => {
         expect(puppeteerUtil.click).toBeCalledTimes(3);
+      });
+
+      it('should call click radio button with the right arguments ', () => {
+        expect(puppeteerUtil.clickRadioButton).toBeCalledWith(
+          '#order_cemaxnconf',
+        );
       });
 
       it('should call click with the right arguments', async () => {
@@ -971,6 +1324,12 @@ describe('OrderRegistrationService', () => {
 
       it('should call click three times', () => {
         expect(puppeteerUtil.click).toBeCalledTimes(3);
+      });
+
+      it('should call click radio button with the right arguments ', () => {
+        expect(puppeteerUtil.clickRadioButton).toBeCalledWith(
+          '#order_cemaxnconf',
+        );
       });
 
       it('should call click with the right arguments', async () => {
@@ -1039,6 +1398,76 @@ describe('OrderRegistrationService', () => {
         );
       });
 
+      it('should call click radio button with the right arguments ', () => {
+        expect(puppeteerUtil.clickRadioButton).toBeCalledWith(
+          '#order_cemaxnconf',
+        );
+      });
+
+      it('should call tryAgain once', () => {
+        expect(puppeteerService.tryAgain).toBeCalledTimes(1);
+      });
+
+      it('should call tryAgain with the right arguments', async () => {
+        expect(puppeteerService.tryAgain).toBeCalledWith(
+          '#scrollrbody > div.modal.fade.modal-choiceinvalid.in > div > div',
+          '#page-content-wrapper > div > div:nth-child(3) > div > section > div.panel-footer > a.btn.btn-success',
+          0,
+        );
+      });
+
+      it('should call checklocation four times', () => {
+        expect(puppeteerUtil.checkLocation).toBeCalledTimes(4);
+      });
+    });
+
+    describe('when called with valid input and dev is false and completeOrder is true and modal check returns false', () => {
+      const dev = false;
+      const completeOrder = true;
+      const newDate = new Date();
+      newDate.setDate(newDate.getDate() + 7);
+      const expectedDateString = `${
+        newDate.getMonth() + 1
+      }/${newDate.getDate()}/${newDate.getFullYear()}`;
+      let result;
+      beforeEach(async () => {
+        jest
+          .spyOn(puppeteerUtil, 'readSelectorText')
+          .mockResolvedValueOnce(expectedDateString);
+        jest
+          .spyOn(puppeteerUtil, 'checkLocation')
+          .mockResolvedValueOnce(true)
+          .mockResolvedValueOnce(false)
+          .mockResolvedValueOnce(true)
+          .mockResolvedValueOnce(true);
+        result = await orderRegistrationService.handleOrderCompletion(
+          dev,
+          completeOrder,
+        );
+      });
+
+      it('should run with no errors and return the right date string', async () => {
+        expect(result).toEqual(expectedDateString);
+      });
+
+      it('should call click radio button with the right arguments ', () => {
+        expect(puppeteerUtil.clickRadioButton).toBeCalledWith(
+          '#order_cemaxnconf',
+        );
+      });
+
+      it('should call click three times', () => {
+        expect(puppeteerUtil.click).toBeCalledTimes(3);
+      });
+
+      it('should call click with the right arguments', async () => {
+        expect(puppeteerUtil.click).toBeCalledWith(
+          '#choiceinvalid-footer > button.btn.btn-success',
+          true,
+          true,
+        );
+      });
+
       it('should call tryAgain once', () => {
         expect(puppeteerService.tryAgain).toBeCalledTimes(1);
       });
@@ -1074,6 +1503,60 @@ describe('OrderRegistrationService', () => {
             completeOrder,
           );
         }).rejects.toThrow('failed to get deliveryDate');
+      });
+    });
+
+    describe('when called with valid input and dev is false and completeOrder is true and checkbox check returns false', () => {
+      const dev = false;
+      const completeOrder = true;
+      const newDate = new Date();
+      newDate.setDate(newDate.getDate() + 7);
+      const expectedDateString = `${
+        newDate.getMonth() + 1
+      }/${newDate.getDate()}/${newDate.getFullYear()}`;
+      let result;
+      beforeEach(async () => {
+        jest
+          .spyOn(puppeteerUtil, 'readSelectorText')
+          .mockResolvedValueOnce(expectedDateString);
+        jest
+          .spyOn(puppeteerUtil, 'checkLocation')
+          .mockResolvedValueOnce(true)
+          .mockResolvedValueOnce(true)
+          .mockResolvedValueOnce(true)
+          .mockResolvedValueOnce(false);
+        result = await orderRegistrationService.handleOrderCompletion(
+          dev,
+          completeOrder,
+        );
+      });
+
+      it('should run with no errors and return the right date string', async () => {
+        expect(result).toEqual(expectedDateString);
+      });
+
+      it('should not call click radio button  ', () => {
+        expect(puppeteerUtil.clickRadioButton).toBeCalledTimes(0);
+      });
+
+      it('should call click three times', () => {
+        expect(puppeteerUtil.click).toBeCalledTimes(3);
+      });
+
+      it('should call click with the right arguments', async () => {
+        expect(puppeteerUtil.click).toBeCalledWith(
+          '#choiceinvalid-footer > button.btn.btn-success',
+          true,
+          true,
+        );
+      });
+
+      it('should not call tryAgain ', () => {
+        expect(puppeteerService.tryAgain).toBeCalledTimes(0);
+      });
+
+      it('should call checklocation four times', () => {
+        expect(puppeteerUtil.checkLocation).toBeCalledTimes(4);
       });
     });
   });

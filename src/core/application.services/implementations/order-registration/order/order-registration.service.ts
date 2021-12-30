@@ -519,6 +519,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
       '#order_afladr_zip',
     );
 
+    console.log(selectedZip);
     if (selectedZip !== postalCodeandCity[0]) {
       throw new Error('wrong zip code selected for address');
     }
@@ -529,7 +530,12 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     );
 
     if (selectedCity !== postalCodeandCity[1]) {
-      throw new Error('wrong city selected for address');
+      throw new Error(
+        'wrong city selected for address: ' +
+          selectedCity +
+          ' ' +
+          postalCodeandCity[1],
+      );
     }
 
     const country = deliveryAddress[2].split(' ');

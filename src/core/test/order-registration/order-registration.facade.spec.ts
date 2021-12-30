@@ -100,8 +100,10 @@ describe('OrderRegistrationService', () => {
     describe('when given a valid order number and login, and get order type returns sts', () => {
       const orderNumber = 'randomOrderNumberForTest';
       let result;
+      let OrderListStub;
 
       beforeEach(async () => {
+        OrderListStub = orderListStub();
         result = await orderRegistrationFacade.getOrderInfo(
           orderNumber,
           loginDtoStub(),
@@ -109,9 +111,9 @@ describe('OrderRegistrationService', () => {
       });
 
       it('should return a valid order list', () => {
-        const OrderListStub = orderListStub();
         OrderListStub.INSOrder = null;
         OrderListStub.STSOrder.insole = true;
+        OrderListStub.logEntries[0].timestamp = result.logEntries[0].timestamp;
         expect(result).toEqual(OrderListStub);
       });
 
@@ -307,7 +309,7 @@ describe('OrderRegistrationService', () => {
       });
     });
 
-    describe('When it cant get a deliverDate', () => {
+    describe('When it cant get a deliverDate with ins', () => {
       let result;
       const OrderListStub = orderListStub();
       OrderListStub.STSOrder = null;

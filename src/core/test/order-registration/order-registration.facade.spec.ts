@@ -15,6 +15,8 @@ import { orderListStub } from '../stubs/order-list.stub';
 import { TargetAndSelectorStub } from '../stubs/target-and-selector';
 import { OrderTypeEnum } from '../../enums/type.enum';
 import { ProcessStepEnum } from '../../enums/processStep.enum';
+import { orderStub } from '../stubs/order-stub';
+import { orderWithLogsStub } from '../stubs/order-with-logs.stub';
 
 jest.mock('src/infrastructure/api/puppeteer.utility.ts');
 jest.mock(
@@ -347,6 +349,175 @@ describe('OrderRegistrationService', () => {
           },
         ];
         expect(result).toEqual(OrderListStub);
+      });
+    });
+
+    describe('When it cant load the usage environment page inss', () => {
+      let result;
+      const OrderListStub = orderListStub();
+      OrderListStub.STSOrder = null;
+      beforeEach(async () => {
+        jest.spyOn(puppeteerUtil, 'checkLocation').mockResolvedValue(undefined);
+        result = await orderRegistrationFacade.createOrder(
+          OrderListStub,
+          loginDtoStub().username,
+          loginDtoStub().password,
+          true,
+          false,
+        );
+      });
+
+      it('Should log a Could not load usage environment page. error', () => {
+        const OrderListStub = orderListStub();
+        OrderListStub.STSOrder = null;
+        //OrderListStub.INSOrder.timeOfDelivery = result.INSOrder.timeOfDelivery;
+        OrderListStub.INSOrder = null;
+        OrderListStub.logEntries = [
+          {
+            status: true,
+            process: ProcessStepEnum.GETORDERINFO,
+            timestamp: result.logEntries[0].timestamp,
+            order: { orderNr: 'randomOrderNumberForTest', completed: false },
+          },
+          {
+            status: false,
+            process: ProcessStepEnum.REGISTERORDER,
+            timestamp: result.logEntries[1].timestamp,
+            order: { orderNr: 'dfxdvcxv', completed: false },
+            error: { errorMessage: 'Could not load usage environment page.' },
+          },
+        ];
+        expect(result).toEqual(OrderListStub);
+      });
+    });
+
+    describe('When it cant get a deliverDate sts', () => {
+      let result;
+      const OrderListStub = orderListStub();
+      OrderListStub.INSOrder = null;
+      beforeEach(async () => {
+        jest
+          .spyOn(orderRegistrationService, 'handleOrderCompletion')
+          .mockResolvedValue(undefined);
+        result = await orderRegistrationFacade.createOrder(
+          OrderListStub,
+          loginDtoStub().username,
+          loginDtoStub().password,
+          true,
+          false,
+        );
+      });
+
+      it('Should log a Failed to get delivery date! error', () => {
+        const OrderListStub = orderListStub();
+        OrderListStub.STSOrder = null;
+        //OrderListStub.INSOrder.timeOfDelivery = result.INSOrder.timeOfDelivery;
+        OrderListStub.INSOrder = null;
+        OrderListStub.logEntries = [
+          {
+            status: true,
+            process: ProcessStepEnum.GETORDERINFO,
+            timestamp: result.logEntries[0].timestamp,
+            order: { orderNr: 'randomOrderNumberForTest', completed: false },
+          },
+          {
+            status: false,
+            process: ProcessStepEnum.REGISTERORDER,
+            timestamp: result.logEntries[1].timestamp,
+            order: { orderNr: 'dfxdvcxv', completed: false },
+            error: { errorMessage: 'failed to get delivery date: undefined' },
+          },
+        ];
+        expect(result).toEqual(OrderListStub);
+      });
+    });
+
+    describe('When it cant load the usage environment page sts', () => {
+      let result;
+      const OrderListStub = orderListStub();
+      OrderListStub.INSOrder = null;
+      beforeEach(async () => {
+        jest.spyOn(puppeteerUtil, 'checkLocation').mockResolvedValue(undefined);
+        result = await orderRegistrationFacade.createOrder(
+          OrderListStub,
+          loginDtoStub().username,
+          loginDtoStub().password,
+          true,
+          false,
+        );
+      });
+
+      it('Should log a Could not load usage envoirment page. error', () => {
+        const OrderListStub = orderListStub();
+        OrderListStub.STSOrder = null;
+        //OrderListStub.INSOrder.timeOfDelivery = result.INSOrder.timeOfDelivery;
+        OrderListStub.INSOrder = null;
+        OrderListStub.logEntries = [
+          {
+            status: true,
+            process: ProcessStepEnum.GETORDERINFO,
+            timestamp: result.logEntries[0].timestamp,
+            order: { orderNr: 'randomOrderNumberForTest', completed: false },
+          },
+          {
+            status: false,
+            process: ProcessStepEnum.REGISTERORDER,
+            timestamp: result.logEntries[1].timestamp,
+            order: { orderNr: 'dfxdvcxv', completed: false },
+            error: { errorMessage: 'Could not load usage envoirment page.' },
+          },
+        ];
+        expect(result).toEqual(OrderListStub);
+      });
+    });
+  });
+
+  describe('handleAllocations', () => {
+    describe('When given valid input', () => {
+      let result;
+      const orderWithLogs = orderWithLogsStub();
+      beforeEach(async () => {
+        orderWithLogs.order.timeOfDelivery = new Date();
+        orderWithLogs.logEntries = [
+          {
+            status: true,
+            process: ProcessStepEnum.GETORDERINFO,
+            timestamp: new Date(),
+            order: { orderNr: 'randomOrderNumberForTest', completed: false },
+          },
+          {
+            status: true,
+            process: ProcessStepEnum.REGISTERORDER,
+            timestamp: new Date(),
+            order: { orderNr: 'dfxdvcxv', completed: false },
+          },
+        ];
+
+        result = await orderRegistrationFacade.handleAllocations(
+          orderWithLogs,
+          loginDtoStub().username,
+          loginDtoStub().password,
+          true,
+          false,
+          0,
+        );
+      });
+
+      it('should return an order with all the right logs', () => {
+        orderWithLogs.logEntries.push({
+          status: true,
+          process: ProcessStepEnum.ALOCATEORDER,
+          timestamp: new Date(),
+          order: { orderNr: orderStub().orderNr, completed: false },
+        });
+
+        console.log('orderWithLogs');
+        console.log(orderWithLogs);
+
+        console.log('result');
+        console.log(result);
+
+        expect(result).toEqual(orderWithLogs);
       });
     });
   });

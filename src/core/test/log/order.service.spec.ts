@@ -142,7 +142,6 @@ describe('OrderService', () => {
     });
 
     describe('when called with a valid createLogDto but the order already exists', () => {
-      let result;
       const orderEntity: OrderEntity = {
         orderNr: 'dfds',
         id: 1,
@@ -171,6 +170,50 @@ describe('OrderService', () => {
         ).rejects.toThrow(
           'Cant create order, an order with this order number already exists',
         );
+      });
+    });
+  });
+
+  describe('checkOrder', () => {
+    describe('when called with a valid orderNumber and the order exists', () => {
+      let result;
+      const orderNumber = 'dfds';
+      const orderEntity: OrderEntity = {
+        orderNr: 'dfds',
+        id: 1,
+        completed: false,
+        logs: [],
+      };
+      beforeEach(async () => {
+        jest
+          .spyOn(orderRepository, 'findOne')
+          .mockResolvedValueOnce(orderEntity);
+        result = await orderService.checkOrder(orderNumber);
+      });
+
+      it('should return the correct orderLogModel', () => {
+        expect(result).toEqual(true);
+      });
+    });
+
+    describe('when called with a valid orderNumber and the order does not exist', () => {
+      let result;
+      const orderNumber = 'dfds';
+      const orderEntity: OrderEntity = {
+        orderNr: 'dfds',
+        id: 1,
+        completed: false,
+        logs: [],
+      };
+      beforeEach(async () => {
+        jest
+          .spyOn(orderRepository, 'findOne')
+          .mockResolvedValueOnce(orderEntity);
+        result = await orderService.checkOrder(orderNumber);
+      });
+
+      it('should return the correct orderLogModel', () => {
+        expect(result).toEqual(true);
       });
     });
   });

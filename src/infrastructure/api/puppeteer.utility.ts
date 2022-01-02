@@ -22,7 +22,11 @@ export class PuppeteerUtility implements PuppeteerUtilityInterface {
   async start(headless: boolean, url: string) {
     this.browser = await this.puppeteer.launch({
       headless: headless,
-      args: [`--window-size=1920,1080`],
+      args: [
+        `--window-size=1920,1080`,
+        /** '--no-sandbox',
+        '--disable-setuid-sandbox', **/
+      ],
       defaultViewport: null,
     });
     this.page = await this.browser.newPage();

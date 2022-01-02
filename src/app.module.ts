@@ -8,9 +8,6 @@ import { AuthenticationModule } from './ui.api/modules/authentication.module';
 import { InsoleModule } from './ui.api/modules/insole.module';
 import { OrderRegistrationModule } from './ui.api/modules/order-registration.module';
 import { LogModule } from './ui.api/modules/log.module';
-import { PuppeteerService } from './core/application.services/implementations/order-registration/puppeteer/puppeteer.service';
-import { StsService } from './core/application.services/implementations/order-registration/sts/sts.service';
-import { InssService } from './core/application.services/implementations/order-registration/inss/inss.service';
 
 @Module({
   imports: [

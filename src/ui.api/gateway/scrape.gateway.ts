@@ -9,7 +9,7 @@ import {
 import { Socket } from 'socket.io';
 import { ScrapeDto } from '../dto/scrape/scrape.dto';
 import { ReturnStrapeDto } from '../dto/scrape/return-strape.dto';
-import { Inject, UseGuards } from '@nestjs/common';
+import { Inject} from '@nestjs/common';
 import {
   NeskridScraperInterface,
   neskridScraperInterfaceProvider,

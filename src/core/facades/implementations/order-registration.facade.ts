@@ -149,7 +149,7 @@ export class OrderRegistrationFacade
   }
 
   /**
-   *
+   * handles creation of the order on ortowear
    * @param orders
    * @param username
    * @param password
@@ -369,7 +369,7 @@ export class OrderRegistrationFacade
   }
 
   /**
-   *
+   * handles allocating the orders on ortowear
    * @param orderWithLogs
    * @param username
    * @param password
@@ -453,22 +453,6 @@ export class OrderRegistrationFacade
         let luxDate = DateTime.fromJSDate(order.timeOfDelivery);
 
         luxDate = luxDate.plus({ days: dateBuffer });
-
-        // console.log(order.timeOfDelivery);
-        // const date = new Date(
-        //   order.timeOfDelivery.getFullYear(),
-        //   order.timeOfDelivery.getMonth(),
-        //   order.timeOfDelivery.getDate(),
-        // );
-
-        /*const date = new Date(order.timeOfDelivery.getTime());
-
-        date.setDate(date.getDate() + dateBuffer);
-        order.timeOfDelivery = date;
-*/
-        // date.setDate(date.getUTCDate() + dateBuffer);
-        //
-        // order.timeOfDelivery = date;
 
         order.timeOfDelivery = luxDate.toJSDate();
 

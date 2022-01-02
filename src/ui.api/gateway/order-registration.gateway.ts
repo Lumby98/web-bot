@@ -42,14 +42,29 @@ export class OrderRegistrationGateway
     private readonly logService: LogInterface,
     private configService: ConfigService,
   ) {}
+
+  /**
+   * outputs a message in the console when connection is established
+   * @param client
+   * @param args
+   */
   handleConnection(client: any, ...args: any[]): any {
     console.log('client connected order-registration gateway ' + client.id);
   }
 
+  /**
+   * outputs a message in the console when disconnected
+   * @param client
+   */
   handleDisconnect(client: any): any {
     console.log('client disconnected order-registration gateway ' + client.id);
   }
 
+  /**
+   * gets all orders from ortowear, registers them in neskrid and then allocates them back on ortowear
+   * @param orderReg
+   * @param clientSocket
+   */
   @SubscribeMessage('startOrderRegistration')
   async handleOrderRegistration(
     @MessageBody() orderReg: OrderRegistrationDto,
@@ -182,6 +197,10 @@ export class OrderRegistrationGateway
     }
   }
 
+  /**
+   * converts an order list to an order with logs
+   * @param orders
+   */
   orderListToOrderWithLogs(orders: OrderList): OrderWithLogs {
     if (orders.STSOrder) {
       return {
@@ -218,6 +237,13 @@ export class OrderRegistrationGateway
     }
   }
 
+  /**
+   * gets called at the end of every step, checks if the step was successful
+   * @param orders
+   * @param processStepEnum
+   * @param processStepList
+   * @param clientSocket
+   */
   async handleStep(
     orders: OrderWithLogs,
     processStepEnum: ProcessStepEnum,

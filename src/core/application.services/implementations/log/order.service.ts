@@ -16,6 +16,38 @@ export class OrderService implements OrderInterface {
     private orderRepository: Repository<OrderEntity>,
   ) {}
 
+  /**
+   * tries to find the given order
+   * @param orderNumber
+   */
+  async checkOrder(orderNumber: string): Promise<boolean> {
+    const order = await this.orderRepository.findOne({
+      where: { orderNr: orderNumber },
+    });
+
+    return !!order;
+  }
+
+  /**
+   * checks the order with entity manager to facilitate transactions
+   * @param orderNumber
+   * @param manager
+   */
+  async checkOrderWithEntityManager(
+    orderNumber: string,
+    manager: EntityManager,
+  ): Promise<boolean> {
+    const order = await manager.findOne(OrderEntity, {
+      where: { orderNr: orderNumber },
+    });
+
+    return !!order;
+  }
+
+  /**
+   * creates order and also outputs a log entry
+   * @param createLogOrder
+   */
   async create(createLogOrder: CreateLogOrderDto): Promise<OrderLogModel> {
     const orderCheck = await this.checkOrder(createLogOrder.orderNr);
     if (orderCheck) {
@@ -28,7 +60,11 @@ export class OrderService implements OrderInterface {
       JSON.stringify(await this.orderRepository.save(orderEntity)),
     );
   }
-
+  /**
+   * creates order with entity manager to facilitate transactions
+   * @param createLogOrder
+   * @param manager
+   */
   async createWithEntityManager(
     createLogOrder: CreateLogOrderDto,
     manager: EntityManager,
@@ -48,25 +84,10 @@ export class OrderService implements OrderInterface {
     );
   }
 
-  async checkOrder(orderNumber: string): Promise<boolean> {
-    const order = await this.orderRepository.findOne({
-      where: { orderNr: orderNumber },
-    });
-
-    return !!order;
-  }
-
-  async checkOrderWithEntityManager(
-    orderNumber: string,
-    manager: EntityManager,
-  ): Promise<boolean> {
-    const order = await manager.findOne(OrderEntity, {
-      where: { orderNr: orderNumber },
-    });
-
-    return !!order;
-  }
-
+  /**
+   * finds all order entries and paginates them
+   * @param query
+   */
   async findAll(query: QueryDto): Promise<PaginationDto<OrderLogModel>> {
     const take = query.take || 10;
     const skip = query.page || 1;
@@ -87,6 +108,10 @@ export class OrderService implements OrderInterface {
     };
   }
 
+  /**
+   * finds an order with the given order number
+   * @param orderNumber
+   */
   async findByOrderNumber(orderNumber: string): Promise<OrderEntity> {
     const order = await this.orderRepository.findOne({
       where: { orderNr: orderNumber },
@@ -95,6 +120,11 @@ export class OrderService implements OrderInterface {
     return order;
   }
 
+  /**
+   * finds order with entity manager to facilitate transactions
+   * @param orderNumber
+   * @param manager
+   */
   async findByOrderNumberWithEntityManager(
     orderNumber: string,
     manager: EntityManager,
@@ -106,6 +136,10 @@ export class OrderService implements OrderInterface {
     return order;
   }
 
+  /**
+   * finds one order by id
+   * @param id
+   */
   async findOne(id: number): Promise<OrderLogModel> {
     const order = await this.orderRepository.findOne(id, {
       relations: ['logs'],
@@ -116,6 +150,10 @@ export class OrderService implements OrderInterface {
     return JSON.parse(JSON.stringify(order));
   }
 
+  /**
+   * removes order by given id
+   * @param id
+   */
   async remove(id: number) {
     try {
       const order = await this.findOne(id);
@@ -126,10 +164,18 @@ export class OrderService implements OrderInterface {
     }
   }
 
+  /**
+   * removes all orders
+   */
   async removeAll() {
     await this.orderRepository.clear();
   }
 
+  /**
+   * updates order with given id
+   * @param id
+   * @param updateLogOrder
+   */
   async update(
     id: number,
     updateLogOrder: UpdateLogOrderDto,

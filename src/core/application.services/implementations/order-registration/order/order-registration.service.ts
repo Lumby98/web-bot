@@ -161,7 +161,16 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     }
     return true;
   }
-
+  
+  /*
+   * handles inputting the order information
+   * @param orderNr
+   * @param deliveryAddress
+   * @param insole
+   * @param EU
+   * @param customerName
+   * @constructor
+   */
   async inputOrderInformation(
     orderNr: string,
     deliveryAddress: string[],
@@ -218,6 +227,12 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     }
   }
 
+  /**
+   * adjusts the month on the calendar on ortowear
+   * @param timeOfDelivery
+   * @param ortowearMonth
+   * @param counter
+   */
   async adjustMonth(
     timeOfDelivery: Date,
     ortowearMonth: string,
@@ -258,6 +273,12 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     }
   }
 
+  /**
+   * adjusts the year on the calendar on ortowear
+   * @param orderYear
+   * @param ortowearYear
+   * @param counter
+   */
   async adjustYear(
     orderYear: number,
     ortowearYear: number,
@@ -316,6 +337,10 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     return formattedDate;
   }
 
+  /**
+   * gets a month from the given string
+   * @param month
+   */
   getMonthFromString(month: string): number {
     const d = Date.parse(month + '1, 2012');
     if (!isNaN(d)) {
@@ -326,6 +351,11 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     );
   }
 
+  /**
+   * gets the next weekday
+   * @param date
+   * @param dayOfWeek
+   */
   getNextDayOfWeek(date: Date, dayOfWeek: number): Date {
     if (dayOfWeek < 0 || dayOfWeek > 6) {
       throw new Error(
@@ -342,6 +372,11 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     return luxDate.toJSDate();
   }
 
+  /**
+   * handles navigation on neskrid
+   * @param username
+   * @param password
+   */
   async handleNeskridNavigation(username: string, password: string) {
     const validateLogin = this.loginValidation(username, password);
     if (!validateLogin) {
@@ -386,7 +421,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
           newDate.getMonth() + 1
         }/${newDate.getDate()}/${newDate.getFullYear()}`,
       );
-      /*return '12/23/2021';*/
+      //return '12/23/2021';
       return `${
         newDate.getMonth() + 1
       }/${newDate.getDate()}/${newDate.getFullYear()}`;
@@ -473,6 +508,12 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     return deliveryDate;
   }
 
+  /**
+   * inputs the given address
+   * @param deliveryAddress
+   * @param orderNr
+   * @param customerName
+   */
   async inputAddress(
     deliveryAddress: string[],
     orderNr: string,
@@ -550,6 +591,11 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     );
   }
 
+  /**
+   * validates the given login
+   * @param username
+   * @param password
+   */
   loginValidation(username: string, password: string): boolean {
     if (!username || !password) {
       return false;
@@ -564,6 +610,10 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     return true;
   }
 
+  /**
+   * gets information in tables on ortowear
+   * @param orderNumber
+   */
   async getTableInfo(orderNumber: string): Promise<TargetAndSelector> {
     return await this.puppeteerUtil.getTableTargetandSelector(orderNumber);
   }

@@ -16,7 +16,6 @@ import { neskridScraperInterfaceProvider } from '../../core/application.services
 import { hultaforsScraperInterfaceProvider } from '../../core/application.services/interfaces/scraper/hultafors-scraper.interface';
 import { hultaforsInterfaceProvider } from '../../core/application.services/interfaces/data-collection/hultafors.interface';
 import { siteInterfaceProvider } from '../../core/application.services/interfaces/data-collection/site.interface';
-import { Puppeteer } from 'puppeteer';
 import { AuthenticationModule } from './authentication.module';
 
 @Module({

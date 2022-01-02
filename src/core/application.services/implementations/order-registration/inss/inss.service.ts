@@ -48,7 +48,7 @@ export class InssService implements INSSInterface {
     orderNumber: string,
     selector: string,
   ): Promise<INSSOrderModel> {
-    if (selector.length < 1) {
+    if (!selector || selector.length < 1) {
       throw new Error('could not find selector for order in table');
     }
 
@@ -85,7 +85,7 @@ export class InssService implements INSSInterface {
       throw new Error('failed getting correct order-registration');
     }
 
-    if (
+    /*    if (
       (inssOrder.sizeR || inssOrder.sizeR != '') &&
       (!inssOrder.sizeL || inssOrder.sizeL == '')
     ) {
@@ -93,6 +93,27 @@ export class InssService implements INSSInterface {
     } else if (
       (!inssOrder.sizeR || inssOrder.sizeR == '') &&
       (inssOrder.sizeL || inssOrder.sizeL != '')
+    ) {
+      inssOrder.sizeR = inssOrder.sizeL;
+    } else if (
+      (!inssOrder.sizeR || inssOrder.sizeR == '') &&
+      (!inssOrder.sizeL || inssOrder.sizeL == '')
+    ) {
+      throw new Error(
+        'Both sizes are empty. Please amend the order entry on the site',
+      );
+    }*/
+
+    if (
+      inssOrder.sizeR &&
+      inssOrder.sizeR != '' &&
+      (!inssOrder.sizeL || inssOrder.sizeL == '')
+    ) {
+      inssOrder.sizeL = inssOrder.sizeR;
+    } else if (
+      (!inssOrder.sizeR || inssOrder.sizeR == '') &&
+      inssOrder.sizeL &&
+      inssOrder.sizeL != ''
     ) {
       inssOrder.sizeR = inssOrder.sizeL;
     } else if (
@@ -116,9 +137,17 @@ export class InssService implements INSSInterface {
       throw new Error('failed getting customer');
     }
 
-    const substring = 'Norway';
+    /* const substring = 'Norway';
     if (inssOrder.deliveryAddress.includes(substring)) {
       inssOrder.EU = false;
+    }*/
+
+    const substring = 'Norway';
+
+    for (const address of inssOrder.deliveryAddress) {
+      if (address.includes(substring)) {
+        inssOrder.EU = false;
+      }
     }
 
     return inssOrder;

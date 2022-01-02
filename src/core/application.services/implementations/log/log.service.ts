@@ -38,7 +38,6 @@ export class LogService implements LogInterface {
     log.process = createLogDto.process;
     log.status = createLogDto.status;
     log.timestamp = createLogDto.timestamp;
-
     const orderCheck = await this.orderService.checkOrder(
       createLogDto.order.orderNr,
     );

@@ -15,7 +15,6 @@ import { OrderInfoModel } from '../../models/order-info.model';
 import { OrderWithLogs } from '../../models/orderWithLogs';
 import { ConfigService } from '@nestjs/config';
 import { DateTime } from 'luxon';
-import { date } from '@hapi/joi';
 import {
   OrderRegistrationInterface,
   orderRegistrationInterfaceProvider,

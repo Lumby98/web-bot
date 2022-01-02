@@ -267,21 +267,34 @@ describe('SavedLoginService', () => {
 
   describe('changeKey', () => {
     describe('when it gets a key', () => {
-      it('Should not throw an error ', async () => {
-        const testsavedLogin: SavedLogin = {
-          id: 1,
-          username: 'test',
-          password: 'test',
-          loginType: LoginTypeEnum.NESKRID,
-          iv: '123123123',
-          salt: 'fesfsefsef',
-        };
+      const testsavedLogin: SavedLogin = {
+        id: 1,
+        username: 'test',
+        password: 'test',
+        loginType: LoginTypeEnum.NESKRID,
+        iv: '123123123',
+        salt: 'fesfsefsef',
+      };
 
-        const testInsertKey: InsertKeyDto = {
-          password: 'testPassword',
-          prevPassword: 'TestPrevPassword',
-        };
+      const testInsertKey: InsertKeyDto = {
+        password: 'testPassword',
+        prevPassword: 'TestPrevPassword',
+      };
 
+      const insertDTO: InsertSavedLoginDto = {
+        username: 'testUserName',
+        password: 'test',
+        loginType: 0,
+        key: 'testPassword',
+      };
+
+      const insertDTO2: InsertSavedLoginDto = {
+        username: 'testUserName',
+        password: 'test',
+        loginType: 1,
+        key: 'testPassword',
+      };
+      beforeEach(async () => {
         jest
           .spyOn(keyRepository, 'findOne')
           .mockResolvedValueOnce({ id: 1, password: 'stuff' });
@@ -301,7 +314,7 @@ describe('SavedLoginService', () => {
           },
         ]);
 
-        jest.spyOn(keyRepository, 'update').mockResolvedValueOnce(undefined);
+        jest.spyOn(keyRepository, 'update').mockResolvedValueOnce(null);
 
         jest
           .spyOn(savedLoginService, 'getKey')
@@ -309,11 +322,95 @@ describe('SavedLoginService', () => {
 
         jest
           .spyOn(savedLoginService, 'insertLogin')
+          .mockResolvedValueOnce(undefined)
           .mockResolvedValueOnce(undefined);
 
+        await savedLoginService.changeKey(testInsertKey);
+      });
+
+      it('Should call insert login ', async () => {
+        expect(savedLoginService.insertLogin).toBeCalledTimes(2);
+      });
+
+      it('Should call insert login with the right arguments', async () => {
+        expect(savedLoginService.insertLogin).toBeCalledWith(insertDTO);
+        expect(savedLoginService.insertLogin).toBeCalledWith(insertDTO2);
+      });
+    });
+
+    describe('when it cant get the key', () => {
+      const testInsertKey: InsertKeyDto = {
+        password: 'testPassword',
+        prevPassword: 'TestPrevPassword',
+      };
+      beforeEach(async () => {
+        jest.spyOn(keyRepository, 'findOne').mockResolvedValueOnce(undefined);
+
+        jest.spyOn(savedLoginService, 'findAllLogins').mockResolvedValueOnce([
+          {
+            id: 1,
+            password: 'test',
+            loginType: LoginTypeEnum.ORTOWEAR,
+            username: 'testUserName',
+          },
+          {
+            id: 2,
+            password: 'test',
+            loginType: LoginTypeEnum.NESKRID,
+            username: 'testUserName',
+          },
+        ]);
+      });
+      it('Should throw a could not get key error', async () => {
         await expect(async () => {
           await savedLoginService.changeKey(testInsertKey);
-        }).not.toThrowError();
+        }).rejects.toThrowError('Could not get key');
+      });
+    });
+  });
+
+  describe('getKey', () => {
+    describe('when it gets a key', () => {
+      let result;
+      const expected = { id: 1, password: 'stuff' };
+      beforeEach(async () => {
+        jest.spyOn(keyRepository, 'findOne').mockResolvedValueOnce(expected);
+
+        result = await savedLoginService.getKey();
+      });
+
+      it('Should return the right key', async () => {
+        expect(result).toEqual(expected);
+      });
+    });
+
+    describe('when it cant get the key', () => {
+      const testInsertKey: InsertKeyDto = {
+        password: 'testPassword',
+        prevPassword: 'TestPrevPassword',
+      };
+      beforeEach(async () => {
+        jest.spyOn(keyRepository, 'findOne').mockResolvedValueOnce(undefined);
+
+        jest.spyOn(savedLoginService, 'findAllLogins').mockResolvedValueOnce([
+          {
+            id: 1,
+            password: 'test',
+            loginType: LoginTypeEnum.ORTOWEAR,
+            username: 'testUserName',
+          },
+          {
+            id: 2,
+            password: 'test',
+            loginType: LoginTypeEnum.NESKRID,
+            username: 'testUserName',
+          },
+        ]);
+      });
+      it('Should throw a could not get key error', async () => {
+        await expect(async () => {
+          await savedLoginService.changeKey(testInsertKey);
+        }).rejects.toThrowError('Could not get key');
       });
     });
   });

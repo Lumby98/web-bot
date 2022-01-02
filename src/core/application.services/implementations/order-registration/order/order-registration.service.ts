@@ -24,6 +24,145 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
   ) {}
 
   /**
+   * navigates to Ortorwear and goes to the order-registration list
+   * @param username
+   * @param password
+   * @private
+   */
+  async handleOrtowearNavigation(username: string, password: string) {
+    const validateLogin = this.loginValidation(username, password);
+    if (!validateLogin) {
+      throw new Error('Wrong username or password');
+    }
+    /**
+     * TODO wait for the page to load
+     */
+
+    await this.puppeteerService.goToURL(this.configService.get('ORTOWEARURL'));
+
+    await this.puppeteerUtil.loginOrtowear(username, password);
+
+    let checkLocation = await this.puppeteerUtil.checkLocation(
+      'div.home-main:nth-child(2) > div:nth-child(1)',
+      false,
+      true,
+    );
+
+    if (!checkLocation) {
+      checkLocation = await this.puppeteerUtil.checkLocation(
+        'div.home-main:nth-child(2) > div:nth-child(1)',
+        false,
+        true,
+        30000,
+      );
+    }
+
+    if (!checkLocation) {
+      if (
+        await this.puppeteerUtil.checkLocation(
+          '#loginForm > div.form-group.has-error > span > strong',
+          false,
+          true,
+        )
+      ) {
+        const ortowearError = await this.puppeteerService.getElementText(
+          '#loginForm > div.form-group.has-error > span > strong',
+        );
+        throw new Error(
+          'Failed to login, ortowear gave this error:' + ortowearError,
+        );
+      } else {
+        throw new Error(
+          'Failed to login, but ortowear didnt display error, if this happens then Ortowear is most likely down.',
+        );
+      }
+    }
+
+    const myPageURL = this.configService.get('ORTOWEARURL') + 'my_page';
+    const currentURL = await this.puppeteerUtil.getCurrentURL();
+    if (myPageURL != currentURL) {
+      if (
+        await this.puppeteerUtil.checkLocation(
+          '#loginForm > div.form-group.has-error > span > strong',
+          false,
+          false,
+        )
+      ) {
+        throw new Error(
+          'Failed to login, but ortowear didnt display error' +
+            myPageURL +
+            ' ' +
+            currentURL,
+        );
+      } else {
+        const ortowearError = await this.puppeteerService.getElementText(
+          '#loginForm > div.form-group.has-error > span > strong',
+        );
+        throw new Error(
+          'Failed to login, ortowear gave this error:' + ortowearError,
+        );
+      }
+    }
+  }
+
+  /**
+   * gets order-registration type for the different order-registration numbers given
+   * @private
+   * @param type
+   */
+  getOrderType(type: string): OrderTypeEnum {
+    switch (type) {
+      case 'STS':
+        return OrderTypeEnum.STS;
+
+      case 'INS-S':
+        return OrderTypeEnum.INSS;
+
+      case 'INS':
+        return OrderTypeEnum.INSS;
+
+      case 'No matching records found':
+        throw new Error('could not find order-registration');
+
+      default:
+        throw new Error(
+          'invalid order-registration type ' +
+            'Order type was ' +
+            type +
+            ' This program supports STS and INS-S orders only.',
+        );
+    }
+  }
+
+  /**
+   * check if an order-registration has an insole
+   * @private
+   */
+  async checkForInsole(): Promise<boolean> {
+    const insoleSelector =
+      'body > div.wrapper > div.content-wrapper > section.content > div.row > div > div > div > div.box-body > form > div:nth-child(4) > div > div > div.col-6.col-print-6 > table > tbody > tr:nth-child(2) > td:nth-child(2) > p';
+
+    const doesCoverExist = await this.puppeteerUtil.checkLocation(
+      insoleSelector,
+      false,
+      false,
+    );
+
+    if (!doesCoverExist) {
+      return false;
+    }
+
+    const insole = await this.puppeteerUtil.readSelectorText(insoleSelector);
+
+    if (insole.includes('EMMA')) {
+      throw new Error(
+        'invalid order-registration, EMMA order-registration is not supported',
+      );
+    }
+    return true;
+  }
+  
+  /*
    * handles inputting the order information
    * @param orderNr
    * @param deliveryAddress
@@ -32,7 +171,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
    * @param customerName
    * @constructor
    */
-  async InputOrderInformation(
+  async inputOrderInformation(
     orderNr: string,
     deliveryAddress: string[],
     insole: boolean,
@@ -48,7 +187,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
         true,
         true,
       );
-    } else if (EU) {
+    } else if (!EU) {
       await this.puppeteerUtil.input('#order_afladr_search', 'Ortowear');
       await this.puppeteerUtil.click(
         '#order_afladr > div > div.panel-heading > div > div > div',
@@ -62,6 +201,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
         true,
         true,
       );
+      await this.puppeteerUtil.wait(undefined, 2000);
       await this.inputAddress(deliveryAddress, orderNr, customerName);
     }
     await this.puppeteerUtil.wait('#order_afladr_name');
@@ -172,34 +312,6 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
   }
 
   /**
-   * check if an order-registration has an insole
-   * @private
-   */
-  async checkForInsole(): Promise<boolean> {
-    const insoleSelector =
-      'body > div.wrapper > div.content-wrapper > section.content > div.row > div > div > div > div.box-body > form > div:nth-child(4) > div > div > div.col-6.col-print-6 > table > tbody > tr:nth-child(2) > td:nth-child(2) > p';
-
-    const doesCoverExist = await this.puppeteerUtil.checkLocation(
-      insoleSelector,
-      false,
-      false,
-    );
-
-    if (!doesCoverExist) {
-      return false;
-    }
-
-    const insole = await this.puppeteerUtil.readSelectorText(insoleSelector);
-
-    if (insole.includes('EMMA')) {
-      throw new Error(
-        'invalid order-registration, EMMA order-registration is not supported',
-      );
-    }
-    return true;
-  }
-
-  /**
    * Formats strings to a format that the javascript Date class will accept.
    * Formats from this: 'mm/dd/yyyy'
    * Formats to this format: 'yyyy-mm-ddThh:mm:ssZ'
@@ -208,9 +320,16 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
   formatDeliveryDate(deliveryDateString: string): Date {
     console.log(deliveryDateString);
     const splitDate = deliveryDateString.split('/');
+    if (splitDate.length < 3) {
+      throw new Error('failed to format date: Invalid date string');
+    }
     const year = Number.parseInt(splitDate[2]);
     const month = Number.parseInt(splitDate[0]) - 1;
     const date = Number.parseInt(splitDate[1]);
+
+    if (isNaN(year) || isNaN(month) || isNaN(date)) {
+      throw new Error('failed to format date: date should be numbers');
+    }
     const formattedDate = new Date(year, month, date);
     console.log(
       `Year: ${year}, Month: ${month}, Date: ${date}, formatedDate: ${formattedDate}`,
@@ -249,44 +368,8 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     luxDate = luxDate.plus({
       days: ((7 + dayOfWeek - date.getDay() - 1) % 7) + 1,
     });
-
     console.log(luxDate.toJSDate());
     return luxDate.toJSDate();
-  }
-
-  /**
-   * gets order-registration type for the different order-registration numbers given
-   * @private
-   * @param type
-   */
-  async getOrderType(type: string): Promise<OrderTypeEnum> {
-    switch (type) {
-      case 'STS':
-        return OrderTypeEnum.STS;
-
-      case 'INS-S':
-        return OrderTypeEnum.INSS;
-
-      case 'INS':
-        return OrderTypeEnum.INSS;
-
-      case 'OSA':
-        return OrderTypeEnum.OSA;
-
-      case 'SOS':
-        return OrderTypeEnum.SOS;
-
-      case 'No matching records found':
-        throw new Error('could not find order-registration');
-
-      default:
-        throw new Error(
-          'invalid order-registration type ' +
-            'Order type was ' +
-            type +
-            ' This program supports STS, INS-S, OSA and SOS orders only.',
-        );
-    }
   }
 
   /**
@@ -303,13 +386,15 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     await this.puppeteerService.goToURL('https://www.neskrid.com/');
 
     await this.puppeteerUtil.loginNeskrid(username, password);
-    await this.puppeteerUtil.wait(
+    await this.puppeteerUtil.checkLocation(
       '#page-content-wrapper > div.container-fluid > div:nth-child(1) > div > h1',
+      false,
+      true,
     );
 
     const desieredPage =
       'https://www.neskrid.com/plugins/neskrid/myneskrid_main.aspx';
-    const currentUrl = await this.puppeteerUtil.getCurrentURL();
+    const currentUrl = this.puppeteerUtil.getCurrentURL();
     if (desieredPage != currentUrl) {
       console.log(desieredPage);
       console.log(currentUrl);
@@ -371,7 +456,7 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
         0,
       );
     }
-    const dd = this.puppeteerUtil.checkLocation(
+    const dd = await this.puppeteerUtil.checkLocation(
       '#scrollrbody > div.modal.fade.modal-choiceinvalid.in > div > div > div.modal-body > div > table.table.mar-bot30 > tbody > tr:nth-child(2) > td:nth-child(3)',
       false,
       true,
@@ -424,88 +509,6 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
   }
 
   /**
-   * navigates to Ortorwear and goes to the order-registration list
-   * @param username
-   * @param password
-   * @private
-   */
-  async handleOrtowearNavigation(username: string, password: string) {
-    const validateLogin = this.loginValidation(username, password);
-    if (!validateLogin) {
-      throw new Error('Wrong username or password');
-    }
-    /**
-     * TODO wait for the page to load
-     */
-
-    await this.puppeteerService.goToURL(this.configService.get('ORTOWEARURL'));
-
-    await this.puppeteerUtil.loginOrtowear(username, password);
-
-    let checklocation = await this.puppeteerUtil.checkLocation(
-      'div.home-main:nth-child(2) > div:nth-child(1)',
-      false,
-      true,
-    );
-
-    if (!checklocation) {
-      checklocation = await this.puppeteerUtil.checkLocation(
-        'div.home-main:nth-child(2) > div:nth-child(1)',
-        false,
-        true,
-        30000,
-      );
-    }
-
-    if (!checklocation) {
-      if (
-        await this.puppeteerUtil.checkLocation(
-          '#loginForm > div.form-group.has-error > span > strong',
-          false,
-          true,
-        )
-      ) {
-        const ortowearError = await this.puppeteerService.getElementText(
-          '#loginForm > div.form-group.has-error > span > strong',
-        );
-        throw new Error(
-          'Failed to login, ortowear gave this error:' + ortowearError,
-        );
-      } else {
-        throw new Error(
-          'Failed to login, but ortowear didnt display error, if this happens then Ortowear is most likely down.',
-        );
-      }
-    }
-
-    const myPageURL = this.configService.get('ORTOWEARURL') + 'my_page';
-    const currentURL = await this.puppeteerUtil.getCurrentURL();
-    if (myPageURL != currentURL) {
-      if (
-        await this.puppeteerUtil.checkLocation(
-          '#loginForm > div.form-group.has-error > span > strong',
-          false,
-          false,
-        )
-      ) {
-        throw new Error(
-          'Failed to login, but ortowear didnt display error' +
-            myPageURL +
-            ' ' +
-            currentURL,
-        );
-      } else {
-        const ortowearError = await this.puppeteerService.getElementText(
-          '#loginForm > div.form-group.has-error > span > strong',
-        );
-        throw new Error(
-          'Failed to login, ortowear gave this error:' + ortowearError,
-        );
-      }
-    }
-  }
-
-  /**
    * inputs the given address
    * @param deliveryAddress
    * @param orderNr
@@ -516,24 +519,76 @@ export class OrderRegistrationService implements OrderRegistrationInterface {
     orderNr: string,
     customerName: string,
   ) {
+    if (deliveryAddress.length < 3) {
+      throw new Error('invalid date');
+    }
     await this.puppeteerUtil.wait('#order_afladr_form');
     await this.puppeteerUtil.input('#order_afladr_name', customerName);
 
     const address = deliveryAddress[0].split(' ');
+    if (address.length < 2) {
+      throw new Error('missing address information');
+    }
 
     await this.puppeteerUtil.input('#order_afladr_street', address[0]);
 
+    const selectedStreet = await this.puppeteerUtil.getInputValue(
+      '#order_afladr_street',
+    );
+
+    if (selectedStreet !== address[0]) {
+      throw new Error('wrong street selected for address');
+    }
+
     await this.puppeteerUtil.input('#order_afladr_nr', address[1]);
 
+    const selectedNumber = await this.puppeteerUtil.getInputValue(
+      '#order_afladr_nr',
+    );
+
+    if (selectedNumber !== address[1]) {
+      throw new Error('wrong street number selected for address');
+    }
+
     const postalCodeandCity = deliveryAddress[1].split(' ');
+    if (postalCodeandCity.length < 2) {
+      throw new Error('missing postal code or city');
+    }
 
     await this.puppeteerUtil.input('#order_afladr_zip', postalCodeandCity[0]);
+    const selectedZip = await this.puppeteerUtil.getInputValue(
+      '#order_afladr_zip',
+    );
+
+    console.log(selectedZip);
+    if (selectedZip !== postalCodeandCity[0]) {
+      throw new Error('wrong zip code selected for address');
+    }
 
     await this.puppeteerUtil.input('#order_afladr_place', postalCodeandCity[1]);
+    const selectedCity = await this.puppeteerUtil.getInputValue(
+      '#order_afladr_place',
+    );
+
+    if (selectedCity !== postalCodeandCity[1]) {
+      throw new Error(
+        'wrong city selected for address: ' +
+          selectedCity +
+          ' ' +
+          postalCodeandCity[1],
+      );
+    }
 
     const country = deliveryAddress[2].split(' ');
 
-    await this.puppeteerUtil.input('#order_afladr_zip', postalCodeandCity[0]);
+    if (country.length < 2) {
+      throw new Error('missing country');
+    }
+
+    await this.puppeteerUtil.dropdownSelect(
+      '#order_afladr_country',
+      country[1],
+    );
   }
 
   /**

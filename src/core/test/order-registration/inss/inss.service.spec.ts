@@ -75,8 +75,11 @@ describe('InssService', () => {
     describe('When given at valid order number and selector', () => {
       const orderNumber = 'dfxdvcxv';
       let result;
+      const stub = orderStub();
       beforeEach(async () => {
+        jest.spyOn(puppeteerUtil, 'readOrder').mockResolvedValueOnce(stub);
         result = await inssService.handleINSSOrder(orderNumber, 'Selector');
+        stub.timeOfDelivery = result.timeOfDelivery;
       });
 
       it('should return a valid ins order model', () => {
@@ -88,7 +91,7 @@ describe('InssService', () => {
       });
 
       it('should call read inss order with the order from read order', () => {
-        expect(puppeteerUtil.readINSSOrder).toBeCalledWith(orderStub());
+        expect(puppeteerUtil.readINSSOrder).toBeCalledWith(stub);
       });
     });
 

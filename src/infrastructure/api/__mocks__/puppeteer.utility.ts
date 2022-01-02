@@ -26,7 +26,7 @@ export const PuppeteerUtility = jest.fn().mockReturnValue({
   getTextsForAll: jest
     .fn()
     .mockResolvedValue(['mockText1', 'mockText2', 'mockText3']),
-  getInputValue: jest.fn().mockResolvedValue(undefined),
+  getInputValue: jest.fn().mockResolvedValue('dfxdvcxv'),
   getTableTargetandSelector: jest
     .fn()
     .mockResolvedValue(TargetAndSelectorStub()),

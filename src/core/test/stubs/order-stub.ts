@@ -1,6 +1,8 @@
 import { OrderInfoModel } from '../../models/order-info.model';
 
 export const orderStub = (): OrderInfoModel => {
+  const newDate = new Date();
+  newDate.setDate(newDate.getDate() + 7);
   return {
     orderNr: 'dfxdvcxv',
     customerName: 'Ortowear',
@@ -9,6 +11,7 @@ export const orderStub = (): OrderInfoModel => {
       '2100 Koebenhavn',
       'Kobenhavn, Denmark',
     ],
+    timeOfDelivery: newDate,
     EU: true,
   };
 };

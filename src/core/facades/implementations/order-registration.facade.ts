@@ -117,12 +117,6 @@ export class OrderRegistrationFacade
           );
           INSOrder = order;
           break;
-        case OrderTypeEnum.OSA:
-          //todo
-          break;
-        case OrderTypeEnum.SOS:
-          //todo
-          break;
         default:
           throw new Error('could not determine order-registration type');
       }
@@ -225,7 +219,7 @@ export class OrderRegistrationFacade
           true,
         );
 
-        await this.orderRegistrationService.InputOrderInformation(
+        await this.orderRegistrationService.inputOrderInformation(
           orders.STSOrder.orderNr,
           orders.STSOrder.deliveryAddress,
           orders.STSOrder.insole,
@@ -297,7 +291,7 @@ export class OrderRegistrationFacade
           true,
           true,
         );
-        await this.orderRegistrationService.InputOrderInformation(
+        await this.orderRegistrationService.inputOrderInformation(
           orders.INSOrder.orderNr,
           orders.INSOrder.deliveryAddress,
           true,

@@ -653,32 +653,4 @@ export class PuppeteerUtility implements PuppeteerUtilityInterface {
     const checkbox = await this.page.$(selector);
     await this.page.evaluate((cb) => cb.click(), checkbox);
   }
-  /*//I have tried.
-  async selectByTexts(selector: string, textValue: string) {
-    const elements = await this.page.$$(selector);
-    const element = await elements.find(async (e) => {
-      const textContent = await e.evaluate((node) => node.textContent);
-      return textContent === textValue;
-    });
-    if (!element) {
-      throw new Error('The element is invalid: ' + element);
-    }
-    console.logEntry(element.toString());
-
-    const parentHandle = await this.page.evaluateHandle(
-      (e) => e.parent,
-      element,
-    );
-
-    const parentElement = parentHandle.asElement();
-    console.logEntry(parentHandle.toString());
-    const id = await parentElement.evaluate((node: Element) => node.id);
-
-    if (!id || id === '') {
-      throw new Error('The id is invalid: ' + id);
-    }
-
-    console.logEntry('id is: ' + id.toString());
-    await this.page.click(id);
-  }*/
 }

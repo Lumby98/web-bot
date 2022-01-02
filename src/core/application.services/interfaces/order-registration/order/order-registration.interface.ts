@@ -5,11 +5,11 @@ export const orderRegistrationInterfaceProvider =
   'orderRegistrationInterfaceProvider';
 export interface OrderRegistrationInterface {
   handleOrtowearNavigation(username: string, password: string);
-  getOrderType(type: string): Promise<OrderTypeEnum>;
+  getOrderType(type: string): OrderTypeEnum;
   checkForInsole(): Promise<boolean>;
   handleNeskridNavigation(username: string, password: string);
   loginValidation(username: string, password: string): boolean;
-  InputOrderInformation(
+  inputOrderInformation(
     orderNr: string,
     deliveryAddress: string[],
     insole: boolean,

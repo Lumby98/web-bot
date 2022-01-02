@@ -203,7 +203,7 @@ export class LogErrorService implements LogErrorInterface {
 
     const updatedError = await this.findOne(id);
 
-    if (updateError) {
+    if (updatedError) {
       if (
         updatedError.errorMessage == updateError.errorMessage &&
         updatedError.id == updateError.id &&

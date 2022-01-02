@@ -15,6 +15,8 @@ import { User } from '../../../infrastructure/entities/user.entity';
 import { InsertSavedLoginDto } from '../../../ui.api/dto/savedLogin/insert-SavedLogin.dto';
 import { LoginTypeEnum } from '../../enums/loginType.enum';
 import { InsertKeyDto } from '../../../ui.api/dto/savedLogin/insert-Key.dto';
+import { SavedLoginModel } from '../../models/Savedlogin.model';
+import { SavedLoginDto } from '../../../ui.api/dto/savedLogin/SavedLoginDto';
 
 describe('SavedLoginService', () => {
   let savedLoginService: SavedLoginService;
@@ -385,10 +387,6 @@ describe('SavedLoginService', () => {
     });
 
     describe('when it cant get the key', () => {
-      const testInsertKey: InsertKeyDto = {
-        password: 'testPassword',
-        prevPassword: 'TestPrevPassword',
-      };
       beforeEach(async () => {
         jest.spyOn(keyRepository, 'findOne').mockResolvedValueOnce(undefined);
 
@@ -409,8 +407,170 @@ describe('SavedLoginService', () => {
       });
       it('Should throw a could not get key error', async () => {
         await expect(async () => {
-          await savedLoginService.changeKey(testInsertKey);
+          await savedLoginService.getKey();
         }).rejects.toThrowError('Could not get key');
+      });
+    });
+  });
+
+  describe('encryptLogin', () => {
+    describe('when it gets a insertSavedLoginDTO', () => {
+      let result;
+      const insertDTO2: InsertSavedLoginDto = {
+        username: 'testUserName',
+        password: 'test',
+        loginType: 1,
+        key: 'testPassword',
+      };
+      beforeEach(async () => {
+        result = await savedLoginService.encryptLogin(insertDTO2);
+      });
+
+      it('Should return the right object', async () => {
+        expect(result.loginType).toEqual(insertDTO2.loginType);
+      });
+    });
+  });
+
+  describe('decryptLogin', () => {
+    describe('when it gets valid arguments', () => {
+      let result;
+      const savedLoginModel: SavedLoginModel = {
+        id: 2,
+        iv: '77In1+Hh+cCjQ++cD9OOVw==',
+        salt: 'jjGI8fo7/fO9BQErvwaJ0Q==',
+        username: 'kH44iJhqK0medXVdm7XjROn+',
+        password: 'jXAljpFFNFE=',
+        loginType: 1,
+      };
+      beforeEach(async () => {
+        result = await savedLoginService.decryptLogin(
+          savedLoginModel,
+          '$2b$10$TY.PRWKxTZyuzvNeg.7tE.C2fEIeoAndaxO5agnSJbv4d.EEr3aFm',
+        );
+      });
+
+      it('Should return the right object', async () => {
+        expect(result.loginType).toEqual(savedLoginModel.loginType);
+      });
+    });
+  });
+
+  describe('getLogin', () => {
+    describe('when it gets valid arguments', () => {
+      let result;
+      const loginType = LoginTypeEnum.NESKRID;
+      const key =
+        '$2b$10$TY.PRWKxTZyuzvNeg.7tE.C2fEIeoAndaxO5agnSJbv4d.EEr3aFm';
+
+      const savedLoginModel: SavedLoginModel = {
+        id: 2,
+        iv: '77In1+Hh+cCjQ++cD9OOVw==',
+        salt: 'jjGI8fo7/fO9BQErvwaJ0Q==',
+        username: 'kH44iJhqK0medXVdm7XjROn+',
+        password: 'jXAljpFFNFE=',
+        loginType: 1,
+      };
+
+      const testsavedLogin: SavedLogin = {
+        id: 1,
+        username: 'test',
+        password: 'test',
+        loginType: LoginTypeEnum.NESKRID,
+        iv: '123123123',
+        salt: 'fesfsefsef',
+      };
+
+      const saveLoginDTO: SavedLoginDto = {
+        id: 1,
+        loginType: LoginTypeEnum.NESKRID,
+        username: 'uff',
+        password: 'fff',
+      };
+      beforeEach(async () => {
+        jest
+          .spyOn(savedLoginRepository, 'findOne')
+          .mockResolvedValueOnce(testsavedLogin);
+
+        jest
+          .spyOn(savedLoginService, 'decryptLogin')
+          .mockResolvedValueOnce(saveLoginDTO);
+        result = await savedLoginService.getLogin(loginType, key);
+      });
+
+      it('Should return the right object', async () => {
+        expect(result.loginType).toEqual(savedLoginModel.loginType);
+      });
+    });
+  });
+
+  describe('findAllLogins', () => {
+    describe('when it gets valid arguments', () => {
+      let result;
+      const key =
+        '$2b$10$TY.PRWKxTZyuzvNeg.7tE.C2fEIeoAndaxO5agnSJbv4d.EEr3aFm';
+
+      const testsavedLogins: SavedLogin[] = [
+        {
+          id: 1,
+          username: 'test',
+          password: 'test',
+          loginType: LoginTypeEnum.NESKRID,
+          iv: '123123123',
+          salt: 'fesfsefsef',
+        },
+        {
+          id: 2,
+          username: 'test',
+          password: 'test',
+          loginType: LoginTypeEnum.NESKRID,
+          iv: '123123123',
+          salt: 'fesfsefsef',
+        },
+      ];
+
+      const saveLoginDTOs: SavedLoginDto[] = [
+        {
+          id: 1,
+          loginType: LoginTypeEnum.NESKRID,
+          username: 'uff',
+          password: 'fff',
+        },
+        {
+          id: 1,
+          loginType: LoginTypeEnum.NESKRID,
+          username: 'uff',
+          password: 'fff',
+        },
+      ];
+      beforeEach(async () => {
+        jest
+          .spyOn(savedLoginRepository, 'find')
+          .mockResolvedValueOnce(testsavedLogins);
+
+        jest
+          .spyOn(savedLoginService, 'verifyKey')
+          .mockResolvedValueOnce(undefined);
+
+        jest
+          .spyOn(savedLoginService, 'decryptLogin')
+          .mockResolvedValueOnce({
+            id: 1,
+            loginType: LoginTypeEnum.NESKRID,
+            username: 'uff',
+            password: 'fff',
+          })
+          .mockResolvedValueOnce({
+            id: 1,
+            loginType: LoginTypeEnum.NESKRID,
+            username: 'uff',
+            password: 'fff',
+          });
+        result = await savedLoginService.findAllLogins(key);
+      });
+
+      it('Should return the right object', async () => {
+        expect(result).toEqual(saveLoginDTOs);
       });
     });
   });

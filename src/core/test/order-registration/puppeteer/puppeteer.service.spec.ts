@@ -32,7 +32,7 @@ describe('PuppeteerService', () => {
       });
 
       it('should call the puppeteer util start method with the right arguments', async () => {
-        expect(puppeteerUtil.start).toBeCalledWith(false, validURL);
+        expect(puppeteerUtil.start).toBeCalledWith(true, validURL);
       });
     });
     describe('when going to wrong url', () => {

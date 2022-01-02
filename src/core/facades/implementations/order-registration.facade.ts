@@ -15,7 +15,6 @@ import { OrderInfoModel } from '../../models/order-info.model';
 import { OrderWithLogs } from '../../models/orderWithLogs';
 import { ConfigService } from '@nestjs/config';
 import { DateTime } from 'luxon';
-import { date } from '@hapi/joi';
 import {
   OrderRegistrationInterface,
   orderRegistrationInterfaceProvider,
@@ -185,11 +184,6 @@ export class OrderRegistrationFacade
         true,
         true,
       );
-      /*await this.puppeteerUtil.click(
-        '#sitebody > div.cc-window.cc-banner.cc-type-opt-out.cc-theme-classic.cc-bottom > div > a.cc-btn.cc-dismiss',
-        true,
-        true,
-      );*/
 
       await this.puppeteerUtil.clickRadioButton(
         '#sitebody > div.cc-window.cc-banner.cc-type-opt-out.cc-theme-classic.cc-bottom > div > a.cc-btn.cc-dismiss',

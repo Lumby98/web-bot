@@ -4,19 +4,21 @@ import { getEntityManagerToken, getRepositoryToken } from '@nestjs/typeorm';
 import { OrderService } from '../../application.services/implementations/log/order.service';
 import { orderEntityStub } from '../stubs/order-entity.stub';
 import { Test, TestingModule } from '@nestjs/testing';
-import { CreateLogDto } from '../../../ui.api/dto/log/logEntry/create-log.dto';
 import { CreateLogOrderDto } from '../../../ui.api/dto/log/order/create-log-order.dto';
 import { OrderLogModel } from '../../models/logEntry/order-log.model';
+import { QueryDto } from '../../../ui.api/dto/filter/query.dto';
+import { PaginationDto } from '../../../ui.api/dto/filter/pagination-dto';
 
 jest.mock('src/infrastructure/api/puppeteer.utility.ts');
 
 describe('OrderService', () => {
-  let orderRepository: Repository<OrderEntity>;
+  let orderRepository;
   let orderService: OrderService;
   let entityManager;
   const mockEntityManager = () => ({
     create: jest.fn(),
     save: jest.fn(),
+    findOne: jest.fn(),
   });
 
   beforeEach(async () => {
@@ -214,6 +216,157 @@ describe('OrderService', () => {
 
       it('should return the correct orderLogModel', () => {
         expect(result).toEqual(true);
+      });
+    });
+  });
+
+  describe('checkOrderWithEntityManager', () => {
+    describe('when order exist', () => {
+      let result;
+      beforeEach(async () => {
+        entityManager.findOne.mockResolvedValueOnce(orderEntityStub());
+        result = await orderService.checkOrderWithEntityManager(
+          'test',
+          entityManager,
+        );
+
+        it('should return true', () => {
+          expect(result).toEqual(true);
+        });
+      });
+    });
+
+    describe('when order does not exist', () => {
+      let result;
+      beforeEach(async () => {
+        entityManager.findOne.mockResolvedValueOnce(undefined);
+        result = await orderService.checkOrderWithEntityManager(
+          'test',
+          entityManager,
+        );
+
+        it('should return false', () => {
+          expect(result).toEqual(false);
+        });
+      });
+    });
+  });
+
+  describe('findAll', () => {
+    describe('when finding order', () => {
+      let result;
+      const query: QueryDto = {
+        page: 1,
+        keyword: '',
+        take: 5,
+      };
+      const stub = orderEntityStub();
+      const ex: PaginationDto<OrderLogModel> = {
+        count: 1,
+        data: [stub],
+      };
+      beforeEach(async () => {
+        jest
+          .spyOn(orderRepository, 'findAndCount')
+          .mockResolvedValueOnce([[stub], 1]);
+        result = await orderService.findAll(query);
+      });
+
+      it('should return list of orders', () => {
+        expect(result).toEqual(ex);
+      });
+    });
+  });
+
+  describe('findByOrderNumber', () => {
+    describe('when finding order', () => {
+      let result;
+      const stub = orderEntityStub();
+
+      beforeEach(async () => {
+        jest.spyOn(orderRepository, 'findOne').mockResolvedValueOnce(stub);
+        result = await orderService.findOne(stub.id);
+      });
+
+      it('should return an order entity', () => {
+        expect(result).toEqual(stub);
+      });
+    });
+  });
+
+  describe('findByOrderNumberWithEntityManager', () => {
+    describe('when finding an order', () => {
+      let result;
+      beforeEach(async () => {
+        entityManager.findOne.mockResolvedValueOnce(orderEntityStub());
+        result = await orderService.findByOrderNumberWithEntityManager(
+          'test',
+          entityManager,
+        );
+
+        it('should return an order', () => {
+          expect(result).toEqual(orderEntityStub());
+        });
+      });
+    });
+  });
+
+  describe('findOne', () => {
+    describe('when given valid order number', () => {
+      let result;
+      const stub = orderEntityStub();
+      beforeEach(async () => {
+        jest.spyOn(orderRepository, 'findOne').mockResolvedValueOnce(stub);
+        result = await orderService.findOne(stub.id);
+      });
+
+      it('should return order', () => {
+        expect(result).toEqual(stub);
+      });
+    });
+  });
+
+  describe('remove', () => {
+    describe('should delete order', () => {
+      let result;
+      const stub = orderEntityStub();
+      beforeEach(async () => {
+        jest.spyOn(orderRepository, 'findOne').mockResolvedValueOnce(stub);
+        jest.spyOn(orderRepository, 'delete').mockResolvedValueOnce(stub);
+        result = await orderService.remove(stub.id);
+      });
+
+      it('should remove an order', () => {
+        expect(result).toEqual(stub);
+      });
+    });
+  });
+
+  describe('update', () => {
+    describe('when updating', () => {
+      let result;
+      const stub = orderEntityStub();
+      stub.completed = false;
+      const update: OrderLogModel = {
+        orderNr: stub.orderNr,
+        completed: true,
+        id: stub.id,
+        logs: stub.logs,
+      };
+
+      beforeEach(async () => {
+        jest.spyOn(orderService, 'checkOrder').mockResolvedValueOnce(true);
+        jest
+          .spyOn(orderService, 'findByOrderNumber')
+          .mockResolvedValueOnce(stub);
+        jest.spyOn(orderRepository, 'update').mockResolvedValueOnce(update);
+        jest.spyOn(orderService, 'findOne').mockResolvedValueOnce(update);
+
+        result = await orderService.update(stub.id, update);
+      });
+
+      it('should return updated order', () => {
+        expect(result).toEqual(update);
       });
     });
   });

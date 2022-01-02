@@ -60,7 +60,7 @@ export class PuppeteerService implements PuppeteerServiceInterface {
   async startPuppeteer(url: string) {
     this.validateUrl(url);
 
-    await this.orderPuppeteer.start(false, url);
+    await this.orderPuppeteer.start(true, url);
     const currentURL = await this.orderPuppeteer.getCurrentURL();
     if (currentURL != url) {
       throw new Error(

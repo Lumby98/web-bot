@@ -15,6 +15,11 @@ export class LogErrorService implements LogErrorInterface {
     @InjectRepository(ErrorEntity)
     private errorRepository: Repository<ErrorEntity>,
   ) {}
+
+  /**
+   * creates a log error
+   * @param createLogError
+   */
   async create(createLogError: CreateOrderErrorDto): Promise<ErrorLogModel> {
     const errorCheck = await this.errorCheck(createLogError.errorMessage);
     if (errorCheck) {
@@ -28,6 +33,11 @@ export class LogErrorService implements LogErrorInterface {
     );
   }
 
+  /**
+   * creates log error with entity manager to facilitate transactions
+   * @param createLogError
+   * @param manager
+   */
   async createWithEntityManager(
     createLogError: CreateOrderErrorDto,
     manager: EntityManager,
@@ -47,6 +57,10 @@ export class LogErrorService implements LogErrorInterface {
     );
   }
 
+  /**
+   * checks the error string it is given
+   * @param errorString
+   */
   async errorCheck(errorString: string): Promise<boolean> {
     const error = await this.errorRepository.findOne({
       where: { errorMessage: errorString },
@@ -55,6 +69,11 @@ export class LogErrorService implements LogErrorInterface {
     return !!error;
   }
 
+  /**
+   * checks the error string it is given with entity manager to facilitate transactions
+   * @param errorString
+   * @param manager
+   */
   async errorCheckWithEntityManager(
     errorString: string,
     manager: EntityManager,
@@ -66,6 +85,10 @@ export class LogErrorService implements LogErrorInterface {
     return !!error;
   }
 
+  /**
+   * finds all error logs and paginates them
+   * @param query
+   */
   async findAll(query: QueryDto): Promise<PaginationDto<ErrorLogModel>> {
     const take = query.take || 10;
     const skip = query.page || 1;
@@ -86,6 +109,10 @@ export class LogErrorService implements LogErrorInterface {
     };
   }
 
+  /**
+   * finds an error by message
+   * @param message
+   */
   async findByMessage(message: string): Promise<ErrorEntity> {
     const error = await this.errorRepository.findOne({
       where: { errorMessage: message },
@@ -93,6 +120,11 @@ export class LogErrorService implements LogErrorInterface {
     return error;
   }
 
+  /**
+   * finds an error by message with entity manager to facilitate transactions
+   * @param message
+   * @param manager
+   */
   async findByMessageWithEntityManager(
     message: string,
     manager: EntityManager,
@@ -115,6 +147,10 @@ export class LogErrorService implements LogErrorInterface {
     return JSON.parse(JSON.stringify(error));
   }
 
+  /**
+   * deletes error by given id
+   * @param id
+   */
   async remove(id: number) {
     try {
       const error = await this.findOne(id);
@@ -125,10 +161,18 @@ export class LogErrorService implements LogErrorInterface {
     }
   }
 
+  /**
+   * removes all error logs
+   */
   async removeAll() {
     await this.errorRepository.clear();
   }
 
+  /**
+   * updates error log by given id
+   * @param id
+   * @param updateError
+   */
   async update(
     id: number,
     updateError: UpdateOrderErrorDto,

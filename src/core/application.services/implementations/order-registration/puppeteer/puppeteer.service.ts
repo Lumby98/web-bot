@@ -12,6 +12,10 @@ export class PuppeteerService implements PuppeteerServiceInterface {
     private readonly orderPuppeteer: PuppeteerUtilityInterface,
   ) {}
 
+  /**
+   * gets text from the given element through a selector string
+   * @param selector
+   */
   async getElementText(selector: string): Promise<string> {
     const check = this.orderPuppeteer.checkLocation(selector, false, false);
 

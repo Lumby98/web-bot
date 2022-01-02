@@ -16,9 +16,6 @@ import {
 } from '../../interfaces/log/log-error.interface';
 import { QueryDto } from '../../../../ui.api/dto/filter/query.dto';
 import { PaginationDto } from '../../../../ui.api/dto/filter/pagination-dto';
-import { NeskridModel } from '../../../models/neskrid.model';
-import { NeskridProduct } from '../../../../infrastructure/entities/neskrid.product.entity';
-import { log } from 'util';
 
 @Injectable()
 export class LogService implements LogInterface {
@@ -33,7 +30,7 @@ export class LogService implements LogInterface {
   ) {}
 
   /**
-   *
+   * creates a log
    * @param createLogDto
    */
   async create(createLogDto: CreateLogDto): Promise<LogModel> {
@@ -88,7 +85,7 @@ export class LogService implements LogInterface {
   }
 
   /**
-   *
+   * creates a log with entity manager to facilitate transactions
    * @param createLogDto
    * @param manager
    */
@@ -182,6 +179,10 @@ export class LogService implements LogInterface {
     }
   }
 
+  /**
+   * finds all logs
+   * @param query
+   */
   async findAll(query: QueryDto): Promise<PaginationDto<LogModel>> {
     let take = query.take;
     if (!query.take || query.take < 1) {
@@ -217,6 +218,10 @@ export class LogService implements LogInterface {
     };
   }
 
+  /**
+   * finds one log by given id
+   * @param id
+   */
   async findOne(id: number): Promise<LogModel> {
     const log = await this.logRepository.findOne(id, {
       relations: ['order', 'error'],
@@ -228,6 +233,10 @@ export class LogService implements LogInterface {
     return JSON.parse(JSON.stringify(log));
   }
 
+  /**
+   * deletes a log entry
+   * @param id
+   */
   async remove(id: number) {
     try {
       const log = await this.findOne(id);
@@ -238,10 +247,17 @@ export class LogService implements LogInterface {
     }
   }
 
+  /**
+   * removes all log entries
+   */
   async removeAll() {
     await this.logRepository.clear();
   }
 
+  /**
+   * updates a log entry
+   * @param updateLogDto
+   */
   async update(updateLogDto: UpdateLogDto): Promise<LogModel> {
     const logFromDatabase = await this.logRepository.findOne({
       where: { id: updateLogDto.id },

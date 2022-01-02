@@ -4,7 +4,6 @@ import {
   HttpCode,
   Inject,
   Post,
-  Res,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -14,7 +13,7 @@ import {
 import { jwtAuthenticationGuard } from '../guard/jwt-authentication.guard';
 import { InsertSavedLoginDto } from '../dto/savedLogin/insert-SavedLogin.dto';
 import { KeyDto } from '../dto/savedLogin/Key.dto';
-import { InsertKeyDto } from "../dto/savedLogin/insert-Key.dto";
+import { InsertKeyDto } from '../dto/savedLogin/insert-Key.dto';
 
 @Controller('saved-login')
 export class SavedLoginController {
@@ -23,6 +22,10 @@ export class SavedLoginController {
     private readonly savedLoginService: savedLoginServiceInterface,
   ) {}
 
+  /**
+   * inserts the saved login
+   * @param insertSavedLoginDto
+   */
   @UseGuards(jwtAuthenticationGuard)
   @Post('insert')
   async insert(@Body() insertSavedLoginDto: InsertSavedLoginDto) {
@@ -32,23 +35,25 @@ export class SavedLoginController {
         throw err;
       });
   }
+
+  /**
+   * verifies the given key
+   * @param keyDto
+   */
   @HttpCode(200)
   @Post('verify')
   async verify(@Body() keyDto: KeyDto) {
     await this.savedLoginService.verifyKey(keyDto.password);
-
-    //console.logEntry(await this.savedLoginService.findAllLogins(keyDto.password));
   }
 
+  /**
+   * changes the key to the given key
+   * @param insertKeyDto
+   */
   @UseGuards(jwtAuthenticationGuard)
   @HttpCode(200)
   @Post('changeKey')
   async changeKey(@Body() insertKeyDto: InsertKeyDto) {
     await this.savedLoginService.changeKey(insertKeyDto);
   }
-
-  //use this later
-  // @UseGuards(jwtAuthenticationGuard)
-  // @Get()
-  // async findAll(@Body() keyModel: KeyModel) { return this.savedLoginService.findAllLogins().catch((err) => {throw err;});}
 }

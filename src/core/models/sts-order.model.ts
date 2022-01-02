@@ -1,5 +1,4 @@
 import { OrderInfoModel } from './order-info.model';
-import { OrderInsoleModel } from './order-insole.model';
 
 export interface STSOrderModel extends OrderInfoModel {
   widthL: string;

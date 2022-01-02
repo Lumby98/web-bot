@@ -34,7 +34,6 @@ import {
   NeskridInterface,
   neskridInterfaceProvider,
 } from '../../core/application.services/interfaces/data-collection/neskrid.interface';
-import { NeskridProduct } from '../../infrastructure/entities/neskrid.product.entity';
 import { NeskridModel } from '../../core/models/neskrid.model';
 import { LoginTypeEnum } from '../../core/enums/loginType.enum';
 import {
@@ -123,6 +122,10 @@ export class ScraperController {
     }
   }
 
+  /**
+   * makes all products
+   * @param neskridModels
+   */
   @UseGuards(jwtAuthenticationGuard)
   @Post('createAll')
   async createAll(@Body() neskridModels: NeskridModel[]) {
@@ -150,6 +153,10 @@ export class ScraperController {
     }
   }
 
+  /**
+   * updates all products
+   * @param neskridModels
+   */
   @UseGuards(jwtAuthenticationGuard)
   @Put('updateAll')
   async updateAll(@Body() neskridModels: NeskridModel[]) {

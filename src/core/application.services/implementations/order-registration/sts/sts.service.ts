@@ -55,11 +55,6 @@ export class StsService implements STSInterface {
       throw new Error('Could not find order-registration page');
     }
 
-    //Enable this in production.
-    /*if (!(await this.orderPuppeteer.checkLocation('#edit_order', false))) {
-      throw new Error('This order-registration is delivered so it cannot be allocated');
-    }*/
-
     const order: OrderInfoModel = await this.puppeteerUtil.readOrder(
       orderNumber,
     );
@@ -147,6 +142,12 @@ export class StsService implements STSInterface {
     return stsOrder;
   }
 
+  /**
+   * handles input of the STS model on neskrid
+   * @param model
+   * @param size
+   * @param width
+   */
   async inputStsModel(model: string, size: string, width: string) {
     const isModelLoaded = await this.puppeteerUtil.checkLocation(
       '#page-content-wrapper > div > div > div > div.col-md-7 > div',
@@ -257,6 +258,10 @@ export class StsService implements STSInterface {
     }
   }
 
+  /**
+   * handles inputting information on the usage environment site of STS on neskrid
+   * @param orderNr
+   */
   async inputStsUsageEnvironment(orderNr: string) {
     const endUserIsLoaded = await this.puppeteerUtil.checkLocation(
       '#order_enduser',
@@ -314,6 +319,11 @@ export class StsService implements STSInterface {
     }
   }
 
+  /**
+   * handles inputting the STS supplement information
+   * @param insole
+   * @param dev
+   */
   async supplement(insole: boolean, dev: boolean) {
     const isSupplementlLoaded = await this.puppeteerUtil.checkLocation(
       '#order_info_14',

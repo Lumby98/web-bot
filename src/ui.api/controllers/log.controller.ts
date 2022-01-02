@@ -10,7 +10,6 @@ import {
   HttpException,
   HttpStatus,
   Query,
-  HttpCode,
 } from '@nestjs/common';
 import { CreateLogDto } from '../dto/log/logEntry/create-log.dto';
 import {
@@ -41,6 +40,10 @@ export class LogController {
     private readonly errorService: LogErrorInterface,
   ) {}
 
+  /**
+   * creates a single log
+   * @param createLogDto
+   */
   @Post()
   async create(@Body() createLogDto: CreateLogDto): Promise<LogEntryDto> {
     try {
@@ -53,6 +56,10 @@ export class LogController {
     }
   }
 
+  /**
+   * creates a number of logs
+   * @param createLogDtos
+   */
   @Post('createAll')
   async createAll(
     @Body() createLogDtos: CreateLogDto[],
@@ -67,6 +74,10 @@ export class LogController {
     }
   }
 
+  /**
+   * updates a single log entry
+   * @param updateLogDto
+   */
   @Patch()
   async update(@Body() updateLogDto: UpdateLogDto): Promise<LogEntryDto> {
     try {
@@ -79,6 +90,10 @@ export class LogController {
     }
   }
 
+  /**
+   * finds all logs matching the query and paginates them
+   * @param query
+   */
   @Get()
   async findAll(@Query() query: QueryDto): Promise<PaginationDto<LogEntryDto>> {
     try {
@@ -88,6 +103,10 @@ export class LogController {
     }
   }
 
+  /**
+   * finds one log entry based on id
+   * @param id
+   */
   @Get('one/:id')
   async findOne(@Param('id') id: string): Promise<LogEntryDto> {
     try {
@@ -98,6 +117,10 @@ export class LogController {
     }
   }
 
+  /**
+   * deletes one entry based on id
+   * @param id
+   */
   @Delete('delete/:id')
   async remove(@Param('id') id: string) {
     try {
@@ -107,6 +130,9 @@ export class LogController {
     }
   }
 
+  /**
+   * deletes all logs
+   */
   @Delete('deleteAll')
   async removeAll() {
     try {
@@ -116,6 +142,10 @@ export class LogController {
     }
   }
 
+  /**
+   * finds an order from id
+   * @param id
+   */
   @Get('order/:id')
   async findOrder(@Param('id') id: string) {
     try {
@@ -125,6 +155,10 @@ export class LogController {
     }
   }
 
+  /**
+   * finds an error from id
+   * @param id
+   */
   @Get('Error/:id')
   async findError(@Param('id') id: string) {
     try {

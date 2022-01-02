@@ -1,19 +1,9 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Inject,
-  Param,
-  Post,
-  Query,
-} from '@nestjs/common';
+import { Body, Controller, Get, Inject, Post, Query } from '@nestjs/common';
 import {
   OrderRegistrationFacadeInterface,
   orderRegistrationFacadeInterfaceProvider,
 } from '../../core/facades/interfaces/order-registration-facade.interface';
 import { OrderRegistrationDto } from '../dto/order-registration/order-registration.dto';
-import { OrderLists } from '../../core/models/order-lists';
-import { STSOrderModel } from '../../core/models/sts-order.model';
 import { AllocationDto } from '../dto/order-registration/allocation-dto';
 import { AllocationTestDto } from '../dto/order-registration/allocationTest.dto';
 import {
@@ -30,6 +20,7 @@ export class OrderRegistrationController {
     private readonly orderRegistrationService: OrderRegistrationInterface,
   ) {}
 
+
   @Post('getOrderInfo')
   async getOrderInfo(@Body() order: OrderRegistrationDto) {
     const orders = await this.orderRegistrationFacade.getOrderInfo(
@@ -43,11 +34,12 @@ export class OrderRegistrationController {
     return orders;
   }
 
+  /**
+   * allocates orders
+   * @param allocationTestDto
+   */
   @Post('allocateOrders')
   async allocateOrders(@Body() allocationTestDto: AllocationTestDto) {
-    /*const newDate = new Date();
-    newDate.setDate(newDate.getDate() + 90);
-    allocationTestDto.orderWithLogs.order.timeOfDelivery = newDate;*/
     const date = this.orderRegistrationService.formatDeliveryDate(
       allocationTestDto.dateString,
     );
@@ -67,6 +59,10 @@ export class OrderRegistrationController {
     return completedOrders;
   }
 
+  /**
+   * creates orders
+   * @param order
+   */
   @Post('createOrder')
   async createOrders(@Body() order: AllocationDto) {
     const createdOrders = await this.orderRegistrationFacade.createOrder(
@@ -80,6 +76,11 @@ export class OrderRegistrationController {
     return createdOrders;
   }
 
+  /**
+   * gets the next weekday
+   * @param date
+   * @param dayOfWeek
+   */
   @Get('getNextDayOfWeekTest')
   async getNextDayOfWeek(
     @Query('date') date: string,

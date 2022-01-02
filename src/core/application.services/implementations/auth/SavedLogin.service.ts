@@ -29,6 +29,10 @@ export class SavedLoginService implements savedLoginServiceInterface {
     private readonly authenticationService: AuthenticationInterface,
   ) {}
 
+  /**
+   * inserts a saved login
+   * @param insertSavedLoginDto
+   */
   async insertLogin(
     insertSavedLoginDto: InsertSavedLoginDto,
   ): Promise<SavedLoginModel> {
@@ -54,6 +58,10 @@ export class SavedLoginService implements savedLoginServiceInterface {
     }
   }
 
+  /**
+   * verifies the given key
+   * @param key
+   */
   async verifyKey(key: string) {
     try {
       const hashedKey = await this.getKey();
@@ -71,6 +79,10 @@ export class SavedLoginService implements savedLoginServiceInterface {
     }
   }
 
+  /**
+   * changes the key ot the given key
+   * @param inserKeyDto
+   */
   async changeKey(inserKeyDto: InsertKeyDto) {
     try {
       const decryptedLogins = await this.findAllLogins(
@@ -103,6 +115,9 @@ export class SavedLoginService implements savedLoginServiceInterface {
     }
   }
 
+  /**
+   * gets the current key
+   */
   async getKey(): Promise<KeyModel> {
     try {
       const key = await this.keyRepository.findOne(1);
@@ -115,6 +130,10 @@ export class SavedLoginService implements savedLoginServiceInterface {
     }
   }
 
+  /**
+   * handles encrypting the login information securely
+   * @param insertSavedLoginDto
+   */
   async encryptLogin(
     insertSavedLoginDto: InsertSavedLoginDto,
   ): Promise<SavedLoginModel> {
@@ -152,6 +171,11 @@ export class SavedLoginService implements savedLoginServiceInterface {
     };
   }
 
+  /**
+   * handles decrypting the needed login information
+   * @param savedlogin
+   * @param key
+   */
   async decryptLogin(
     savedlogin: SavedLoginModel,
     key: string,
@@ -192,6 +216,11 @@ export class SavedLoginService implements savedLoginServiceInterface {
     };
   }
 
+  /**
+   * gets the login based on type
+   * @param loginType
+   * @param key
+   */
   async getLogin(
     loginType: LoginTypeEnum,
     key: string,
@@ -211,6 +240,10 @@ export class SavedLoginService implements savedLoginServiceInterface {
     }
   }
 
+  /**
+   * finds all logins
+   * @param key
+   */
   async findAllLogins(key: string): Promise<SavedLoginDto[]> {
     await this.verifyKey(key);
     try {

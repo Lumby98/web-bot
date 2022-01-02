@@ -20,6 +20,9 @@ export class InssService implements INSSInterface {
     private readonly puppeteerService: PuppeteerServiceInterface,
   ) {}
 
+  /**
+   * inputs INS information on the confirmation page on neskrid
+   */
   async confirmation() {
     const quantity = await this.puppeteerUtil.readSelectorText(
       '#order_quantity',
@@ -36,6 +39,11 @@ export class InssService implements INSSInterface {
     }
   }
 
+  /**
+   * handles inputting INS orders
+   * @param orderNumber
+   * @param selector
+   */
   async handleINSSOrder(
     orderNumber: string,
     selector: string,
@@ -116,6 +124,10 @@ export class InssService implements INSSInterface {
     return inssOrder;
   }
 
+  /**
+   * handles inputting the INS information on the model page
+   * @param order
+   */
   async inputInssModel(order: INSSOrderModel) {
     const isModelLoaded = await this.puppeteerUtil.checkLocation(
       '#insoleForm',
@@ -263,6 +275,10 @@ export class InssService implements INSSInterface {
     }
   }
 
+  /**
+   * handles inputting INS information on the usage environment page
+   * @param order
+   */
   async inputInssUsageEnvironment(order: INSSOrderModel) {
     //Input Registration no. medical specialist
     const regNoIsLoaded = await this.puppeteerUtil.checkLocation(
@@ -344,6 +360,9 @@ export class InssService implements INSSInterface {
     }
   }
 
+  /**
+   * handles inputting INS information on the orthotics page
+   */
   async orthotics() {
     this.puppeteerUtil.wait('#order_opt_107', 5000);
     const isOrthoticsLoaded = await this.puppeteerUtil.checkLocation(

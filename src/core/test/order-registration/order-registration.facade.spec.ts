@@ -13,10 +13,10 @@ import { InssService } from '../../application.services/implementations/order-re
 import { loginDtoStub } from '../stubs/login-dto.stub';
 import { orderListStub } from '../stubs/order-list.stub';
 import { TargetAndSelectorStub } from '../stubs/target-and-selector';
-import { OrderTypeEnum } from '../../enums/type.enum';
 import { ProcessStepEnum } from '../../enums/processStep.enum';
 import { orderStub } from '../stubs/order-stub';
 import { orderWithLogsStub } from '../stubs/order-with-logs.stub';
+import { OrderTypeEnum } from '../../enums/type.enum';
 
 jest.mock('src/infrastructure/api/puppeteer.utility.ts');
 jest.mock(
@@ -145,7 +145,7 @@ describe('OrderRegistrationFacade', () => {
       beforeEach(async () => {
         jest
           .spyOn(orderRegistrationService, 'getOrderType')
-          .mockResolvedValue(OrderTypeEnum.INSS);
+          .mockReturnValueOnce(OrderTypeEnum.INSS);
 
         const targetAndSelectorStub = TargetAndSelectorStub();
         targetAndSelectorStub.type = 'INSS';
@@ -215,7 +215,7 @@ describe('OrderRegistrationFacade', () => {
       beforeEach(async () => {
         jest
           .spyOn(orderRegistrationService, 'getOrderType')
-          .mockResolvedValue(undefined);
+          .mockReturnValueOnce(undefined);
 
         result = await orderRegistrationFacade.getOrderInfo(
           orderNumber,

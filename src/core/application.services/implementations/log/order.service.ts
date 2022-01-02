@@ -16,25 +16,6 @@ export class OrderService implements OrderInterface {
     private orderRepository: Repository<OrderEntity>,
   ) {}
 
-  async checkOrder(orderNumber: string): Promise<boolean> {
-    const order = await this.orderRepository.findOne({
-      where: { orderNr: orderNumber },
-    });
-
-    return !!order;
-  }
-
-  async checkOrderWithEntityManager(
-    orderNumber: string,
-    manager: EntityManager,
-  ): Promise<boolean> {
-    const order = await manager.findOne(OrderEntity, {
-      where: { orderNr: orderNumber },
-    });
-
-    return !!order;
-  }
-
   async create(createLogOrder: CreateLogOrderDto): Promise<OrderLogModel> {
     const orderCheck = await this.checkOrder(createLogOrder.orderNr);
     if (orderCheck) {
@@ -65,6 +46,25 @@ export class OrderService implements OrderInterface {
     return JSON.parse(
       JSON.stringify(await manager.save(OrderEntity, orderEntity)),
     );
+  }
+
+  async checkOrder(orderNumber: string): Promise<boolean> {
+    const order = await this.orderRepository.findOne({
+      where: { orderNr: orderNumber },
+    });
+
+    return !!order;
+  }
+
+  async checkOrderWithEntityManager(
+    orderNumber: string,
+    manager: EntityManager,
+  ): Promise<boolean> {
+    const order = await manager.findOne(OrderEntity, {
+      where: { orderNr: orderNumber },
+    });
+
+    return !!order;
   }
 
   async findAll(query: QueryDto): Promise<PaginationDto<OrderLogModel>> {

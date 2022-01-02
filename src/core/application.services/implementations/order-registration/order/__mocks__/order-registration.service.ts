@@ -8,7 +8,7 @@ export const OrderRegistrationService = jest.fn().mockReturnValue({
   checkForInsole: jest.fn().mockResolvedValue(true),
   handleNeskridNavigation: jest.fn().mockResolvedValue(undefined),
   loginValidation: jest.fn().mockReturnValue(true),
-  InputOrderInformation: jest.fn().mockResolvedValue(undefined),
+  inputOrderInformation: jest.fn().mockResolvedValue(undefined),
   inputAddress: jest.fn().mockResolvedValue(undefined),
   handleOrderCompletion: jest.fn().mockResolvedValue(DateStringStub()),
   formatDeliveryDate: jest.fn().mockReturnValue(new Date()),

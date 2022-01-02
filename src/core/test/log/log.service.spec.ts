@@ -46,6 +46,7 @@ describe('LogService', () => {
     }).compile();
 
     logService = await module.get<LogService>(LogService);
+    connection = await module.get<Connection>(Connection);
     jest.clearAllMocks();
   });
 

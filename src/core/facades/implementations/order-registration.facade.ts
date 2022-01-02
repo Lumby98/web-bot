@@ -168,7 +168,7 @@ export class OrderRegistrationFacade
     const OSAOrder = null;
     const SOSOrder = null;
     try {
-      await this.puppeteerUtil.start(false, 'https://www.google.com/');
+      await this.puppeteerService.startPuppeteer('https://www.google.com/');
       await this.orderRegistrationService.handleNeskridNavigation(
         username,
         password,
